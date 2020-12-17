@@ -38177,41 +38177,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _savegame_savegame__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../savegame/savegame */ "./src/js/savegame/savegame.js");
 /* harmony import */ var _savegame_savegame_serializer__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../savegame/savegame_serializer */ "./src/js/savegame/savegame_serializer.js");
 /* harmony import */ var _automatic_save__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./automatic_save */ "./src/js/game/automatic_save.js");
-/* harmony import */ var _buildings_hub__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./buildings/hub */ "./src/js/game/buildings/hub.js");
-/* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./camera */ "./src/js/game/camera.js");
-/* harmony import */ var _dynamic_tickrate__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./dynamic_tickrate */ "./src/js/game/dynamic_tickrate.js");
-/* harmony import */ var _entity_manager__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./entity_manager */ "./src/js/game/entity_manager.js");
-/* harmony import */ var _game_system_manager__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./game_system_manager */ "./src/js/game/game_system_manager.js");
-/* harmony import */ var _hub_goals__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./hub_goals */ "./src/js/game/hub_goals.js");
-/* harmony import */ var _hud_hud__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./hud/hud */ "./src/js/game/hud/hud.js");
-/* harmony import */ var _key_action_mapper__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./key_action_mapper */ "./src/js/game/key_action_mapper.js");
-/* harmony import */ var _logic__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./logic */ "./src/js/game/logic.js");
-/* harmony import */ var _map_view__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./map_view */ "./src/js/game/map_view.js");
-/* harmony import */ var _meta_building__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./meta_building */ "./src/js/game/meta_building.js");
-/* harmony import */ var _modes_regular__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./modes/regular */ "./src/js/game/modes/regular.js");
-/* harmony import */ var _production_analytics__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./production_analytics */ "./src/js/game/production_analytics.js");
-/* harmony import */ var _root__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./root */ "./src/js/game/root.js");
-/* harmony import */ var _shape_definition_manager__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./shape_definition_manager */ "./src/js/game/shape_definition_manager.js");
-/* harmony import */ var _sound_proxy__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./sound_proxy */ "./src/js/game/sound_proxy.js");
-/* harmony import */ var _time_game_time__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ./time/game_time */ "./src/js/game/time/game_time.js");
-/* harmony import */ var _levels_level_1__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ./levels/level_1 */ "./src/js/game/levels/level_1.js");
-/* harmony import */ var _levels_level_2__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ./levels/level_2 */ "./src/js/game/levels/level_2.js");
-/* harmony import */ var _levels_level_3__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ./levels/level_3 */ "./src/js/game/levels/level_3.js");
-/* harmony import */ var _levels_level_4__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ./levels/level_4 */ "./src/js/game/levels/level_4.js");
-/* harmony import */ var _levels_level_5__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ./levels/level_5 */ "./src/js/game/levels/level_5.js");
-/* harmony import */ var _levels_level_6__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ./levels/level_6 */ "./src/js/game/levels/level_6.js");
-/* harmony import */ var _levels_level_7__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ./levels/level_7 */ "./src/js/game/levels/level_7.js");
-/* harmony import */ var _levels_level_8__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ./levels/level_8 */ "./src/js/game/levels/level_8.js");
-
-
-
-
-
-
-
-
-
-
+/* harmony import */ var _camera__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./camera */ "./src/js/game/camera.js");
+/* harmony import */ var _dynamic_tickrate__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./dynamic_tickrate */ "./src/js/game/dynamic_tickrate.js");
+/* harmony import */ var _entity_manager__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./entity_manager */ "./src/js/game/entity_manager.js");
+/* harmony import */ var _game_system_manager__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./game_system_manager */ "./src/js/game/game_system_manager.js");
+/* harmony import */ var _hub_goals__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./hub_goals */ "./src/js/game/hub_goals.js");
+/* harmony import */ var _hud_hud__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./hud/hud */ "./src/js/game/hud/hud.js");
+/* harmony import */ var _key_action_mapper__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./key_action_mapper */ "./src/js/game/key_action_mapper.js");
+/* harmony import */ var _logic__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./logic */ "./src/js/game/logic.js");
+/* harmony import */ var _map_view__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./map_view */ "./src/js/game/map_view.js");
+/* harmony import */ var _meta_building__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./meta_building */ "./src/js/game/meta_building.js");
+/* harmony import */ var _modes_regular__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./modes/regular */ "./src/js/game/modes/regular.js");
+/* harmony import */ var _production_analytics__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./production_analytics */ "./src/js/game/production_analytics.js");
+/* harmony import */ var _root__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./root */ "./src/js/game/root.js");
+/* harmony import */ var _shape_definition_manager__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./shape_definition_manager */ "./src/js/game/shape_definition_manager.js");
+/* harmony import */ var _sound_proxy__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./sound_proxy */ "./src/js/game/sound_proxy.js");
+/* harmony import */ var _time_game_time__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./time/game_time */ "./src/js/game/time/game_time.js");
 
 
 
@@ -38289,7 +38270,7 @@ class GameCore {
      */
     initializeRoot(parentState, savegame) {
         // Construct the root element, this is the data representation of the game
-        this.root = new _root__WEBPACK_IMPORTED_MODULE_27__["GameRoot"](this.app);
+        this.root = new _root__WEBPACK_IMPORTED_MODULE_26__["GameRoot"](this.app);
         this.root.gameState = parentState;
         this.root.keyMapper = parentState.keyActionMapper;
         this.root.savegame = savegame;
@@ -38303,29 +38284,29 @@ class GameCore {
         const root = this.root;
 
         // This isn't nice, but we need it right here
-        root.keyMapper = new _key_action_mapper__WEBPACK_IMPORTED_MODULE_21__["KeyActionMapper"](root, this.root.gameState.inputReciever);
+        root.keyMapper = new _key_action_mapper__WEBPACK_IMPORTED_MODULE_20__["KeyActionMapper"](root, this.root.gameState.inputReciever);
 
         // Needs to come first
-        root.dynamicTickrate = new _dynamic_tickrate__WEBPACK_IMPORTED_MODULE_16__["DynamicTickrate"](root);
+        root.dynamicTickrate = new _dynamic_tickrate__WEBPACK_IMPORTED_MODULE_15__["DynamicTickrate"](root);
 
         // Init game mode
-        root.gameMode = new _modes_regular__WEBPACK_IMPORTED_MODULE_25__["RegularGameMode"](root);
+        root.gameMode = new _modes_regular__WEBPACK_IMPORTED_MODULE_24__["RegularGameMode"](root);
 
         // Init classes
-        root.camera = new _camera__WEBPACK_IMPORTED_MODULE_15__["Camera"](root);
-        root.map = new _map_view__WEBPACK_IMPORTED_MODULE_23__["MapView"](root);
-        root.logic = new _logic__WEBPACK_IMPORTED_MODULE_22__["GameLogic"](root);
-        root.hud = new _hud_hud__WEBPACK_IMPORTED_MODULE_20__["GameHUD"](root);
-        root.time = new _time_game_time__WEBPACK_IMPORTED_MODULE_30__["GameTime"](root);
+        root.camera = new _camera__WEBPACK_IMPORTED_MODULE_14__["Camera"](root);
+        root.map = new _map_view__WEBPACK_IMPORTED_MODULE_22__["MapView"](root);
+        root.logic = new _logic__WEBPACK_IMPORTED_MODULE_21__["GameLogic"](root);
+        root.hud = new _hud_hud__WEBPACK_IMPORTED_MODULE_19__["GameHUD"](root);
+        root.time = new _time_game_time__WEBPACK_IMPORTED_MODULE_29__["GameTime"](root);
         root.automaticSave = new _automatic_save__WEBPACK_IMPORTED_MODULE_13__["AutomaticSave"](root);
-        root.soundProxy = new _sound_proxy__WEBPACK_IMPORTED_MODULE_29__["SoundProxy"](root);
+        root.soundProxy = new _sound_proxy__WEBPACK_IMPORTED_MODULE_28__["SoundProxy"](root);
 
         // Init managers
-        root.entityMgr = new _entity_manager__WEBPACK_IMPORTED_MODULE_17__["EntityManager"](root);
-        root.systemMgr = new _game_system_manager__WEBPACK_IMPORTED_MODULE_18__["GameSystemManager"](root);
-        root.shapeDefinitionMgr = new _shape_definition_manager__WEBPACK_IMPORTED_MODULE_28__["ShapeDefinitionManager"](root);
-        root.hubGoals = new _hub_goals__WEBPACK_IMPORTED_MODULE_19__["HubGoals"](root);
-        root.productionAnalytics = new _production_analytics__WEBPACK_IMPORTED_MODULE_26__["ProductionAnalytics"](root);
+        root.entityMgr = new _entity_manager__WEBPACK_IMPORTED_MODULE_16__["EntityManager"](root);
+        root.systemMgr = new _game_system_manager__WEBPACK_IMPORTED_MODULE_17__["GameSystemManager"](root);
+        root.shapeDefinitionMgr = new _shape_definition_manager__WEBPACK_IMPORTED_MODULE_27__["ShapeDefinitionManager"](root);
+        root.hubGoals = new _hub_goals__WEBPACK_IMPORTED_MODULE_18__["HubGoals"](root);
+        root.productionAnalytics = new _production_analytics__WEBPACK_IMPORTED_MODULE_25__["ProductionAnalytics"](root);
         root.buffers = new _core_buffer_maintainer__WEBPACK_IMPORTED_MODULE_0__["BufferMaintainer"](root);
 
         // Initialize the hud once everything is loaded
@@ -38369,26 +38350,10 @@ class GameCore {
         this.root.gameIsFresh = true;
         this.root.map.seed = Object(_core_utils__WEBPACK_IMPORTED_MODULE_9__["randomInt"])(0, 100000);
 
-        // // Place the hub
-        // const hub = gMetaBuildingRegistry.findByClass(MetaHubBuilding).createEntity({
-        //     root: this.root,
-        //     origin: new Vector(-2, -2),
-        //     rotation: 0,
-        //     originalRotation: 0,
-        //     rotationVariant: 0,
-        //     variant: defaultBuildingVariant,
-        // });
-        // this.root.map.placeStaticEntity(hub);
-        // this.root.entityMgr.registerEntity(hub);
 
-        _core_global_registries__WEBPACK_IMPORTED_MODULE_5__["gLevelRegistry"].findByClass(_levels_level_1__WEBPACK_IMPORTED_MODULE_31__["Level_1"]).createLevel(this.root)
-        _core_global_registries__WEBPACK_IMPORTED_MODULE_5__["gLevelRegistry"].findByClass(_levels_level_2__WEBPACK_IMPORTED_MODULE_32__["Level_2"]).createLevel(this.root)
-        _core_global_registries__WEBPACK_IMPORTED_MODULE_5__["gLevelRegistry"].findByClass(_levels_level_3__WEBPACK_IMPORTED_MODULE_33__["Level_3"]).createLevel(this.root)
-        _core_global_registries__WEBPACK_IMPORTED_MODULE_5__["gLevelRegistry"].findByClass(_levels_level_4__WEBPACK_IMPORTED_MODULE_34__["Level_4"]).createLevel(this.root)
-        _core_global_registries__WEBPACK_IMPORTED_MODULE_5__["gLevelRegistry"].findByClass(_levels_level_5__WEBPACK_IMPORTED_MODULE_35__["Level_5"]).createLevel(this.root)
-        _core_global_registries__WEBPACK_IMPORTED_MODULE_5__["gLevelRegistry"].findByClass(_levels_level_6__WEBPACK_IMPORTED_MODULE_36__["Level_6"]).createLevel(this.root)
-        _core_global_registries__WEBPACK_IMPORTED_MODULE_5__["gLevelRegistry"].findByClass(_levels_level_7__WEBPACK_IMPORTED_MODULE_37__["Level_7"]).createLevel(this.root)
-        _core_global_registries__WEBPACK_IMPORTED_MODULE_5__["gLevelRegistry"].findByClass(_levels_level_8__WEBPACK_IMPORTED_MODULE_38__["Level_8"]).createLevel(this.root)
+        for (var i = 0; i < _core_global_registries__WEBPACK_IMPORTED_MODULE_5__["gLevelRegistry"].entries.length; i++) {
+            _core_global_registries__WEBPACK_IMPORTED_MODULE_5__["gLevelRegistry"].entries[i].createLevel(this.root);
+        };
     }
 
     /**
@@ -43604,7 +43569,7 @@ class HUDDebugInfo extends _base_hud_part__WEBPACK_IMPORTED_MODULE_0__["BaseHUDP
      */
     onModeChanged(mode) {
         this.element.setAttribute("data-mode", mode);
-        this.versionElement.innerText = `${"1.2.2"} @ ${"dev"} @ ${"5cb38705"}`;
+        this.versionElement.innerText = `${"1.2.2"} @ ${"dev"} @ ${"55cc75d0"}`;
     }
 
     /**
@@ -49939,7 +49904,7 @@ class Level {
     /**
      * Should return the dimensions of the Level
      */
-    getDimensions(variant = defaultBuildingVariant) {
+    getDimensions() {
         return new _core_vector__WEBPACK_IMPORTED_MODULE_3__["Vector"](1, 1);
     }
 
@@ -49974,7 +49939,7 @@ class Level {
             if (param.length >= 7 && param[0] == "item_producer") {
                 entity.components.ItemProducer.item = this.parseSignalCode(root, param[6]);
             }
-            root.map.   placeStaticEntity(entity);
+            root.map.placeStaticEntity(entity);
             root.entityMgr.registerEntity(entity);
         };
 
@@ -50056,6 +50021,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _levels_level_6__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./levels/level_6 */ "./src/js/game/levels/level_6.js");
 /* harmony import */ var _levels_level_7__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./levels/level_7 */ "./src/js/game/levels/level_7.js");
 /* harmony import */ var _levels_level_8__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./levels/level_8 */ "./src/js/game/levels/level_8.js");
+/* harmony import */ var _levels_level_9__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./levels/level_9 */ "./src/js/game/levels/level_9.js");
+/* harmony import */ var _levels_level_10__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./levels/level_10 */ "./src/js/game/levels/level_10.js");
+
+
 
 
 
@@ -50075,6 +50044,8 @@ function initLevelRegistry() {
     _core_global_registries__WEBPACK_IMPORTED_MODULE_0__["gLevelRegistry"].register(_levels_level_6__WEBPACK_IMPORTED_MODULE_6__["Level_6"]);
     _core_global_registries__WEBPACK_IMPORTED_MODULE_0__["gLevelRegistry"].register(_levels_level_7__WEBPACK_IMPORTED_MODULE_7__["Level_7"]);
     _core_global_registries__WEBPACK_IMPORTED_MODULE_0__["gLevelRegistry"].register(_levels_level_8__WEBPACK_IMPORTED_MODULE_8__["Level_8"]);
+    _core_global_registries__WEBPACK_IMPORTED_MODULE_0__["gLevelRegistry"].register(_levels_level_9__WEBPACK_IMPORTED_MODULE_9__["Level_9"]);
+    _core_global_registries__WEBPACK_IMPORTED_MODULE_0__["gLevelRegistry"].register(_levels_level_10__WEBPACK_IMPORTED_MODULE_10__["Level_10"]);
 
     // IMPORTANT ^^^^^ UPDATE ENTITY COMPONENT STORAGE AFTERWARDS
 
@@ -50084,7 +50055,7 @@ function initLevelRegistry() {
         // @ts-ignore
         __webpack_require__("./src/js/game/levels sync .*\\.js/").keys().length ===
             _core_global_registries__WEBPACK_IMPORTED_MODULE_0__["gLevelRegistry"].getNumEntries(),
-        "Not all components are registered"
+        "Not all Levels are registered"
     );
 
     console.log("📦 There are", _core_global_registries__WEBPACK_IMPORTED_MODULE_0__["gLevelRegistry"].getNumEntries(), "levels");
@@ -50102,13 +50073,15 @@ function initLevelRegistry() {
 
 var map = {
 	"./level_1.js": "./src/js/game/levels/level_1.js",
+	"./level_10.js": "./src/js/game/levels/level_10.js",
 	"./level_2.js": "./src/js/game/levels/level_2.js",
 	"./level_3.js": "./src/js/game/levels/level_3.js",
 	"./level_4.js": "./src/js/game/levels/level_4.js",
 	"./level_5.js": "./src/js/game/levels/level_5.js",
 	"./level_6.js": "./src/js/game/levels/level_6.js",
 	"./level_7.js": "./src/js/game/levels/level_7.js",
-	"./level_8.js": "./src/js/game/levels/level_8.js"
+	"./level_8.js": "./src/js/game/levels/level_8.js",
+	"./level_9.js": "./src/js/game/levels/level_9.js"
 };
 
 
@@ -50169,6 +50142,52 @@ class Level_1 extends _level__WEBPACK_IMPORTED_MODULE_1__["Level"] {
             ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](0, 2), "right", 0, 0, "default", "RuRuRuRu"],
             ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](0, 3), "right", 0, 0, "default", "RuRuRuRu"],
             ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](0, 4), "right", 0, 0, "default", "RuRuRuRu"],
+        ]
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/js/game/levels/level_10.js":
+/*!****************************************!*\
+  !*** ./src/js/game/levels/level_10.js ***!
+  \****************************************/
+/*! exports provided: Level_10 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Level_10", function() { return Level_10; });
+/* harmony import */ var _core_vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/vector */ "./src/js/core/vector.js");
+/* harmony import */ var _level__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../level */ "./src/js/game/level.js");
+/* harmony import */ var _buildings_hub__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../buildings/hub */ "./src/js/game/buildings/hub.js");
+/* harmony import */ var _buildings_item_producer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../buildings/item_producer */ "./src/js/game/buildings/item_producer.js");
+
+
+
+
+
+class Level_10 extends _level__WEBPACK_IMPORTED_MODULE_1__["Level"] {
+    constructor() {
+        super("level_10", 9);
+    }
+
+    getDimensions() {
+        return new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](10, 7);
+    }
+
+    // { root, origin, rotation, originalRotation, rotationVariant, variant }
+    setupLevel(root) {
+        return [
+            ["hub", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](0, 5), "right", 0, 0, "default"],
+            ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](6, 0), "bottom", 0, 0, "default", "Ru--Ru--"],
+            ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](0, 3), "right", 0, 0, "default", "Su------"],
+            ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](0, 4), "right", 0, 0, "default", "----Su--"],
+            ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](9, 4), "left", 0, 0, "default", "red"],
+            ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](4, 0), "bottom", 0, 0, "default", "white"],
+            ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](4, 6), "top", 0, 0, "default", "white"],
+            ["wall", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](2, 3), "top", 0, 0, "default", "white"],
         ]
     }
 }
@@ -50461,6 +50480,49 @@ class Level_8 extends _level__WEBPACK_IMPORTED_MODULE_1__["Level"] {
         return [
             ["hub", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](11, 1), "left", 0, 0, "default"],
             ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](0, 1), "right", 0, 0, "default", "Cu----Cu"],
+        ]
+    }
+}
+
+
+/***/ }),
+
+/***/ "./src/js/game/levels/level_9.js":
+/*!***************************************!*\
+  !*** ./src/js/game/levels/level_9.js ***!
+  \***************************************/
+/*! exports provided: Level_9 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Level_9", function() { return Level_9; });
+/* harmony import */ var _core_vector__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/vector */ "./src/js/core/vector.js");
+/* harmony import */ var _level__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../level */ "./src/js/game/level.js");
+/* harmony import */ var _buildings_hub__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../buildings/hub */ "./src/js/game/buildings/hub.js");
+/* harmony import */ var _buildings_item_producer__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../buildings/item_producer */ "./src/js/game/buildings/item_producer.js");
+
+
+
+
+
+class Level_9 extends _level__WEBPACK_IMPORTED_MODULE_1__["Level"] {
+    constructor() {
+        super("level_9", 8);
+    }
+
+    getDimensions() {
+        return new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](8, 11);
+    }
+
+    // { root, origin, rotation, originalRotation, rotationVariant, variant }
+    setupLevel(root) {
+        return [
+            ["hub", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](5, 10), "top", 0, 0, "default"],
+            ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](1, 0), "bottom", 0, 0, "default", "green"],
+            ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](3, 0), "bottom", 0, 0, "default", "red"],
+            ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](5, 0), "bottom", 0, 0, "default", "blue"],
+            ["item_producer", new _core_vector__WEBPACK_IMPORTED_MODULE_0__["Vector"](6, 0), "bottom", 0, 0, "default", "WuWuWuWu"],
         ]
     }
 }
@@ -52593,7 +52655,7 @@ function generateLevelDefinitions(limitedVersion = false) {
     const levelDefinitions = [
         // Level 1
         {
-            shape: "RuRuRuRu:RuRuRuRu:RuRuRuRu:RuRuRuRu",
+            shape: "RuRu----:RuRu----:RuRuRuRu:RuRuRuRu",
             required: 10,
             reward: _tutorial_goals__WEBPACK_IMPORTED_MODULE_3__["enumHubGoalRewards"].level_1,
         },
@@ -52629,7 +52691,7 @@ function generateLevelDefinitions(limitedVersion = false) {
         // Level 6
         {
             shape: "WrWrWrWr",
-            required: 6.5, // Per Second
+            required: 10, // Per Second
             reward: _tutorial_goals__WEBPACK_IMPORTED_MODULE_3__["enumHubGoalRewards"].level_6,
             throughputOnly: true,
         },
@@ -52650,15 +52712,15 @@ function generateLevelDefinitions(limitedVersion = false) {
 
         // Level 9
         {
-            shape: "CpCpCpCp",
-            required: 600,
+            shape: "WwWwWwWw:WbWrWyWg",
+            required: 10,
             reward: _tutorial_goals__WEBPACK_IMPORTED_MODULE_3__["enumHubGoalRewards"].level_9,
         },
 
         // Level 10
         {
-            shape: "ScScScSc",
-            required: 800,
+            shape: "--Sw--Sw:--Sr--Sr:--Sw--Sw:RuSrRuSr",
+            required: 10,
             reward: _tutorial_goals__WEBPACK_IMPORTED_MODULE_3__["enumHubGoalRewards"].level_10,
         },
 
@@ -60302,8 +60364,8 @@ if (window.coreThreadLoadedCb) {
 // }
 
 console.log(
-    `%cshapez.io ️%c\n© 2020 Tobias Springer IT Solutions\nCommit %c${"5cb38705"}%c on %c${new Date(
-        1608200967390
+    `%cshapez.io ️%c\n© 2020 Tobias Springer IT Solutions\nCommit %c${"55cc75d0"}%c on %c${new Date(
+        1608231100498
     ).toLocaleString()}\n`,
     "font-size: 35px; font-family: Arial;font-weight: bold; padding: 10px 0;",
     "color: #aaa",
@@ -69081,7 +69143,7 @@ class PreloadState extends _core_game_state__WEBPACK_IMPORTED_MODULE_3__["GameSt
 
                     <div class="lower">
                         <button class="resetApp styledButton">Reset App</button>
-                        <i>Build ${"1.2.2"} @ ${"5cb38705"}</i>
+                        <i>Build ${"1.2.2"} @ ${"55cc75d0"}</i>
                     </div>
                 </div>
         `;
@@ -69213,14 +69275,14 @@ class SettingsState extends _core_textual_game_state__WEBPACK_IMPORTED_MODULE_0_
 
     renderBuildText() {
         const labelVersion = this.htmlElement.querySelector(".buildVersion");
-        const lastBuildMs = new Date().getTime() - 1608200967390;
+        const lastBuildMs = new Date().getTime() - 1608231100498;
         const lastBuildText = Object(_core_utils__WEBPACK_IMPORTED_MODULE_1__["formatSecondsToTimeAgo"])(lastBuildMs / 1000.0);
 
         const version = _translations__WEBPACK_IMPORTED_MODULE_3__["T"].settings.versionBadges["dev"];
 
         labelVersion.innerHTML = `
             <span class='version'>
-                ${"1.2.2"} @ ${version} @ ${"5cb38705"}
+                ${"1.2.2"} @ ${version} @ ${"55cc75d0"}
             </span>
             <span class='buildTime'>
                 ${_translations__WEBPACK_IMPORTED_MODULE_3__["T"].settings.buildDate.replace("<at-date>", lastBuildText)}<br />
