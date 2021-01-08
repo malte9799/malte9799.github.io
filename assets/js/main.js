@@ -23,10 +23,4 @@ $(document).ready(() => {
 
 		localStorage.setItem('darkmode', $("body").hasClass("active"));
 	});
-
-	// switch page on click
-	$("a.link").click((e) => {
-		$(".current").removeClass("current")
-		$(e.target.hash).addClass("current")
-	})
 });
