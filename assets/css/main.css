@@ -162,7 +162,7 @@ a {
     transition: all 500ms;
     transform: translate(50%,-50%);}
 
-.dark-layer-button.active {
+body.active > .dark-layer-button {
     width: 0;
     height: 0;}
 
@@ -193,7 +193,7 @@ a {
     transition: all 200ms;
     z-index: 2}
 
-.dark-layer.active {
+body.active > .dark-layer {
     border-bottom-left-radius: 0;
     height: 100%;
     width: 100%;}
