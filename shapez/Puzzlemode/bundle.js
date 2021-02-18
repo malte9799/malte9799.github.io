@@ -45763,28 +45763,14 @@ class HUDSandboxController extends _base_hud_part__WEBPACK_IMPORTED_MODULE_1__["
                     <button class="styledButton minus">-</button>
                     <button class="styledButton plus">+</button>
                 </div>
-
-                <div class="additionalOptions">
-                    <button class="styledButton giveBlueprints">Fill blueprint shapes</button>
-                    <button class="styledButton maxOutAll">Max out all</button>
-                </div>
             </div>
         `
         );
 
         const bind = (selector, handler) => this.trackClicks(this.element.querySelector(selector), handler);
 
-        bind(".giveBlueprints", this.giveBlueprints);
         bind(".levelToggle .minus", () => this.modifyLevel(-1));
         bind(".levelToggle .plus", () => this.modifyLevel(1));
-    }
-
-    giveBlueprints() {
-        const shape = this.root.gameMode.getBlueprintShapeKey();
-        if (!this.root.hubGoals.storedShapes[shape]) {
-            this.root.hubGoals.storedShapes[shape] = 0;
-        }
-        this.root.hubGoals.storedShapes[shape] += 1e9;
     }
 
     modifyLevel(amount) {
