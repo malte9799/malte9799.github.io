@@ -120,9 +120,9 @@ body {
     justify-content: center;
     align-items: center;
     color: #fff;
-    animation: autogen_anim_ub958c3b8 1s ease-in-out infinite !important; }
+    animation: autogen_anim_u3c1737d1 1s ease-in-out infinite !important; }
 
-@keyframes autogen_anim_ub958c3b8 {
+@keyframes autogen_anim_u3c1737d1 {
   50% {
     transform: scale(1.05); } }
 
@@ -391,7 +391,7 @@ canvas {
   opacity: 1;
   z-index: 20;
   color: #393747;
-  animation: autogen_anim_uc997bf72 1.5s ease-in-out infinite !important; }
+  animation: autogen_anim_u603c124c 1.5s ease-in-out infinite !important; }
   .prefab_LoadingTextWithAnim::after,
   .prefab_LoadingTextWithAnimDelayed::after {
     content: " ";
@@ -400,7 +400,7 @@ canvas {
     display: inline-block;
     vertical-align: middle; }
 
-@keyframes autogen_anim_uc997bf72 {
+@keyframes autogen_anim_u603c124c {
   50% {
     transform: scale(1.2) rotate(160deg); } }
   html[data-theme="dark"] .prefab_LoadingTextWithAnim, .prefab_LoadingTextWithAnim[data-theme="dark"], html[data-theme="dark"]
@@ -409,9 +409,9 @@ canvas {
     color: #fff; }
 
 .prefab_LoadingTextWithAnimDelayed {
-  animation: autogen_anim_ubfe7c93d 0.6s ease-in-out !important; }
+  animation: autogen_anim_u966df36d 0.6s ease-in-out !important; }
 
-@keyframes autogen_anim_ubfe7c93d {
+@keyframes autogen_anim_u966df36d {
   0% {
     opacity: 0; }
   50% {
@@ -472,9 +472,9 @@ canvas {
     width: 100%;
     display: flex;
     flex-grow: 1;
-    animation: autogen_anim_uf1f83f3e 1.5s ease-in-out infinite !important; }
+    animation: autogen_anim_u70e05ef1 1.5s ease-in-out infinite !important; }
 
-@keyframes autogen_anim_uf1f83f3e {
+@keyframes autogen_anim_u70e05ef1 {
   50% {
     transform: scale(1.2) rotate(160deg); } }
   .gameState.prefab_LoadingState .prefab_GameHint {
@@ -529,9 +529,9 @@ canvas {
         background-color: #393747;
         border-radius: calc(2px * var(--ui-scale))    ;
         transform-origin: 0% 50%;
-        animation: autogen_anim_u7aa19808 1.3s ease-in-out infinite !important; }
+        animation: autogen_anim_ua2dc9ae8 1.3s ease-in-out infinite !important; }
 
-@keyframes autogen_anim_u7aa19808 {
+@keyframes autogen_anim_ua2dc9ae8 {
   0% {
     background-color: #2d2c39;
     transform: none; }
@@ -721,7 +721,7 @@ iframe {
       background-color: #b9bfd2;
       transform: translateY(2px); }
 
-@keyframes autogen_anim_u12391f5d_even {
+@keyframes autogen_anim_ufd876dd5_even {
   0% {
     transform: scale(1, 1); }
   50% {
@@ -729,7 +729,7 @@ iframe {
   100% {
     transform: scale(1, 1); } }
 
-@keyframes autogen_anim_u12391f5d_odd {
+@keyframes autogen_anim_ufd876dd5_odd {
   0% {
     transform: scale(1, 1); }
   50% {
@@ -738,10 +738,10 @@ iframe {
     transform: scale(1, 1); } }
 
 .changeAnimEven {
-  animation: autogen_anim_u12391f5d_even 0.2s ease-in-out; }
+  animation: autogen_anim_ufd876dd5_even 0.2s ease-in-out; }
 
 .changeAnimOdd {
-  animation: autogen_anim_u12391f5d_odd 0.2s ease-in-out; }
+  animation: autogen_anim_ufd876dd5_odd 0.2s ease-in-out; }
 
 .gameState {
   display: block;
@@ -931,7 +931,7 @@ iframe {
   display: flex;
   justify-content: center;
   align-items: center;
-  animation: autogen_anim_uca1c7ae4 1s ease-in-out !important; }
+  animation: autogen_anim_u348f4116 1s ease-in-out !important; }
   #adinplayVideoContainer *, #adinplayVideoContainer {
     pointer-events: all; }
   #adinplayVideoContainer:not(.visible) {
@@ -946,15 +946,15 @@ iframe {
       left: 0;
       right: 0;
       bottom: 0;
-      animation: autogen_anim_u93cd3aaa 0.2s ease-in-out !important; }
+      animation: autogen_anim_u1753526a 0.2s ease-in-out !important; }
 
-@keyframes autogen_anim_u93cd3aaa {
+@keyframes autogen_anim_u1753526a {
   0% {
     opacity: 0; }
   100% {
     opacity: 1; } }
 
-@keyframes autogen_anim_uca1c7ae4 {
+@keyframes autogen_anim_u348f4116 {
   0% {
     background: rgba(222, 225, 234, 0.1); }
   100% {
@@ -1039,13 +1039,13 @@ iframe {
         letter-spacing: 0.04em;
         margin-bottom: calc(10px * var(--ui-scale))    ; }
   #state_PreloadState .failureBox {
-    animation: autogen_anim_u9e0a3bd3 0.3s ease-in-out !important; }
+    animation: autogen_anim_ueb58519b 0.3s ease-in-out !important; }
     #state_PreloadState .failureBox .logo {
       margin-bottom: calc(30px * var(--ui-scale))    ; }
       #state_PreloadState .failureBox .logo img {
         width: calc(240px * var(--ui-scale))    ; }
 
-@keyframes autogen_anim_u9e0a3bd3 {
+@keyframes autogen_anim_ueb58519b {
   0% {
     opacity: 0; }
   100% {
@@ -1173,9 +1173,9 @@ iframe {
     #state_MainMenuState .fullscreenBackgroundVideo.loaded {
       display: block;
       opacity: 0.07;
-      animation: autogen_anim_uaeec5b2c 0.1s ease-in-out !important; }
+      animation: autogen_anim_u0ecd4060 0.1s ease-in-out !important; }
 
-@keyframes autogen_anim_uaeec5b2c {
+@keyframes autogen_anim_u0ecd4060 {
   0% {
     opacity: 0; }
   100% {
@@ -1272,9 +1272,9 @@ iframe {
       font-weight: bold;
       right: calc(40px * var(--ui-scale))    ;
       bottom: calc(20px * var(--ui-scale))    ;
-      animation: autogen_anim_u7425bf25 1.3s ease-in-out infinite !important; }
+      animation: autogen_anim_uff74d340 1.3s ease-in-out infinite !important; }
 
-@keyframes autogen_anim_u7425bf25 {
+@keyframes autogen_anim_uff74d340 {
   50% {
     transform: translateX(50%) rotate(-7deg) scale(1.1); } }
       html[data-theme="dark"] #state_MainMenuState .logo .updateLabel, #state_MainMenuState .logo .updateLabel[data-theme="dark"] {
@@ -2055,6 +2055,32 @@ html[data-theme="dark"] #state_SettingsState .container .content .categoryContai
           background-color: rgba(113, 173, 230, 0.4); }
           .ingame_buildingsToolbar .buildings .building.unlocked.selected .keybinding {
             color: #111; }
+      .ingame_buildingsToolbar .buildings .building:not(.hint_needed_buildings) p {
+        display: none; }
+      .ingame_buildingsToolbar .buildings .building.hint_needed_buildings::before {
+        content: "";
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        z-index: 4;
+        background-color: #ff6666;
+        border: #111 solid 0px; }
+      .ingame_buildingsToolbar .buildings .building.hint_needed_buildings.negative::before {
+        background-color: #ff3333; }
+      .ingame_buildingsToolbar .buildings .building.hint_needed_buildings p {
+        display: block;
+        position: absolute;
+        top: -1px;
+        right: 3.5px;
+        width: 15px;
+        height: 15px;
+        color: #fff;
+        font-size: 12px;
+        z-index: 4;
+        text-align: center; }
 
 #ingame_HUD_PlacementHints {
   position: fixed;
@@ -2303,22 +2329,22 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
   bottom: 0;
   overflow: auto;
   pointer-events: all;
-  animation: autogen_anim_u84870485 0.1s ease-in-out !important; }
+  animation: autogen_anim_uf2a9127a 0.1s ease-in-out !important; }
 
-@keyframes autogen_anim_u84870485 {
+@keyframes autogen_anim_uf2a9127a {
   0% {
     opacity: 0; } }
   #ingame_HUD_UnlockNotification .dialog {
     border-radius: calc(2px * var(--ui-scale))    ;
     padding: calc(30px * var(--ui-scale))    ;
-    animation: autogen_anim_u377d02cd 0.5s ease-in-out !important;
+    animation: autogen_anim_uccc1b00f 0.5s ease-in-out !important;
     display: flex;
     align-items: center;
     flex-direction: column;
     color: #fff;
     text-align: center; }
 
-@keyframes autogen_anim_u377d02cd {
+@keyframes autogen_anim_uccc1b00f {
   0% {
     opacity: 0; } }
     #ingame_HUD_UnlockNotification .dialog .title,
@@ -2330,9 +2356,9 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
       letter-spacing: 0.04em;
       text-transform: uppercase;
       font-size: calc(40px * var(--ui-scale))    ;
-      animation: autogen_anim_uea7644c1 0.5s ease-in-out !important; }
+      animation: autogen_anim_u82d792dc 0.5s ease-in-out !important; }
 
-@keyframes autogen_anim_uea7644c1 {
+@keyframes autogen_anim_u82d792dc {
   0% {
     transform: translateY(-50vh); }
   50% {
@@ -2349,9 +2375,9 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
       margin: calc(5px * var(--ui-scale)) calc(0px * var(--ui-scale)) calc(20px * var(--ui-scale))  ;
       color: #66bb6a;
       border-radius: calc(2px * var(--ui-scale))    ;
-      animation: autogen_anim_u44e1a516 0.5s ease-in-out !important; }
+      animation: autogen_anim_ud04b7962 0.5s ease-in-out !important; }
 
-@keyframes autogen_anim_u44e1a516 {
+@keyframes autogen_anim_ud04b7962 {
   0% {
     transform: translateY(-60vh); }
   50% {
@@ -2360,14 +2386,14 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
     transform: translateY(-3vh); } }
     #ingame_HUD_UnlockNotification .dialog .contents {
       width: calc(400px * var(--ui-scale))    ;
-      animation: autogen_anim_u38a717f1 0.5s ease-in-out !important;
+      animation: autogen_anim_u19df1949 0.5s ease-in-out !important;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       grid-gap: calc(10px * var(--ui-scale))    ; }
 
-@keyframes autogen_anim_u38a717f1 {
+@keyframes autogen_anim_u19df1949 {
   0% {
     transform: translateX(-100vw); }
   50% {
@@ -2377,9 +2403,9 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
       #ingame_HUD_UnlockNotification .dialog .contents .rewardName {
         grid-column: 1 / 3;
         display: none;
-        animation: autogen_anim_u12544ac6 0.5s ease-in-out !important; }
+        animation: autogen_anim_u9bb0209b 0.5s ease-in-out !important; }
 
-@keyframes autogen_anim_u12544ac6 {
+@keyframes autogen_anim_u9bb0209b {
   0% {
     transform: translateX(200vw); }
   50% {
@@ -2472,7 +2498,7 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
     #ingame_HUD_GameMenu > .button.save {
       grid-column: 3; }
 
-@keyframes autogen_anim_uf57f3e04_even {
+@keyframes autogen_anim_u3ec0f809_even {
   0% {
     transform: scale(1, 1); }
   70% {
@@ -2484,7 +2510,7 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
   90% {
     transform: scale(1.1, 1.1); } }
 
-@keyframes autogen_anim_uf57f3e04_odd {
+@keyframes autogen_anim_u3ec0f809_odd {
   0% {
     transform: scale(1, 1); }
   70% {
@@ -2497,17 +2523,17 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
     transform: scale(1.1, 1.1); } }
       #ingame_HUD_GameMenu > button.save.animEven,
       #ingame_HUD_GameMenu > .button.save.animEven {
-        animation: autogen_anim_uf57f3e04_even 0.5s ease-in-out; }
+        animation: autogen_anim_u3ec0f809_even 0.5s ease-in-out; }
       #ingame_HUD_GameMenu > button.save.animOdd,
       #ingame_HUD_GameMenu > .button.save.animOdd {
-        animation: autogen_anim_uf57f3e04_odd 0.5s ease-in-out; }
+        animation: autogen_anim_u3ec0f809_odd 0.5s ease-in-out; }
       #ingame_HUD_GameMenu > button.save.saving,
       #ingame_HUD_GameMenu > .button.save.saving {
-        animation: autogen_anim_u0de77944 0.4s ease-in-out infinite !important;
+        animation: autogen_anim_ue170663b 0.4s ease-in-out infinite !important;
         pointer-events: none;
         cursor: default; }
 
-@keyframes autogen_anim_u0de77944 {
+@keyframes autogen_anim_ue170663b {
   50% {
     opacity: 0.5;
     transform: scale(0.8); } }
@@ -2524,9 +2550,9 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
     #ingame_HUD_GameMenu > button.hasBadge,
     #ingame_HUD_GameMenu > .button.hasBadge {
       transform-origin: 50% 50%;
-      animation: autogen_anim_u0faf89a9 0.8s ease-in-out infinite !important; }
+      animation: autogen_anim_u542154e9 0.8s ease-in-out infinite !important; }
 
-@keyframes autogen_anim_u0faf89a9 {
+@keyframes autogen_anim_u542154e9 {
   50% {
     transform: scale(1.3) rotate(6deg); } }
       #ingame_HUD_GameMenu > button.hasBadge .badge,
@@ -2555,9 +2581,9 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: autogen_anim_ud0c8d878 0.12s ease-in-out !important; }
+  animation: autogen_anim_u43cd4754 0.12s ease-in-out !important; }
 
-@keyframes autogen_anim_ud0c8d878 {
+@keyframes autogen_anim_u43cd4754 {
   0% {
     background-color: transparent;
     opacity: 0.5; }
@@ -2565,9 +2591,9 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
     background-color: rgba(160, 165, 180, 0.8); } }
   html[data-theme="dark"] .ingameDialog, .ingameDialog[data-theme="dark"] {
     background: rgba(72, 76, 88, 0.9);
-    animation: autogen_anim_u149f101a 0.12s ease-in-out !important; }
+    animation: autogen_anim_u56992990 0.12s ease-in-out !important; }
 
-@keyframes autogen_anim_u149f101a {
+@keyframes autogen_anim_u56992990 {
   0% {
     background-color: transparent;
     opacity: 0.5; }
@@ -2732,9 +2758,9 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
             content: " ";
             display: inline-block;
             background: rgba(255, 255, 255, 0.6);
-            animation: autogen_anim_ubebf0032 3s linear !important; }
+            animation: autogen_anim_u8df3238b 3s linear !important; }
 
-@keyframes autogen_anim_ubebf0032 {
+@keyframes autogen_anim_u8df3238b {
   0% {
     width: 100%; }
   100% {
@@ -3053,7 +3079,7 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
     width: calc(150px * var(--ui-scale))    ;
     transform-origin: 100% 50%;
     opacity: 0;
-    animation: autogen_anim_u515e9941 3s ease-in-out !important; }
+    animation: autogen_anim_u5ffe3ee1 3s ease-in-out !important; }
     html[data-theme="dark"] #ingame_HUD_Notifications .notification, #ingame_HUD_Notifications .notification[data-theme="dark"] {
       background-color: rgba(85, 89, 93, 0.8); }
     #ingame_HUD_Notifications .notification[data-icon] {
@@ -3063,7 +3089,7 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
       background-repeat: no-repeat;
       background-size: calc(15px * var(--ui-scale))    ; }
 
-@keyframes autogen_anim_u515e9941 {
+@keyframes autogen_anim_u5ffe3ee1 {
   0% {
     opacity: 1; }
   87% {
@@ -3226,13 +3252,6 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
   @media (max-width: 1430px) {
     #ingame_HUD_TutorialHints {
       bottom: calc(50px * var(--ui-scale))    ; } }
-  #ingame_HUD_TutorialHints video {
-    transition: all 0.2s ease-in-out;
-    transition-property: opacity, width;
-    width: calc(0px * var(--ui-scale))    ;
-    opacity: 0;
-    z-index: 10;
-    position: relative; }
   #ingame_HUD_TutorialHints .header {
     color: #333438;
     display: grid;
@@ -3259,55 +3278,19 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
         width: calc(12px * var(--ui-scale))    ;
         height: calc(12px * var(--ui-scale))    ;
         display: inline-block; }
-    #ingame_HUD_TutorialHints .header button.toggleHint {
+    #ingame_HUD_TutorialHints .header button.showHint {
       font-size: calc(13px * var(--ui-scale));
       line-height: calc(17px * var(--ui-scale));
       font-weight: 400;
       font-family: "GameFont", sans-serif;
       letter-spacing: 0.04em; }
-      #ingame_HUD_TutorialHints .header button.toggleHint::after {
+      #ingame_HUD_TutorialHints .header button.showHint::after {
         content: "";
         position: absolute;
         top: calc(0px * var(--ui-scale));
         bottom: calc(0px * var(--ui-scale));
         left: calc(0px * var(--ui-scale));
         right: calc(0px * var(--ui-scale)); }
-  #ingame_HUD_TutorialHints button.toggleHint .hide {
-    display: none; }
-  #ingame_HUD_TutorialHints.enlarged {
-    background: rgba(51, 52, 56, 0.9);
-    left: 50%;
-    bottom: 50%;
-    transform: translate(-50%, 50%); }
-    #ingame_HUD_TutorialHints.enlarged::before {
-      pointer-events: all;
-      content: " ";
-      position: fixed;
-      top: -1000px;
-      left: -1000px;
-      right: -1000px;
-      bottom: -1000px;
-      z-index: 0;
-      background: rgba(51, 52, 56, 0.3); }
-    #ingame_HUD_TutorialHints.enlarged .header {
-      grid-template-columns: 1fr auto; }
-      #ingame_HUD_TutorialHints.enlarged .header > span {
-        display: none; }
-      #ingame_HUD_TutorialHints.enlarged .header button.toggleHint {
-        grid-column: 2 / 3; }
-    #ingame_HUD_TutorialHints.enlarged video {
-      animation: autogen_anim_u8fa96ecd 0.2s ease-in-out !important;
-      opacity: 1;
-      width: calc(500px * var(--ui-scale))    ; }
-
-@keyframes autogen_anim_u8fa96ecd {
-  0% {
-    opacity: 0;
-    width: calc(0px * var(--ui-scale))    ; } }
-    #ingame_HUD_TutorialHints.enlarged button.toggleHint .hide {
-      display: block; }
-    #ingame_HUD_TutorialHints.enlarged button.toggleHint .show {
-      display: none; }
 
 #ingame_HUD_Watermark {
   position: absolute;
@@ -3344,18 +3327,18 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
     letter-spacing: 0.04em;
     opacity: 0.7; }
   #ingame_HUD_Watermark.visible {
-    animation: autogen_anim_ubf1b1bd9 0.5s ease-in-out !important;
+    animation: autogen_anim_u66a9d80f 0.5s ease-in-out !important;
     opacity: 1; }
 
-@keyframes autogen_anim_ubf1b1bd9 {
+@keyframes autogen_anim_u66a9d80f {
   0% {
     opacity: 0; }
   100% {
     opacity: 1; } }
   #ingame_HUD_Watermark:not(.visible) {
-    animation: autogen_anim_u419c230f 0.5s ease-in-out !important; }
+    animation: autogen_anim_uea2bece0 0.5s ease-in-out !important; }
 
-@keyframes autogen_anim_u419c230f {
+@keyframes autogen_anim_uea2bece0 {
   0% {
     opacity: 1; }
   100% {
@@ -3539,17 +3522,17 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
     #ingame_HUD_InteractiveTutorial {
       bottom: calc(50px * var(--ui-scale))    ; } }
 
-@keyframes autogen_anim_u7a95c1f5_even {
+@keyframes autogen_anim_ub720edff_even {
   50% {
     transform: translateX(-100%); } }
 
-@keyframes autogen_anim_u7a95c1f5_odd {
+@keyframes autogen_anim_ub720edff_odd {
   50% {
     transform: translateX(-100%); } }
   #ingame_HUD_InteractiveTutorial.animEven {
-    animation: autogen_anim_u7a95c1f5_even 0.5s ease-in-out; }
+    animation: autogen_anim_ub720edff_even 0.5s ease-in-out; }
   #ingame_HUD_InteractiveTutorial.animOdd {
-    animation: autogen_anim_u7a95c1f5_odd 0.5s ease-in-out; }
+    animation: autogen_anim_ub720edff_odd 0.5s ease-in-out; }
   #ingame_HUD_InteractiveTutorial.hovered {
     opacity: 10%; }
     #ingame_HUD_InteractiveTutorial.hovered .helperGif {
@@ -3817,7 +3800,7 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
     color: #aaa;
     margin: calc(0px * var(--ui-scale))    ;
     margin-top: calc(15px * var(--ui-scale))    ;
-    animation: autogen_anim_u2938a65d 5s ease-in-out !important; }
+    animation: autogen_anim_u1851161b 5s ease-in-out !important; }
     #ingame_HUD_StandaloneAdvantages .lowerBar .otherCloseButton::after {
       content: "";
       position: absolute;
@@ -3826,7 +3809,7 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
       left: calc(0px * var(--ui-scale));
       right: calc(0px * var(--ui-scale)); }
 
-@keyframes autogen_anim_u2938a65d {
+@keyframes autogen_anim_u1851161b {
   0% {
     opacity: 0.05; }
   50% {
@@ -3895,9 +3878,9 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
   background: transparent center center / contain no-repeat;
   right: 0;
   bottom: calc(150px * var(--ui-scale))    ;
-  animation: autogen_anim_u064d038c 0.5s ease-in-out !important; }
+  animation: autogen_anim_u27e0187d 0.5s ease-in-out !important; }
 
-@keyframes autogen_anim_u064d038c {
+@keyframes autogen_anim_u27e0187d {
   0% {
     transform: translateX(100%); }
   100% {
@@ -3929,13 +3912,19 @@ body.uiHidden #ingame_HUD_KeybindingOverlay .binding:not(.hudToggle) {
       display: flex;
       justify-content: center;
       align-items: center;
-      background: skyblue;
       width: auto;
       height: 50px;
-      font-size: 1rem;
+      font-size: 1.5rem;
+      font-weight: 400;
       border: none;
-      outline-color: #00a8ef;
-      cursor: pointer; }
+      background-color: #555;
+      cursor: default; }
+      #ingame_HUD_LevelSelector .content .levels .level.unlocked {
+        background: #4a97df;
+        cursor: pointer; }
+      #ingame_HUD_LevelSelector .content .levels .level.completed {
+        background: #66bb6a;
+        cursor: pointer; }
 
 #ingame_Canvas {
   z-index: 100; }
