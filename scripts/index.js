@@ -30,20 +30,32 @@ const averageRGB = (color1, color2) => {
 };
 
 let lastPos = { x: 0, y: 0 };
+let click = false;
+let scale = 1;
 const updateCursor = (e = lastPos) => {
 	let { clientX: x, clientY: y } = e;
 	x = x || lastPos.x;
 	y = y || lastPos.y;
 	lastPos = { x, y };
 
-	let scale = 1;
+	if (!click) scale = 1;
 	let target = document.elementFromPoint(x, y);
-	if (target.matches('a,span,[onclick],img,video,i')) {
+	if (!click && target.matches('a,span,[onclick],img,video,i')) {
 		scale = 3;
 	}
 
 	cursor_dot.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%))`;
 	cursor_circle.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%)) scale(${scale})`;
+};
+const clickAnimation = () => {
+	click = true;
+	scale = 1;
+	updateCursor();
+	sleep(100).then(() => {
+		scale = 3;
+		updateCursor();
+		click = false;
+	});
 };
 
 const onUnload = (e) => {
@@ -69,19 +81,21 @@ const loadPage = () => {
 			updateCursor();
 
 			if (content_old) {
+				clickAnimation();
 				content_old.classList.add('old');
 				let circle = doc.createElement('div');
 				circle.className = 'fullscreen';
 				doc.body.appendChild(circle);
 				circle.style.zIndex = 2;
-				let color = averageRGB(content_old.style.backgroundColor, content_new.style.backgroundColor);
+				let color_old = content_old.style.backgroundColor;
+				let color_new = content_new.style.backgroundColor;
+				let color = averageRGB(color_old, color_new);
 				circle.style.backgroundColor = color;
 
 				circle.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
 				content_new.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
 
-				sleep(150).then(() => {
-					updateCursor();
+				sleep(100).then(() => {
 					content_new.style.clipPath = `circle(150% at ${lastPos.x}px ${lastPos.y}px`;
 					circle.style.clipPath = `circle(300% at ${lastPos.x}px ${lastPos.y}px`;
 				});
