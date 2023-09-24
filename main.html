@@ -1,0 +1,11 @@
+<script>
+	let url = location.href.split('/');
+	url = url.slice(0, url.length - 1);
+	window.location.href = url.join('/') + '#main';
+</script>
+
+<content style="background-color: #dc143c">
+	<a href="#main" style="font-weight: 900">Main</a>
+	<a href="#page1">Page1</a>
+	<a href="#page2">Page2</a>
+</content>
