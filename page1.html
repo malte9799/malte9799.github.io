@@ -1,11 +1,9 @@
 <script>
-	let url = location.href.split('/');
-	url = url.slice(0, url.length - 1);
-	window.location.href = url.join('/') + '#page1';
+	location.href = location.origin + '?page=page1';
 </script>
 
 <content style="background-color: #ffd700">
-	<a href="#main">Main</a>
-	<a href="#page1" style="font-weight: 900">Page1</a>
-	<a href="#page2">Page2</a>
+	<a link="main">Main</a>
+	<a link="page1" style="font-weight: 900">Page1</a>
+	<a link="page2">Page2</a>
 </content>

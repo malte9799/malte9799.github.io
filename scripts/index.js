@@ -60,18 +60,19 @@ const clickAnimation = () => {
 
 const onUnload = (e) => {
 	localStorage.setItem('cursorPos', JSON.stringify(lastPos));
-	content.innerHTML = '';
 };
 
 const onLoad = (e) => {
+	// Load Next Page in Style
 	lastPos = JSON.parse(localStorage.getItem('cursorPos'));
 	loadPage();
 	sleep(100).then(() => (cursor_circle.style.transition = 'transform ease-out 0.1s'));
 };
 
-const loadPage = () => {
+const loadPage = (page = undefined) => {
 	let content_old = doc.querySelector('content:not(.old)');
-	let page = location.hash.substring(1) || 'main';
+	const urlParams = new URLSearchParams(location.search);
+	page = page || urlParams.get('page') || 'main';
 	fetch(`./${page}.html`)
 		.then((res) => res.text())
 		.then((text) => {
@@ -106,6 +107,17 @@ const loadPage = () => {
 					circle.remove();
 				});
 			}
+		})
+		.then(() => {
+			doc.querySelectorAll('a').forEach((item) => {
+				if (item.getAttribute('link')) {
+					item.addEventListener('click', (e) => {
+						let page = e.target.attributes.link.nodeValue;
+						window.history.replaceState(null, null, '?page=' + page);
+						loadPage(page);
+					});
+				}
+			});
 		})
 		.catch((e) => console.error(e));
 };
