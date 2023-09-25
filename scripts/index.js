@@ -15,7 +15,7 @@ const htmlToElement = (html) => {
 	let template = document.createElement('template');
 	html = html.trim();
 	template.innerHTML = html;
-	return template.content.firstChild;
+	return template.section.firstChild;
 };
 const averageRGB = (color1, color2) => {
 	const regex = /rgb\((\d+), (\d+), (\d+)\)/;
@@ -75,41 +75,41 @@ const onLoad = (e) => {
 };
 
 const loadPage = (page = undefined) => {
-	let content_old = doc.querySelector('content:not(.old)');
+	let section_old = doc.querySelector('section:not(.old)');
 	page = page || getUrlParams('page') || 'main';
 	fetch(`./${page}.html`)
 		.then((res) => res.text())
 		.then((text) => {
-			content_new = htmlToElement(text.match(/<content[\s\S]*?>[\s\S]*<\/content>/gm)[0]);
-			content_new.className = 'fullscreen';
-			doc.body.appendChild(content_new);
+			section_new = htmlToElement(text.match(/<section[\s\S]*?>[\s\S]*<\/section>/gm)[0]);
+			section_new.className = 'fullscreen';
+			doc.body.appendChild(section_new);
 			updateCursor();
 
-			if (content_old) {
+			if (section_old) {
 				clickAnimation();
-				content_old.classList.add('old');
+				section_old.classList.add('old');
 				let circle = doc.createElement('div');
 				circle.className = 'fullscreen';
 				doc.body.appendChild(circle);
 				circle.style.zIndex = 2;
-				let color_old = content_old.style.backgroundColor;
-				let color_new = content_new.style.backgroundColor;
+				let color_old = section_old.style.backgroundColor;
+				let color_new = section_new.style.backgroundColor;
 				let color;
 				if (color_old == color_new) color = color_new;
 				else color = averageRGB(color_old, color_new);
 				circle.style.backgroundColor = color;
 
 				circle.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
-				content_new.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
+				section_new.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
 
 				sleep(100).then(() => {
-					content_new.style.clipPath = `circle(150% at ${lastPos.x}px ${lastPos.y}px`;
+					section_new.style.clipPath = `circle(150% at ${lastPos.x}px ${lastPos.y}px`;
 					circle.style.clipPath = `circle(300% at ${lastPos.x}px ${lastPos.y}px`;
 				});
 
 				sleep(500).then(() => updateCursor());
 				sleep(650).then(() => {
-					content_old.remove();
+					section_old.remove();
 					circle.remove();
 				});
 			}

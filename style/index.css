@@ -52,15 +52,15 @@ body {
 	color: var(--white);
 }
 
-content {
+section {
 	z-index: 1;
 	background-color: var(--main);
 }
-content:not(.old) {
+section:not(.old) {
 	z-index: 3;
 }
 
-content {
+section {
 	display: flex;
 	justify-content: center;
 	align-items: center;
