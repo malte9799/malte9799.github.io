@@ -15,7 +15,7 @@ const htmlToElement = (html) => {
 	let template = document.createElement('template');
 	html = html.trim();
 	template.innerHTML = html;
-	return template.section.firstChild;
+	return template.content.firstChild;
 };
 const averageRGB = (color1, color2) => {
 	const regex = /rgb\((\d+), (\d+), (\d+)\)/;
