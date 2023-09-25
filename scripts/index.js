@@ -28,6 +28,11 @@ const averageRGB = (color1, color2) => {
 
 	return `rgb(${average.join(', ')})`;
 };
+const getUrlParams = (search = undefined) => {
+	let params = {};
+	decodeURIComponent(window.location.search).replace(/[?&]+([^=&]+)=([^&]*)/g, (m, key, value) => (params[key] = value));
+	return search ? params[search] : params;
+};
 
 let lastPos = { x: 0, y: 0 };
 let click = false;
@@ -71,8 +76,7 @@ const onLoad = (e) => {
 
 const loadPage = (page = undefined) => {
 	let content_old = doc.querySelector('content:not(.old)');
-	const urlParams = new URLSearchParams(location.search);
-	page = page || urlParams.get('page') || 'main';
+	page = page || getUrlParams('page') || 'main';
 	fetch(`./${page}.html`)
 		.then((res) => res.text())
 		.then((text) => {
@@ -90,7 +94,9 @@ const loadPage = (page = undefined) => {
 				circle.style.zIndex = 2;
 				let color_old = content_old.style.backgroundColor;
 				let color_new = content_new.style.backgroundColor;
-				let color = averageRGB(color_old, color_new);
+				let color;
+				if (color_old == color_new) color = color_new;
+				else color = averageRGB(color_old, color_new);
 				circle.style.backgroundColor = color;
 
 				circle.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
@@ -113,6 +119,7 @@ const loadPage = (page = undefined) => {
 				if (item.getAttribute('link')) {
 					item.addEventListener('click', (e) => {
 						let page = e.target.attributes.link.nodeValue;
+						if (getUrlParams('page') == page) return;
 						window.history.replaceState(null, null, '?page=' + page);
 						loadPage(page);
 					});
