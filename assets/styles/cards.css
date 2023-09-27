@@ -9,7 +9,7 @@
 
 .card {
   overflow-wrap: anywhere;
-  background-image: url(../assets/images/cards.png);
+  background-image: url(/assets/images/cards.png);
   width: 19px;
   height: 27px;
   image-rendering: pixelated;
