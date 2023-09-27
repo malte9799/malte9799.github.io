@@ -12,8 +12,9 @@ const sleep = (time) => {
 	return new Promise((resolve) => setTimeout(resolve, time));
 };
 const htmlToElement = (html) => {
+	if (!html) return undefined;
 	let template = document.createElement('template');
-	html = html.trim();
+	html = html[0].trim();
 	template.innerHTML = html;
 	return template.content.firstChild;
 };
@@ -62,6 +63,32 @@ const clickAnimation = () => {
 		click = false;
 	});
 };
+const circleAnimation = (section_old, section_new) => {
+	section_old.classList.add('old');
+
+	let circle = doc.createElement('div');
+	circle.className = 'fullscreen';
+	doc.body.appendChild(circle);
+	circle.style.zIndex = 2;
+
+	let color_old = section_old.style.backgroundColor;
+	let color_new = section_new.style.backgroundColor;
+	circle.style.backgroundColor = color_old == color_new ? color_old : averageRGB(color_old, color_new);
+
+	circle.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
+	section_new.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
+
+	sleep(100).then(() => {
+		section_new.style.clipPath = `circle(150% at ${lastPos.x}px ${lastPos.y}px`;
+		circle.style.clipPath = `circle(300% at ${lastPos.x}px ${lastPos.y}px`;
+	});
+
+	sleep(500).then(() => updateCursor());
+	sleep(650).then(() => {
+		section_old.remove();
+		circle.remove();
+	});
+};
 
 const onUnload = (e) => {
 	localStorage.setItem('cursorPos', JSON.stringify(lastPos));
@@ -75,43 +102,21 @@ const onLoad = (e) => {
 };
 
 const loadPage = (page = undefined) => {
+	doc.querySelectorAll('.included').forEach((e) => e.remove());
 	let section_old = doc.querySelector('section:not(.old)');
 	page = page || getUrlParams('page') || 'main';
 	fetch(`./${page}.html`)
 		.then((res) => res.text())
 		.then((text) => {
-			section_new = htmlToElement(text.match(/<section[\s\S]*?>[\s\S]*<\/section>/gm)[0]);
+			section_new = htmlToElement(text.match(/<section[\s\S]*?>[\s\S]*<\/section>/gm));
 			section_new.className = 'fullscreen';
 			doc.body.appendChild(section_new);
+			section_new.addEventListener('DOMContentLoaded', loadIncludes(htmlToElement(text.match(/<include[\s\S]*?>[\s\S]*<\/include>/gm))));
 			updateCursor();
 
 			if (section_old) {
 				clickAnimation();
-				section_old.classList.add('old');
-				let circle = doc.createElement('div');
-				circle.className = 'fullscreen';
-				doc.body.appendChild(circle);
-				circle.style.zIndex = 2;
-				let color_old = section_old.style.backgroundColor;
-				let color_new = section_new.style.backgroundColor;
-				let color;
-				if (color_old == color_new) color = color_new;
-				else color = averageRGB(color_old, color_new);
-				circle.style.backgroundColor = color;
-
-				circle.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
-				section_new.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
-
-				sleep(100).then(() => {
-					section_new.style.clipPath = `circle(150% at ${lastPos.x}px ${lastPos.y}px`;
-					circle.style.clipPath = `circle(300% at ${lastPos.x}px ${lastPos.y}px`;
-				});
-
-				sleep(500).then(() => updateCursor());
-				sleep(650).then(() => {
-					section_old.remove();
-					circle.remove();
-				});
+				circleAnimation(section_old, section_new);
 			}
 		})
 		.then(() => {
@@ -127,4 +132,21 @@ const loadPage = (page = undefined) => {
 			});
 		})
 		.catch((e) => console.error(e));
+};
+
+const loadIncludes = (dom) => {
+	if (!dom) return;
+	dom.querySelectorAll('script').forEach((e) => {
+		let script = doc.createElement('script');
+		script.classList.add('included');
+		script.setAttribute('src', e.attributes.src.nodeValue);
+		doc.body.appendChild(script);
+	});
+	dom.querySelectorAll('link').forEach((e) => {
+		let link = doc.createElement('link');
+		link.classList.add('included');
+		link.setAttribute('rel', e.attributes.rel.nodeValue);
+		link.setAttribute('href', e.attributes.href.nodeValue);
+		doc.head.appendChild(link);
+	});
 };
