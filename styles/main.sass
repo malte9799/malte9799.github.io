@@ -1,3 +1,5 @@
+@import ./_vars
+
 :root
     --blue: #007bff
     --indigo: #6610f2
@@ -20,7 +22,6 @@
     --danger: #dc3545
     --light: #f8f9fa
     --dark: #343a40
-    --main: #0f0d15
 
 @media screen and (min-width: 768px)
     *
@@ -43,15 +44,15 @@ body
 
 body
     position: absolute
-    background-color: var(--success)
+    background-color: $background
     color: var(--white)
 
 section
-    z-index: 1
+    z-index: 3
     background-color: var(--main)
 
-    &:not(.old)
-        z-index: 3
+    &.old
+        z-index: 1
 
 section
     display: flex
@@ -66,9 +67,6 @@ section
     width: 100%
     transition: clip-path cubic-bezier(0.75, 0, 1, 1) 500ms
 
-/* ################################ */
-/* ############ CURSOR ############ */
-/* ################################ */
 .cursor
     position: fixed
     z-index: 99999999
