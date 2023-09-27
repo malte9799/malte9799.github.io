@@ -3,4 +3,12 @@
 	l.href = `${l.origin}?page=${l.pathname.match(/\/(\w*)\./)[1]}`;
 </script>
 
-<section></section>
+<include>
+	<link rel="stylesheet" href="./styles/cards.css" />
+	<script src="./scripts/cards.js"></script>
+</include>
+
+<section>
+	<div class="cards"></div>
+	<div class="hands"></div>
+</section>

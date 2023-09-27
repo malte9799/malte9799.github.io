@@ -1,0 +1,22 @@
+@import ./_vars
+.cards
+    display: grid
+    grid-template-columns: repeat(13, auto)
+    grid-auto-rows: min-content
+    row-gap: 100px
+    column-gap: 40px
+
+.card
+    overflow-wrap: anywhere
+    background-image: url(../assets/images/cards.png)
+    width: 19px
+    height: 27px
+    image-rendering: pixelated
+    scale: 4
+    transition: transform ease-out 0.1s
+
+    &:hover
+        transform: translateY(-2px)
+
+    &.selected
+        transform: translateY(-5px)
