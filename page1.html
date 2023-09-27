@@ -1,5 +1,6 @@
 <script>
-	location.href = location.origin + '?page=page1';
+	const l = location;
+	l.href = `${l.origin}?page=${l.pathname.match(/\/(\w*)\./)[1]}`;
 </script>
 
 <section style="background-color: #ffd700">
