@@ -104,8 +104,8 @@ const onLoad = (e) => {
 const loadPage = (page = undefined) => {
 	doc.querySelectorAll('.included').forEach((e) => e.remove());
 	let section_old = doc.querySelector('section:not(.old)');
-	page = page || getUrlParams('page') || 'main';
-	fetch(`./${page}.html`)
+	page = page || getUrlParams('page') || 'index';
+	fetch(`./pages/${page}.html`)
 		.then((res) => res.text())
 		.then((text) => {
 			section_new = htmlToElement(text.match(/<section[\s\S]*?>[\s\S]*<\/section>/gm));
