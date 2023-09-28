@@ -1,6 +1,7 @@
 const doc = document;
 const cursor_circle = doc.querySelector('.cursor-circle');
 const cursor_dot = doc.querySelector('.cursor-dot');
+const root = doc.querySelector(':root');
 
 window.addEventListener('unload', (e) => onUnload(e));
 window.addEventListener('load', (e) => onLoad(e));
@@ -35,12 +36,13 @@ const getUrlParams = (search = undefined) => {
 	return search ? params[search] : params;
 };
 
-let lastPos = { clientX: 0, clientX: 0 };
+let lastPos = { x: 0, y: 0 };
 let click = false;
 let scale = 1;
-const updateCursor = (e = lastPos) => {
-	let { clientX: x, clientY: y } = e;
-	lastPos = { clientX: x, clientY: y };
+const updateCursor = (e = undefined) => {
+	let x = e ? e.clientX : lastPos.x;
+	let y = e ? e.clientY : lastPos.y;
+	lastPos = { x, y };
 
 	if (!click) scale = 1;
 	let target = document.elementFromPoint(x, y);
@@ -48,6 +50,8 @@ const updateCursor = (e = lastPos) => {
 		scale = 3;
 	}
 
+	root.style.setProperty('--mouseX', x);
+	root.style.setProperty('--mouseY', y);
 	cursor_dot.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%))`;
 	cursor_circle.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%)) scale(${scale})`;
 };
@@ -73,16 +77,16 @@ const circleAnimation = (section_old, section_new) => {
 	let color_new = section_new.style.backgroundColor;
 	circle.style.backgroundColor = color_old == color_new ? color_old : averageRGB(color_old, color_new);
 
-	circle.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
-	section_new.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px`;
+	circle.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px)`;
+	section_new.style.clipPath = `circle(0% at ${lastPos.x}px ${lastPos.y}px)`;
 
 	sleep(100).then(() => {
-		section_new.style.clipPath = `circle(150% at ${lastPos.x}px ${lastPos.y}px`;
-		circle.style.clipPath = `circle(300% at ${lastPos.x}px ${lastPos.y}px`;
+		section_new.style.clipPath = `circle(150% at ${lastPos.x}px ${lastPos.y}px)`;
+		circle.style.clipPath = `circle(300% at ${lastPos.x}px ${lastPos.y}px)`;
 	});
 
 	sleep(500).then(() => updateCursor());
-	sleep(650).then(() => {
+	sleep(600).then(() => {
 		section_old.remove();
 		circle.remove();
 	});
@@ -94,7 +98,7 @@ const onUnload = (e) => {
 
 const onLoad = (e) => {
 	// Load Next Page in Style
-	lastPos = JSON.parse(localStorage.getItem('cursorPos'));
+	if (localStorage.getItem('cursorPos')) lastPos = JSON.parse(localStorage.getItem('cursorPos'));
 	loadPage();
 	sleep(100).then(() => (cursor_circle.style.transition = 'transform ease-out 0.1s'));
 };
@@ -107,12 +111,11 @@ const loadPage = (page = undefined) => {
 	fetch(`./pages/${page}.html`)
 		.then((res) => res.text())
 		.then((text) => {
-			section_new = htmlToElement(text.match(/<section[\s\S]*?>[\s\S]*<\/section>/gm));
+			let section_new = htmlToElement(text.match(/<section[\s\S]*?>[\s\S]*<\/section>/gm));
 			section_new.className = 'fullscreen';
-
+			doc.body.appendChild(section_new);
 			loadIncludes(htmlToElement(text.match(/<include[\s\S]*?>[\s\S]*<\/include>/gm)));
 
-			doc.body.appendChild(section_new);
 			updateCursor();
 
 			if (section_old) {
