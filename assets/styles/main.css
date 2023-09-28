@@ -48,14 +48,14 @@ body {
   background-color: #0f0d15;
   color: var(--white);
 }
-section.old {
-  z-index: 1;
-}
+
 section {
   z-index: 3;
   background-color: var(--main);
 }
-
+section.old {
+  z-index: 1;
+}
 
 section {
   display: flex;
