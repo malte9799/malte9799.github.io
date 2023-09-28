@@ -48,16 +48,15 @@ body
     color: var(--white)
 
 section
+    overflow: hidden
     z-index: 3
     background-color: var(--main)
-
-    &.old
-        z-index: 1
-
-section
     display: flex
     justify-content: center
     align-items: center
+
+    &.old
+        z-index: 1 !important
 
 .fullscreen
     position: absolute
@@ -89,4 +88,4 @@ a
     text-decoration: none
     font-size: 5rem
     position: relative
-    padding: 3rem
+    margin: 0 3rem
