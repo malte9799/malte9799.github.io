@@ -35,14 +35,12 @@ const getUrlParams = (search = undefined) => {
 	return search ? params[search] : params;
 };
 
-let lastPos = { x: 0, y: 0 };
+let lastPos = { clientX: 0, clientX: 0 };
 let click = false;
 let scale = 1;
 const updateCursor = (e = lastPos) => {
 	let { clientX: x, clientY: y } = e;
-	x = x || lastPos.x;
-	y = y || lastPos.y;
-	lastPos = { x, y };
+	lastPos = { clientX: x, clientY: y };
 
 	if (!click) scale = 1;
 	let target = document.elementFromPoint(x, y);
@@ -103,6 +101,7 @@ const onLoad = (e) => {
 
 const loadPage = (page = undefined) => {
 	doc.querySelectorAll('.included').forEach((e) => e.remove());
+
 	let section_old = doc.querySelector('section:not(.old)');
 	page = page || getUrlParams('page') || 'index';
 	fetch(`./pages/${page}.html`)
@@ -110,8 +109,10 @@ const loadPage = (page = undefined) => {
 		.then((text) => {
 			section_new = htmlToElement(text.match(/<section[\s\S]*?>[\s\S]*<\/section>/gm));
 			section_new.className = 'fullscreen';
+
+			loadIncludes(htmlToElement(text.match(/<include[\s\S]*?>[\s\S]*<\/include>/gm)));
+
 			doc.body.appendChild(section_new);
-			section_new.addEventListener('DOMContentLoaded', loadIncludes(htmlToElement(text.match(/<include[\s\S]*?>[\s\S]*<\/include>/gm))));
 			updateCursor();
 
 			if (section_old) {
@@ -137,10 +138,7 @@ const loadPage = (page = undefined) => {
 const loadIncludes = (dom) => {
 	if (!dom) return;
 	dom.querySelectorAll('script').forEach((e) => {
-		let script = doc.createElement('script');
-		script.classList.add('included');
-		script.setAttribute('src', e.attributes.src.nodeValue);
-		doc.body.appendChild(script);
+		$.getScript(e.attributes.src.nodeValue);
 	});
 	dom.querySelectorAll('link').forEach((e) => {
 		let link = doc.createElement('link');
