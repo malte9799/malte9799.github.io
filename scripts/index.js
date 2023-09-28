@@ -1,7 +1,6 @@
 const doc = document;
 const cursor_circle = doc.querySelector('.cursor-circle');
 const cursor_dot = doc.querySelector('.cursor-dot');
-const root = doc.querySelector(':root');
 
 window.addEventListener('unload', (e) => onUnload(e));
 window.addEventListener('load', (e) => onLoad(e));
@@ -46,12 +45,10 @@ const updateCursor = (e = undefined) => {
 
 	if (!click) scale = 1;
 	let target = document.elementFromPoint(x, y);
-	if (!click && target.matches('a,span,[onclick],img,video,i')) {
+	if (!click && target?.matches('a,span,[onclick],img,video,i')) {
 		scale = 3;
 	}
 
-	root.style.setProperty('--mouseX', x);
-	root.style.setProperty('--mouseY', y);
 	cursor_dot.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%))`;
 	cursor_circle.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%)) scale(${scale})`;
 };
