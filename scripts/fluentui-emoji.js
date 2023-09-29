@@ -3,7 +3,7 @@
 function iconToUrl(icon) {
 	icon = icon.replace('pinata', 'piñata');
 	const colors = { default: 'Default', light: 'Light', 'medium-light': 'Medium-Light', medium: 'Medium', 'medium-dark': 'Medium-Dark', dark: 'Dark' };
-	const styles = { '3d': '3D', color: 'Colors', flat: 'Flat', high_contrast: 'High Contrast' };
+	const styles = { '3d': '3D', color: 'Color', flat: 'Flat', high_contrast: 'High Contrast' };
 	let [_, name, rest] = icon.match(/(.*)(?=_3d|_color|_flat|_high_contrast)_(.*)/);
 	name = name.charAt(0).toUpperCase() + name.slice(1);
 	name = name.split('_').join('%20');
