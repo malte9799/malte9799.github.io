@@ -50,7 +50,7 @@ body {
 }
 
 section {
-  overflow: hidden;
+  overflow-x: hidden;
   z-index: 3;
   background-color: var(--main);
   display: flex;
