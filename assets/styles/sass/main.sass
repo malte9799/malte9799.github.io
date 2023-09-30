@@ -50,7 +50,7 @@ body
 section
     overflow-x: hidden
     z-index: 3
-    background-color: var(--main)
+    background-color: $background
     display: flex
     justify-content: center
     align-items: center
@@ -87,5 +87,63 @@ a
     color: #f8f9fa
     text-decoration: none
     font-size: 5rem
-    position: relative
-    margin: 0 3rem
+    // position: relative
+    margin: 0 6rem 0 0
+
+#menu
+    z-index: 1000
+    height: 100%
+    position: fixed
+    background-color: #FED057
+    width: 300px
+    transition: all 1000ms cubic-bezier(0.19, 1, 0.22, 1)
+    transform: translateX(-100%)
+    left: 60px
+    &.expanded
+        transform: translateX(0%)
+        left: 0px
+
+    .hamburger
+        right: 20px
+        position: absolute
+        width: 20px
+        height: 20px
+        margin-top: -10px
+        .line
+            width: 100%
+            height: 4px
+            background-color: #fff
+            position: absolute
+        .line:nth-child(2)
+            top: 50%
+            margin-top: -2px
+        .line:nth-child(3)
+            bottom: 0
+
+    #blob
+        top: 0
+        z-index: -1
+        right: 60px
+        transform: translateX(100%)
+        height: 100%
+        position: absolute
+        #blob-path
+            height: 100%
+            fill: #FED057
+
+    .menu-inner
+        width: 100%
+        height: 100%
+        position: relative
+        ul
+            padding: 0
+            list-style: none
+            width: 80%
+            margin-left: 10%
+            position: absolute
+            top: 10px
+            li
+                margin: 2em 0
+                a
+                    color: #fff
+                    font-size: 1em
