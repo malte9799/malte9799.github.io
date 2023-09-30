@@ -8,7 +8,7 @@ let click = false;
 let scale = 1;
 
 function onLoad() {
-	window.mousePos = JSON.parse(localStorage.getItem('mousePos')) || { x: 0, y: 0 };
+	window.mousePos = JSON.parse(localStorage.getItem('mousePos')) || { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 	updateCursor();
 	window.sleep(100).then(() => {
 		$('.cursor-circle').css('transition', 'transform ease-out 0.1s');
@@ -16,12 +16,12 @@ function onLoad() {
 }
 
 function onUnload() {
-	localStorage.setItem('cursorPos', JSON.stringify(window.mousePos));
+	localStorage.setItem('mousePos', JSON.stringify(window.mousePos));
 }
 
 function updateCursor(e = undefined) {
-	let x = e ? e.clientX : window.mousePos.x || 0;
-	let y = e ? e.clientY : window.mousePos.y || 0;
+	let x = e ? e.clientX : window.mousePos.x;
+	let y = e ? e.clientY : window.mousePos.y;
 	window.mousePos = { x, y };
 
 	if (!click) scale = 1;
