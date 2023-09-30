@@ -1,4 +1,3 @@
-// console.log(iconToUrl('hourglass_not_done_flat'));
 style = '3d';
 color = 'medium';
 fluentui_emoji_list = undefined;

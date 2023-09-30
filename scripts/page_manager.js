@@ -50,7 +50,6 @@ function loadPage() {
 			.find('link')
 			.each((i, e) => {
 				$('head').append(`<link class="included" rel="stylesheet" href="${$(e).attr('href')}">`);
-				console.log(e);
 			});
 	});
 }
