@@ -13,13 +13,23 @@ function averageRGB(color1, color2) {
 	return `rgb(${average.join(', ')})`;
 }
 
+function changeColor(color) {
+	let colorObj = new window.Color(color);
+	let [h, s, l] = colorObj.get('hsl', false);
+	l = l <= 25 ? (l += 5) : (l -= 5);
+	colorObj.update('hsl', h, s, l);
+	return colorObj.get();
+}
+
 function loadPage() {
-	$('.included').remove();
+	$('#menu').removeClass('expanded');
+	$('.included').addClass('old');
 	let section_old = $('section:not(.old)');
 	$.get(`/pages/${window.getUrlParams('page') || 'index'}.html`, (res) => {
 		let section_new = $.parseHTML(res.match(/<section.*>[\s\S]*<\/section>/gm)[0]);
 		$(section_new).addClass('fullscreen');
-		$(section_new)
+		$('body').append(section_new);
+		$('body')
 			.find('a[link]')
 			.on('click', (e) => {
 				let page = $(e.target).attr('link');
@@ -27,22 +37,30 @@ function loadPage() {
 				window.history.replaceState(null, null, '?page=' + page);
 				loadPage(page);
 			});
-		$('body').append(section_new);
-		let match = res.match(/<include>([\s\S]*)<\/include>/);
-		if (match) {
-			let includes = $.parseHTML(match[1].trim(), true);
-			$(includes).each((i, e) => $.getScript($(e).attr('src')));
-		}
 
 		if (section_old.length) page_transition(section_old, $(section_new));
+
+		let match = res.match(/<include>[\s\S]*<\/include>/);
+		if (!match) return;
+		let includes = $.parseHTML(match[0], true);
+		$(includes)
+			.find('script')
+			.each((i, e) => $.getScript($(e).attr('src')));
+		$(includes)
+			.find('link')
+			.each((i, e) => {
+				$('head').append(`<link class="included" rel="stylesheet" href="${$(e).attr('href')}">`);
+				console.log(e);
+			});
 	});
 }
 
 function page_transition(section_old, section_new) {
 	section_old.addClass('old');
+
 	let color_old = section_old.css('background-color');
 	let color_new = section_new.css('background-color');
-	let transition_color = color_old == color_new ? color_old : averageRGB(color_old, color_new);
+	let transition_color = color_old == color_new ? changeColor(color_old) : averageRGB(color_old, color_new);
 	let circle = $.parseHTML(
 		`<div class="fullscreen" style="clip-path:circle(0% at ${window.mousePos.x}px ${window.mousePos.y}px); background-color:${transition_color}; z-index:2"></div>`
 	);
@@ -58,5 +76,6 @@ function page_transition(section_old, section_new) {
 		section_new.css('clip-path', '');
 		section_old.remove();
 		$(circle).remove();
+		$('.included.old').remove();
 	});
 }
