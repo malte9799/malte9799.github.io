@@ -20,7 +20,9 @@ function iconToUrl(icon) {
 	return 'https://cdn.jsdelivr.net/gh/microsoft/fluentui-emoji/assets/' + `${name}/${param}/${icon + ending}`;
 }
 
-document.querySelectorAll('img').forEach((img) => {
-	if (!img.hasAttribute('fluentui')) return;
-	img.src = iconToUrl(img.getAttribute('fluentui'));
-});
+(function () {
+	document.querySelectorAll('img').forEach((img) => {
+		if (!img.hasAttribute('fluentui')) return;
+		img.src = iconToUrl(img.getAttribute('fluentui'));
+	});
+})();
