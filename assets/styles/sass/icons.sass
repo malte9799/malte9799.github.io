@@ -1,0 +1,51 @@
+.container
+    position: absolute
+    top: 50%
+    width: 75%
+    display: grid
+    grid-template-columns: repeat(auto-fill, 7.5em)
+    grid-auto-rows: 9em
+    gap: 1em
+    grid-auto-flow: row dense
+    justify-items: center
+
+article
+    width: 100%
+    height: 100%
+    overflow: hidden
+
+button
+    position: relative
+    margin: 0
+    padding: 0
+    border: 0
+    background: white
+    box-shadow: none
+    border-radius: 10px
+    width: 100%
+    height: 100%
+
+img
+    position: absolute
+    left: 50%
+    top: 5%
+    transform: translateX(-50%)
+    width: 90%
+
+span
+    position: absolute
+    width: 80%
+    bottom: 0
+    font-size: 0.8em
+    line-height: 1.25
+    padding-bottom: 5%
+    left: 50%
+    transform: translateX(-50%)
+    color: gray
+    overflow: hidden
+    text-overflow: ellipsis
+    display: -webkit-box
+    -webkit-line-clamp: 2
+    box-sizing: border-box
+    -webkit-box-orient: vertical
+    word-break: break-word

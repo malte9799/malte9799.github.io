@@ -1,0 +1,14 @@
+<script>
+	const l = location;
+	l.href = `${l.origin}?page=${l.pathname.match(/\/(\w*)\./)[1]}`;
+</script>
+
+<section style="background-color: #17a2b8">
+	<div class="container"></div>
+</section>
+
+<include>
+	<link rel="stylesheet" href="/assets/styles/icons.css" />
+	<script src="/scripts/fluentui-emoji.js"></script>
+	<script src="/scripts/icons.js"></script>
+</include>
