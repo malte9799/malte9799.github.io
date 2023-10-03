@@ -8,6 +8,12 @@
 	--ascend: #00a981;
 }
 
+@media screen and (min-width: 768px) {
+	* {
+		cursor: none !important;
+	}
+}
+
 * {
 	font-family: 'CeraRoundPro';
 	box-sizing: border-box;
