@@ -55,8 +55,6 @@ $(function () {
 	});
 });
 
-function hashchange() {}
-
 function getEmojiData() {
 	return fetch('https://cdn.jsdelivr.net/gh/malte9799/cdn/fluentui-emoji/list.json')
 		.then((res) => {
@@ -80,9 +78,9 @@ function createIconArticle(icon) {
 	let img = icon_card.find('img');
 	let span = icon_card.find('span');
 
-	btn.on('click', () => show_details(icon_name, style, hasColor ? color : undefined));
+	btn.off('click.show_details').on('click.show_details', () => show_details(icon_name, style, hasColor ? color : undefined));
 
-	img.attr('src', '/assets/images/loading.svg');
+	img.attr('src', 'https://cdn.jsdelivr.net/gh/malte9799/cdn/loading.svg');
 	let image = new Image();
 	image.onload = () => img.attr('src', image.src);
 	image.onerror = () => img.attr('src', img_not_found);
@@ -134,10 +132,12 @@ function show_details(icon, style, color = undefined) {
 	temp.hide().fadeIn(500);
 	$('body').append(temp);
 
-	$(window).on('click', (e) => {
-		if (e.target.id == 'modal') {
-			console.log($(e.target));
-			$(e.target).parent().fadeOut(200, this.remove);
-		}
-	});
+	$(window)
+		.off('click.hide_details')
+		.on('click.hide_details', (e) => {
+			if (e.target.id == 'modal') {
+				console.log($(e.target));
+				$(e.target).parent().fadeOut(200, this.remove);
+			}
+		});
 }
