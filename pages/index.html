@@ -3,12 +3,12 @@
 	l.href = `${l.origin}?page=${l.pathname.match(/\/(\w*)\./)[1]}`;
 </script>
 
-<section>
-	<a link="index" style="font-weight: 900">Main</a>
-	<a link="page1">Page1</a>
-	<a link="page2">Page2</a>
-</section>
-
 <include>
 	<script src="/scripts/fluentui-emoji.js"></script>
 </include>
+
+<section class="flex items-center text-white justify-evenly">
+	<a class="font-bold text-9xl" link="index">Main</a>
+	<a class="text-9xl" link="page1">Page1</a>
+	<a class="text-9xl" link="page2">Page2</a>
+</section>
