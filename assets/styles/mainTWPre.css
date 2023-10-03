@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	--primary: #0f0d15;
+	--secondary: #242136;
+	--ascend: #00a981;
+}
+
+* {
+	font-family: 'CeraRoundPro';
+	box-sizing: border-box;
+}
+
+body {
+	text-rendering: optimizespeed;
+	font-feature-settings: 'ss01' on;
+}
+
+.fullscreen {
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+	transition: -webkit-clip-path cubic-bezier(0.75, 0, 1, 1) 500ms;
+	transition: clip-path cubic-bezier(0.75, 0, 1, 1) 500ms;
+	transition: clip-path cubic-bezier(0.75, 0, 1, 1) 500ms, -webkit-clip-path cubic-bezier(0.75, 0, 1, 1) 500ms;
+}

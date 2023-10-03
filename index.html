@@ -1,19 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Document</title>
-		<link rel="stylesheet" type="text/css" href="/assets/styles/main.css" />
+
+		<!-- FONTS -->
+		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+		<link href="https://cdn.jsdelivr.net/gh/malte9799/cdn@main/fonts/CeraRoundPro/CeraRoundPro.css" rel="stylesheet" />
+
+		<!-- CSS -->
+		<!-- <link rel="stylesheet" type="text/css" href="/assets/styles/main.css" /> -->
+		<link rel="stylesheet" href="/assets/styles/mainTW.css" />
+
+		<!-- JS -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 		<script src="/scripts/index.js" type="module"></script>
 	</head>
-	<body>
-		<div class="cursor">
-			<div class="cursor cursor-circle"></div>
-			<div class="cursor cursor-dot"></div>
+	<body class="bg-gray-900">
+		<div class="fixed z-50 cursor mix-blend-difference">
+			<div class="fixed w-5 h-5 border rounded-full pointer-events-none cursor cursor-circle"></div>
+			<div class="fixed w-1 h-1 bg-white rounded-full pointer-events-none cursor cursor-dot"></div>
 		</div>
-		<div id="menu">
+		<!-- <div id="menu">
 			<div class="hamburger">
 				<div class="line"></div>
 				<div class="line"></div>
@@ -23,7 +32,7 @@
 				<ul>
 					<li><a link="index">Index</a></li>
 					<li><a link="page1">Page 1</a></li>
-					<li>Menu Item</li>
+					<li><a link="iconsnew">Icons</a></li>
 					<li>Menu Item</li>
 					<li>Menu Item</li>
 					<li>Menu Item</li>
@@ -33,6 +42,6 @@
 			<svg version="1.1" id="blob" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 				<path id="blob-path" />
 			</svg>
-		</div>
+		</div> -->
 	</body>
 </html>
