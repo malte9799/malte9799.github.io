@@ -13,7 +13,7 @@ function averageRGB(color1, color2) {
 }
 
 function changeColor(color) {
-	let colorObj = new window.Color(color);
+	let colorObj = new Color(color);
 	let [h, s, l] = colorObj.get('hsl', false);
 	l = l <= 25 ? (l += 5) : (l -= 5);
 	colorObj.update('hsl', h, s, l);
@@ -64,13 +64,21 @@ function loadScripts(scripts) {
 }
 
 function page_transition(section_old, section_new) {
-	section_old.addClass('old');
+	section_old.addClass('old', 'z-[1]');
+	section_old.removeClass('z-[3]');
+	section_new.addClass('z-[3]');
 
-	let color_old = section_old.css('background-color');
-	let color_new = section_new.css('background-color');
+	let color_old = section_old.get(0).style.backgroundColor;
+	let color_new = section_new.get(0).style.backgroundColor;
+	let body_color = $('body').get(0).style.backgroundColor;
+
+	if (!color_new) section_new.css('background-color', body_color);
+	color_new = color_new || body_color;
+	color_old = color_old || body_color;
+
 	let transition_color = color_old == color_new ? changeColor(color_old) : averageRGB(color_old, color_new);
 
-	let circle = $.parseHTML(`<div class="fullscreen" style="clip-path:circle(0% at ${window.mousePos.x}px ${window.mousePos.y}px); background-color:${transition_color}; z-index:2"></div>`);
+	let circle = $.parseHTML(`<div class="fullscreen z-[2]" style="clip-path:circle(0% at ${window.mousePos.x}px ${window.mousePos.y}px); background-color:${transition_color}; z-index:2"></div>`);
 	$('body').append(circle);
 	section_new.css('clip-path', `circle(0% at ${window.mousePos.x}px ${window.mousePos.y}px)`);
 
