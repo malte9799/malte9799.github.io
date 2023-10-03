@@ -10,7 +10,7 @@ let scale = 1;
 function onLoad() {
 	window.mousePos = JSON.parse(localStorage.getItem('mousePos')) || { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 	updateCursor();
-	window.sleep(100).then(() => {
+	sleep(100).then(() => {
 		$('.cursor-circle').css('transition', 'transform ease-out 0.1s');
 	});
 }
@@ -36,7 +36,7 @@ function onClick() {
 		click = true;
 		scale = 1;
 		updateCursor();
-		window.sleep(100).then(() => {
+		sleep(100).then(() => {
 			scale = 3;
 			updateCursor();
 			click = false;
