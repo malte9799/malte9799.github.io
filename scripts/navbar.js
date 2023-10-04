@@ -5,10 +5,10 @@ let xIteration = 0;
 let yIteration = 0;
 
 $(function () {
-	$('.menu-inner').on('mouseenter', function () {
+	$('#menu-inner').on('mouseenter', function () {
 		$('#menu').addClass('expanded');
 	});
-	$('.menu-inner').on('mouseleave', function () {
+	$('#menu-inner').on('mouseleave', function () {
 		$('#menu').removeClass('expanded');
 	});
 
@@ -52,13 +52,11 @@ function svgCurve() {
 	const curviness = 50;
 	const height = window.innerHeight;
 
-	const newCurve = `M60,${height}H0V0h60v${curveY - anchorDistance}c0,${anchorDistance - curviness},${curveX},${
-		anchorDistance - curviness
-	},${curveX},${anchorDistance}S60,${curveY + curviness},60,${curveY + anchorDistance}V${height}z`;
+	const newCurve = `M60,${height}H0V0h60v${curveY - anchorDistance}c0,${anchorDistance - curviness},${curveX},${anchorDistance - curviness},${curveX},${anchorDistance}S60,${curveY + curviness},60,${curveY + anchorDistance}V${height}z`;
 
 	$('#blob-path').attr('d', newCurve);
 	$('#blob').width(curveX + 60);
-	$('.hamburger').css('transform', `translate(${curveX}px, ${curveY}px)`);
+	$('#hamburger').css('transform', `translate(${curveX}px, ${curveY}px)`);
 
 	window.requestAnimationFrame(svgCurve);
 }
