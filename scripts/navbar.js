@@ -45,14 +45,14 @@ function svgCurve() {
 
 	curveXExact = easeOutExpo(xIteration, curveXExact, targetX - curveXExact, 100);
 	curveYExact = easeOutExpo(yIteration, curveYExact, y - curveYExact, 100);
-	let curveX = Math.round(curveXExact * 100) / 100;
-	let curveY = Math.round(curveYExact * 100) / 100;
+	let curveX = curveXExact.round(2);
+	let curveY = curveYExact.round(2);
 
 	const anchorDistance = 200;
 	const curviness = 50;
 	const height = window.innerHeight;
 
-	const newCurve = `M60,${height}H0V0h60v${curveY - anchorDistance}c0,${anchorDistance - curviness},${curveX},${anchorDistance - curviness},${curveX},${anchorDistance}S60,${curveY + curviness},60,${curveY + anchorDistance}V${height}z`;
+	const newCurve = `M60,${height}H0V0h60v${(curveY - anchorDistance).round(2)}c0,${(anchorDistance - curviness).round(2)},${curveX},${(anchorDistance - curviness).round(2)},${curveX},${anchorDistance}S60,${(curveY + curviness).round(2)},60,${(curveY + anchorDistance).round(2)}V${height}z`;
 
 	$('#blob-path').attr('d', newCurve);
 	$('#blob').width(curveX + 60);
