@@ -1,0 +1,25 @@
+<script>
+	const l = location;
+	l.href = `${l.origin}?page=${l.pathname.match(/\/(\w*)\./)[1]}`;
+</script>
+
+<include>
+	<script src="/scripts/fluentui-emoji.js"></script>
+</include>
+
+<section class="flex items-center justify-center">
+	<div class="relative w-64 m-4 text-white h-96 child-first:hover:rotate-y-180">
+		<div class="w-full h-full transition-transform duration-700 preserve-3d">
+			<div id="front" class="translate-z-5 absolute w-full h-full preserve-3d backface-hidden bg-[url('/assets/images/W3tra4F.gif')]">
+				<h2 class="text-center p-2.5 translate-z-5">Front</h2>
+				<div class="absolute top-0 flex items-center justify-center w-full h-full preserve-3d">
+					<h1 class="text-4xl text-center translate-z-10">HOVER</h1>
+				</div>
+			</div>
+			<div id="back" class="-translate-z-5 absolute w-full h-full preserve-3d rotate-y-180 before:w-full before:h-full before:absolute before:[background-position-x:_-2.5rem] before:bg-[url('/assets/images/W3tra4F.gif')] before:-scale-x-100">
+				<h2 class="text-center p-2.5 translate-z-5">Back</h2>
+			</div>
+			<div id="R-side" class="absolute w-10 h-full bg-white -translate-x-[50%] rotate-y-90 bg-[url('/assets/images/W3tra4F.gif')]"></div>
+		</div>
+	</div>
+</section>
