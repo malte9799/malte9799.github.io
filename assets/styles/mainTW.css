@@ -609,10 +609,6 @@ video {
   inset: 0px;
 }
 
-.bottom-0 {
-  bottom: 0px;
-}
-
 .left-16 {
   left: 4rem;
 }
@@ -631,10 +627,6 @@ video {
 
 .top-3 {
   top: 0.75rem;
-}
-
-.top-\[50\%\] {
-  top: 50%;
 }
 
 .z-1 {
@@ -675,20 +667,12 @@ video {
   margin-bottom: 2rem;
 }
 
-.-mt-0 {
-  margin-top: -0px;
-}
-
-.-mt-0\.5 {
-  margin-top: -0.125rem;
-}
-
 .-mt-2 {
   margin-top: -0.5rem;
 }
 
-.ml-\[10\%\] {
-  margin-left: 10%;
+.ml-8 {
+  margin-left: 2rem;
 }
 
 .mt-0 {
@@ -798,6 +782,10 @@ video {
   width: 1.25rem;
 }
 
+.w-6 {
+  width: 1.5rem;
+}
+
 .w-64 {
   width: 16rem;
 }
@@ -872,6 +860,10 @@ video {
 
 .justify-center {
   justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
 }
 
 .justify-evenly {
@@ -1149,6 +1141,14 @@ video {
   transition-duration: 700ms;
 }
 
+.\!ease-out {
+  transition-timing-function: cubic-bezier(0, 0, 0.2, 1) !important;
+}
+
+.ease-in-out {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .ease-out {
   transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
 }
@@ -1175,6 +1175,16 @@ skew(var(--tw-skew-x), var(--tw-skew-y))
 
 .translate-x-full {
   --tw-translate-x: 100%;
+  transform: 
+translate(var(--tw-translate-x), var(--tw-translate-y))
+rotate(var(--tw-rotate-x))
+scale(var(--tw-scale-x), var(--tw-scale-y))
+skew(var(--tw-skew-x), var(--tw-skew-y))
+;
+}
+
+.translate-y-7 {
+  --tw-translate-y: 1.75rem;
   transform: 
 translate(var(--tw-translate-x), var(--tw-translate-y))
 rotate(var(--tw-rotate-x))
@@ -1210,15 +1220,6 @@ scale3d(var(--tw-scale-x), var(--tw-scale-y), var(--tw-scale-z))
 skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) !important;
 }
 
-.rotate-y-12 {
-  --tw-rotate-y: 12deg;
-  transform: 
-translate3d(var(--tw-translate-x), var(--tw-translate-y), var(--tw-translate-z)) 
-rotateX(var(--tw-rotate-x)) rotateY(var(--tw-rotate-y)) rotateZ(var(--tw-rotate-z)) 
-scale3d(var(--tw-scale-x), var(--tw-scale-y), var(--tw-scale-z))
-skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) !important;
-}
-
 .rotate-y-180 {
   --tw-rotate-y: 180deg;
   transform: 
@@ -1247,18 +1248,6 @@ skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) !important;
 
 .\[--balloon-color\:\#146ebe\] {
   --balloon-color: #146ebe;
-}
-
-.\[perspective\:1000px\] {
-  perspective: 1000px;
-}
-
-.\[perspective\:100px\] {
-  perspective: 100px;
-}
-
-.\[perspective\:100\%\] {
-  perspective: 100%;
 }
 
 :root {
