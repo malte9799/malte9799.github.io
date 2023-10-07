@@ -12,10 +12,25 @@ $(function () {
 		$('#menu').removeClass('expanded');
 	});
 
-	curveYExact = window.mousePos.y;
-
-	window.requestAnimationFrame(svgCurve);
+	$(window).on('mousemove', mouseMove);
 });
+
+const hoverZone = 150;
+const expandAmount = 20;
+const anchorDist = 200;
+const curviness = 50;
+
+let animating = false;
+
+function mouseMove() {
+	const x = window.mousePos.x;
+	if (!animating && x <= hoverZone && x > 0) {
+		curveYExact = 32;
+		$('#hamburger').removeClass('transition');
+		window.requestAnimationFrame(svgCurve);
+		animating = true;
+	}
+}
 
 function easeOutExpo(currentIteration, startValue, changeInValue, totalIterations) {
 	return changeInValue * (-Math.pow(2, (-10 * currentIteration) / totalIterations) + 1) + startValue;
@@ -24,8 +39,6 @@ function easeOutExpo(currentIteration, startValue, changeInValue, totalIteration
 function svgCurve() {
 	const x = window.mousePos.x;
 	const y = window.mousePos.y;
-	const hoverZone = 150;
-	const expandAmount = 20;
 
 	if (Math.abs(curveXExact - x) < 1) {
 		xIteration = 0;
@@ -45,18 +58,28 @@ function svgCurve() {
 
 	curveXExact = easeOutExpo(xIteration, curveXExact, targetX - curveXExact, 100);
 	curveYExact = easeOutExpo(yIteration, curveYExact, y - curveYExact, 100);
-	let curveX = curveXExact.round(2);
+	let curveX = curveXExact.round(2) || 0;
 	let curveY = curveYExact.round(2);
 
-	const anchorDistance = 200;
-	const curviness = 50;
 	const height = window.innerHeight;
 
-	const newCurve = `M60,${height}H0V0h60v${(curveY - anchorDistance).round(2)}c0,${(anchorDistance - curviness).round(2)},${curveX},${(anchorDistance - curviness).round(2)},${curveX},${anchorDistance}S60,${(curveY + curviness).round(2)},60,${(curveY + anchorDistance).round(2)}V${height}z`;
+	const anchorOffset = (anchorDist - curviness).round(2);
+
+	// const path1 = `M60,${height}H0V0h60v${(curveY - anchorDist).round(2)}`;
+	// const curve1 = `c0,${anchorOffset},${curveX},${anchorOffset},${curveX},${anchorDist}`;
+	// const curve2 = `S60,${(curveY + curviness).round(2)},60,${(curveY + anchorDist).round(2)}`;
+	// const newCurve = path1 + curve1 + curve2 + 'z';
+
+	const newCurve = `M60,${height}H0V0h60v${(curveY - anchorDist).round(2)}c0,${anchorOffset.round(2)},${curveX},${anchorOffset.round(2)},${curveX},${anchorDist}S60,${(curveY + curviness).round(2)},60,${(curveY + anchorDist).round(2)}z`;
 
 	$('#blob-path').attr('d', newCurve);
 	$('#blob').width(curveX + 60);
 	$('#hamburger').css('transform', `translate(${curveX}px, ${curveY}px)`);
 
-	window.requestAnimationFrame(svgCurve);
+	if (targetX > 0 || curveX > 1) window.requestAnimationFrame(svgCurve);
+	else {
+		$('#hamburger').addClass('transition');
+		$('#hamburger').removeAttr('style');
+		animating = false;
+	}
 }
