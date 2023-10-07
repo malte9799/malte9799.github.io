@@ -47,6 +47,10 @@ window.isMobile = window.matchMedia('only screen and (max-width: 760px)').matche
 
 window.img_not_found = 'https://cdn.jsdelivr.net/gh/malte9799/cdn/fluentui-emoji/not_found.png';
 
+Number.prototype.round = function (places) {
+	return +(Math.round(this + 'e+' + places) + 'e-' + places);
+};
+
 import '/scripts/color.js';
 import '/scripts/cursor.js';
 import '/scripts/page_manager.js';
