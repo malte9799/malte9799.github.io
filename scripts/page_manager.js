@@ -1,4 +1,5 @@
 $(loadPage);
+$(window).on('popstate ', () => loadPage({ x: innerWidth / 2, y: innerHeight / 2 }));
 
 function averageRGB(color1, color2) {
 	const regex = /rgb\((\d+), (\d+), (\d+)\)/;
@@ -20,24 +21,29 @@ function changeColor(color) {
 	return colorObj.get();
 }
 
-function loadPage() {
+function loadPage(overwriteMouse = undefined) {
 	$('#menu').removeClass('expanded');
 	$('.included').addClass('old');
 	let section_old = $('section:not(.old)');
-	$.get(`/pages/${getUrlParams('page') || 'index'}.html`, (res) => {
+	let page = window.getUrlParams('page') || 'index';
+	$.get(`/pages/${page}.html`, (res) => {
 		let section_new = $.parseHTML(res.match(/<section.*>[\s\S]*<\/section>/gm)[0]);
 		$(section_new).addClass('fullscreen');
 		$('body').append(section_new);
 		$('body')
 			.find('a[link]')
 			.on('click', (e) => {
+				e.preventDefault();
 				let page = $(e.target).attr('link');
-				if ((getUrlParams('page') || 'index') == page) return;
-				window.history.replaceState(null, null, '?page=' + page);
-				loadPage(page);
+				if ((window.getUrlParams('page') || 'index') == page) return;
+				window.setUrlParam('page', page, true, true);
+				loadPage();
+			})
+			.each((i, e) => {
+				e.href = '?page=' + $(e).attr('link');
 			});
 
-		if (section_old.length) page_transition(section_old, $(section_new));
+		if (section_old.length) page_transition(section_old, $(section_new), overwriteMouse);
 
 		let match = res.match(/<include>[\s\S]*<\/include>/);
 		if (!match) return;
@@ -63,10 +69,13 @@ function loadScripts(scripts) {
 	}
 }
 
-function page_transition(section_old, section_new) {
-	section_old.addClass('old', 'z-[1]');
-	section_old.removeClass('z-[3]');
-	section_new.addClass('z-[3]');
+function page_transition(section_old, section_new, overwriteMouse) {
+	let x = overwriteMouse?.x || window.mousePos.x;
+	let y = overwriteMouse?.y || window.mousePos.y;
+
+	section_old.addClass('old', 'z-1');
+	section_old.removeClass('z-3');
+	section_new.addClass('z-3');
 
 	let color_old = section_old.get(0).style.backgroundColor;
 	let color_new = section_new.get(0).style.backgroundColor;
@@ -78,13 +87,13 @@ function page_transition(section_old, section_new) {
 
 	let transition_color = color_old == color_new ? changeColor(color_old) : averageRGB(color_old, color_new);
 
-	let circle = $.parseHTML(`<div class="fullscreen z-[2]" style="clip-path:circle(0% at ${window.mousePos.x}px ${window.mousePos.y}px); background-color:${transition_color}; z-index:2"></div>`);
+	let circle = $.parseHTML(`<div class="fullscreen z-2" style="clip-path:circle(0% at ${x}px ${y}px); background-color:${transition_color};"></div>`);
 	$('body').append(circle);
-	section_new.css('clip-path', `circle(0% at ${window.mousePos.x}px ${window.mousePos.y}px)`);
+	section_new.css('clip-path', `circle(0% at ${x}px ${y}px)`);
 
 	sleep(50).then(() => {
-		section_new.css('clip-path', `circle(150% at ${window.mousePos.x}px ${window.mousePos.y}px)`);
-		$(circle).css('clip-path', `circle(300% at ${window.mousePos.x}px ${window.mousePos.y}px)`);
+		section_new.css('clip-path', `circle(150% at ${x}px ${y}px)`);
+		$(circle).css('clip-path', `circle(300% at ${x}px ${y}px)`);
 	});
 
 	sleep(600).then(() => {
