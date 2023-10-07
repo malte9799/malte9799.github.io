@@ -1,10 +1,16 @@
 /** @type {import('tailwindcss').Config} */
 
-const transform = `
+const transform3DImp = `
 translate3d(var(--tw-translate-x), var(--tw-translate-y), var(--tw-translate-z)) 
 rotateX(var(--tw-rotate-x)) rotateY(var(--tw-rotate-y)) rotateZ(var(--tw-rotate-z)) 
 scale3d(var(--tw-scale-x), var(--tw-scale-y), var(--tw-scale-z))
-skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y))`;
+skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) !important`;
+const transform2D = `
+translate(var(--tw-translate-x), var(--tw-translate-y))
+rotate(var(--tw-rotate-x))
+scale(var(--tw-scale-x), var(--tw-scale-y))
+skew(var(--tw-skew-x), var(--tw-skew-y))
+`;
 
 module.exports = {
 	content: ['./index.html', './pages/*.{html,js}', './scripts/*.js'],
@@ -75,7 +81,7 @@ module.exports = {
 				{
 					'translate-x': (value) => ({
 						'--tw-translate-x': value,
-						transform,
+						transform: transform2D,
 					}),
 				},
 				{ values: theme('translate'), supportsNegativeValues: true }
@@ -84,7 +90,7 @@ module.exports = {
 				{
 					'translate-y': (value) => ({
 						'--tw-translate-y': value,
-						transform,
+						transform: transform2D,
 					}),
 				},
 				{ values: theme('translate'), supportsNegativeValues: true }
@@ -93,7 +99,7 @@ module.exports = {
 				{
 					'translate-z': (value) => ({
 						'--tw-translate-z': value,
-						transform,
+						transform: transform3DImp,
 					}),
 				},
 				{ values: theme('translate'), supportsNegativeValues: true }
@@ -103,7 +109,7 @@ module.exports = {
 				{
 					'rotate-x': (value) => ({
 						'--tw-rotate-x': value,
-						transform,
+						transform: transform2D,
 					}),
 				},
 				{ values: theme('rotate'), supportsNegativeValues: true }
@@ -112,7 +118,7 @@ module.exports = {
 				{
 					'rotate-y': (value) => ({
 						'--tw-rotate-y': value,
-						transform,
+						transform: transform3DImp,
 					}),
 				},
 				{ values: theme('rotate'), supportsNegativeValues: true }
@@ -121,7 +127,7 @@ module.exports = {
 				{
 					'rotate-z': (value) => ({
 						'--tw-rotate-z': value,
-						transform,
+						transform: transform3DImp,
 					}),
 				},
 				{ values: theme('rotate'), supportsNegativeValues: true }
@@ -131,7 +137,7 @@ module.exports = {
 				{
 					'scale-x': (value) => ({
 						'--tw-scale-x': value,
-						transform,
+						transform: transform2D,
 					}),
 				},
 				{ values: theme('scale'), supportsNegativeValues: true }
@@ -140,7 +146,7 @@ module.exports = {
 				{
 					'scale-y': (value) => ({
 						'--tw-scale-y': value,
-						transform,
+						transform: transform2D,
 					}),
 				},
 				{ values: theme('scale'), supportsNegativeValues: true }
@@ -149,7 +155,7 @@ module.exports = {
 				{
 					'scale-z': (value) => ({
 						'--tw-scale-z': value,
-						transform,
+						transform: transform3DImp,
 					}),
 				},
 				{ values: theme('scale'), supportsNegativeValues: true }
@@ -173,7 +179,7 @@ module.exports = {
 			// transform-3d
 			addUtilities({
 				'.transform-3d': {
-					transform,
+					transform: transform3DImp,
 				},
 			});
 
