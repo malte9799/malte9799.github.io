@@ -22,6 +22,7 @@ function changeColor(color) {
 }
 
 function loadPage(overwriteMouse = undefined) {
+	removeOldEventListeners();
 	$('#menu').removeClass('expanded');
 	$('.included').addClass('old');
 	let section_old = $('section:not(.old)');
@@ -101,5 +102,18 @@ function page_transition(section_old, section_new, overwriteMouse) {
 		section_old.remove();
 		$(circle).remove();
 		$('.included.old').remove();
+	});
+}
+
+function removeOldEventListeners() {
+	Object.values($._data(window, 'events')).forEach((e) => {
+		if (e[0].namespace == 'temp') {
+			$(window).off(`${e[0].type}.temp`);
+		}
+	});
+	Object.values($._data(document, 'events')).forEach((e) => {
+		if (e[0].namespace == 'temp') {
+			$(document).off(`${e[0].type}.temp`);
+		}
 	});
 }
