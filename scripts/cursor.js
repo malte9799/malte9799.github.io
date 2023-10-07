@@ -1,8 +1,8 @@
 $(onLoad);
-$(window).off('pagehide.cursor').on('pagehide.cursor', onUnload);
-$(document).off('mousemove.cursor').on('mousemove.cursor', updateCursor);
-$(document).off('scroll.cursor').on('scroll.cursor', updateCursor);
-$(document).off('click.cursor').on('click.cursor', onClick);
+$(window).on('pagehide', onUnload);
+$(document).on('mousemove', updateCursor);
+$(document).on('scroll', updateCursor);
+$(document).on('click', onClick);
 
 let click = false;
 let scale = 1;

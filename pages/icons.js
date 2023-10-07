@@ -4,7 +4,8 @@ window.templates.icon_card = `
 		<img loading="lazy" class="w-3/4"/>
 		<span class="box-border inline-flex items-center m-1 mt-0 overflow-hidden text-xs leading-4 text-gray-300 break-words pointer-events-none min-h-[2rem] line-clamp-2 text-ellipsis"></span>
 	</button>
-</article>`;
+</article>
+`;
 
 window.templates.icon_detail = `
 <div class="fixed inset-0 w-screen overflow-y-auto bg-gray-800 bg-opacity-50 z-.1 event">
@@ -45,7 +46,8 @@ window.templates.icon_detail = `
          </div>
       </div>
    </div>
-</div>`;
+</div>
+`;
 
 window.templates.icon_detail_selector = `<div class="flex flex-row h-full max-h-[50%] min-h-[1rem] child-first:rounded-l-2xl child-first:border-l-4 child-last:rounded-r-2xl child-last:border-r-4"></div>`;
 window.templates.icon_detail_selector_img = `<button class="flex items-center justify-center flex-1 w-full transition-colors border-gray-800 hover:bg-gray-800 border-x-2 border-y-4 grow"><img class="max-h-full" width="100vh"/></button>`;
@@ -59,7 +61,7 @@ $(function () {
 	if (!window.getUrlParams('c')) window.setUrlParam('c', 'medium');
 
 	let p = window.getUrlParams('p');
-	getEmojiData().then((data) => {
+	getIconData().then((data) => {
 		icon_data = data;
 		data = data.slice(icons_per_page * (p - 1), icons_per_page * p);
 
@@ -72,15 +74,11 @@ $(function () {
 	});
 });
 
-function getEmojiData() {
-	return fetch('https://cdn.jsdelivr.net/gh/malte9799/cdn/fluentui-emoji/list.json')
-		.then((res) => {
-			if (!res.ok) throw new Error('Network response was not ok');
-			return res.json();
-		})
-		.then((data) => {
-			return data;
-		});
+async function getIconData() {
+	const res = await fetch('https://cdn.jsdelivr.net/gh/malte9799/cdn/fluentui-emoji/list.json');
+	if (!res.ok) throw new Error('Network response was not ok');
+	const data = await res.json();
+	return data;
 }
 
 function createIconArticle(icon) {
@@ -99,7 +97,7 @@ function createIconArticle(icon) {
 	let img = icon_card.find('img');
 	let span = icon_card.find('span');
 
-	btn.off('click.show_details').on('click.show_details', () => show_details(icon_name));
+	btn.on('click', () => show_details(icon_name));
 	img.attr('src', iconToUrl(`${icon_name}_${icon_style}`));
 	span.text(icon_name.replace('_', '-'));
 
@@ -164,20 +162,17 @@ function show_details(icon) {
 	temp.hide().fadeIn(500);
 	$('section').append(temp);
 
-	$(window)
-		.off('click.hide_details')
-		.off('popstate.icons')
-		.on('click.hide_details', (e) => {
-			if (e.target.id == 'modal') {
-				window.removeUrlParam('view');
-				$(e.target)
-					.parent()
-					.fadeOut(200, () => {
-						$('#modal').parent().remove();
-						$(window).off('click.hide_details').off('pagehide.icons');
-					});
-			}
-		});
+	$(window).on('click.temp', (e) => {
+		if (e.target.id == 'modal') {
+			window.removeUrlParam('view');
+			$(window).off('click.temp');
+			$(e.target)
+				.parent()
+				.fadeOut(200, () => {
+					$('#modal').parent().remove();
+				});
+		}
+	});
 }
 
 function update_details(type, value) {
