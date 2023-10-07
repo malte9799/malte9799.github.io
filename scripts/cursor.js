@@ -1,16 +1,16 @@
 $(onLoad);
-$(window).on('unload', onUnload);
-$(document).on('mousemove', updateCursor);
-$(document).on('scroll', updateCursor);
-$(document).on('click', onClick);
+$(window).off('pagehide.cursor').on('pagehide.cursor', onUnload);
+$(document).off('mousemove.cursor').on('mousemove.cursor', updateCursor);
+$(document).off('scroll.cursor').on('scroll.cursor', updateCursor);
+$(document).off('click.cursor').on('click.cursor', onClick);
 
 let click = false;
 let scale = 1;
 
 function onLoad() {
-	window.mousePos = JSON.parse(localStorage.getItem('mousePos')) || { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+	window.mousePos = JSON.parse(localStorage.getItem('mousePos')) || { x: innerWidth / 2, y: innerHeight / 2 };
 	updateCursor();
-	sleep(100).then(() => {
+	window.sleep(100).then(() => {
 		$('#cursor-circle').css('transition', 'transform ease-out 0.1s');
 	});
 }
@@ -36,7 +36,7 @@ function onClick() {
 		click = true;
 		scale = 1;
 		updateCursor();
-		sleep(100).then(() => {
+		window.sleep(100).then(() => {
 			scale = 3;
 			updateCursor();
 			click = false;
