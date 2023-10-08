@@ -1,26 +1,32 @@
+const hoverZone = 150;
+const expandAmount = 100;
+const anchorDist = 200;
+const curviness = 50;
+
 let curveXExact = 0;
 let curveYExact = 0;
 let targetX = 0;
 let xIteration = 0;
 let yIteration = 0;
 
+let animating = false;
+let closing = false;
+
 $(function () {
 	$('#menu-inner').on('mouseenter', function () {
 		$('#menu').addClass('expanded');
 	});
+	$('#blob').on('mouseenter', function () {
+		if (!closing) $('#menu').addClass('expanded');
+	});
 	$('#menu-inner').on('mouseleave', function () {
 		$('#menu').removeClass('expanded');
+		closing = true;
+		window.sleep(500).then(() => (closing = false));
 	});
 
 	$(window).on('mousemove', mouseMove);
 });
-
-const hoverZone = 150;
-const expandAmount = 20;
-const anchorDist = 200;
-const curviness = 50;
-
-let animating = false;
 
 function mouseMove() {
 	const x = window.mousePos.x;
@@ -70,16 +76,17 @@ function svgCurve() {
 	// const curve2 = `S60,${(curveY + curviness).round(2)},60,${(curveY + anchorDist).round(2)}`;
 	// const newCurve = path1 + curve1 + curve2 + 'z';
 
-	const newCurve = `M60,${height}H0V0h60v${(curveY - anchorDist).round(2)}c0,${anchorOffset.round(2)},${curveX},${anchorOffset.round(2)},${curveX},${anchorDist}S60,${(curveY + curviness).round(2)},60,${(curveY + anchorDist).round(2)}z`;
+	const newCurve = `M64,${height}H0V0h64v${(curveY - anchorDist).round(2)}c0,${anchorOffset.round(2)},${curveX},${anchorOffset.round(2)},${curveX},${anchorDist}S64,${(curveY + curviness).round(2)},64,${(curveY + anchorDist).round(2)}z`;
 
 	$('#blob-path').attr('d', newCurve);
-	$('#blob').width(curveX + 60);
+	$('#blob').width(curveX + 64);
 	$('#hamburger').css('transform', `translate(${curveX}px, ${curveY}px)`);
 
 	if (targetX > 0 || curveX > 1) window.requestAnimationFrame(svgCurve);
 	else {
 		$('#hamburger').addClass('transition');
 		$('#hamburger').removeAttr('style');
+		$('#blob-path').removeAttr('d');
 		animating = false;
 	}
 }
