@@ -26,7 +26,7 @@ function updateCursor(e = undefined) {
 
 	if (!click) scale = 1;
 	let target = document.elementFromPoint(x, y);
-	if (!click && target?.matches('a,button,img,li')) scale = 3;
+	if (!click && target?.matches('a,button,img,li,input')) scale = 3;
 
 	$('#cursor-dot').css('transform', `translate(calc(${x}px - 50%), calc(${y}px - 50%))`);
 	$('#cursor-circle').css('transform', `translate(calc(${x}px - 50%), calc(${y}px - 50%)) scale(${scale})`);
