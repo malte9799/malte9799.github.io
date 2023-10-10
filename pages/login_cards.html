@@ -5,27 +5,123 @@
 
 <include>
 	<script src="/scripts/fluentui-emoji.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </include>
 
 <section>
-	<!-- <div class="relative w-64 m-4 text-white h-96 child:hover:rotate-y-180">
-		<div class="w-full h-full transition-transform duration-700 !ease-in-out-cubic preserve-3d">
-			<div id="front" class="absolute w-full h-full translate-z-5 preserve-3d backface-hidden bg-[url('/assets/images/W3tra4F.gif')]">
-				<h2 class="text-center p-2.5 translate-z-5">Front</h2>
-				<div class="absolute top-0 flex items-center justify-center w-full h-full preserve-3d">
-					<h1 class="text-4xl text-center translate-z-10">HOVER</h1>
+	<!-- <div class="h-96 child:hover:rotate-y-180 relative w-64 m-4 text-white">
+		  <div class="w-full h-full transition-transform duration-700 !ease-in-out-cubic preserve-3d">
+			  <div id="front" class="translate-z-5 preserve-3d backface-hidden bg-[url('/assets/images/W3tra4F.gif')] absolute w-full h-full">
+				  <h2 class="p-2.5 translate-z-5 text-center">Front</h2>
+				  <div class="preserve-3d absolute top-0 flex items-center justify-center w-full h-full">
+					  <h1 class="translate-z-10 text-4xl text-center">HOVER</h1>
+				  </div>
+			  </div>
+			  <div id="back" class="-translate-z-5 preserve-3d rotate-y-180 before:w-full before:h-full before:absolute before:[background-position-x:_-2.5rem] before:bg-[url('/assets/images/W3tra4F.gif')] before:-scale-x-100 absolute w-full h-full">
+				  <h2 class="p-2.5 translate-z-5 text-center">Back</h2>
+			  </div>
+			  <div id="R-side" class="rotate-y-90 bg-[url('/assets/images/W3tra4F.gif')] absolute w-10 h-full -translate-x-1/2 bg-white"></div>
+		  </div>
+	  </div> -->
+	<!-- <div class="py-[50vh] flex flex-col items-center gap-8"> -->
+	<div class="py-[20vh] flex flex-col items-center gap-8">
+		<div id="" class="h-[40rem] rounded-xl border-slate-500 flex items-center justify-center w-3/5 border-2">
+			<div id="card" class="group h-4/5 rounded-3xl relative w-4/5 bg-white">
+				<div class="rounded-l-3xl rounded-r-[30%] group-[.active]:left-full group-[.active]:-translate-x-full group-[.active]:rounded-l-[30%] group-[.active]:rounded-r-3xl absolute left-0 z-10 w-1/2 h-full transition-all duration-500 bg-blue-500">
+					<div class="relative flex justify-center w-full h-full overflow-hidden">
+						<div class="group-[.active]:-translate-x-[200%] absolute flex flex-col items-center justify-center h-full gap-8 px-8 text-center text-white transition-all duration-500 translate-x-0">
+							<h1 class="text-4xl font-bold">Hello, Friend!</h1>
+							<p>Register with your personal details to use all of site features</p>
+							<button class="rounded-2xl w-1/3 h-12 font-medium text-white border" onclick="$('#card').toggleClass('active')">SIGN IN</button>
+						</div>
+						<div class="translate-x-[200%] group-[.active]:translate-x-0 absolute flex flex-col items-center justify-center h-full gap-8 px-8 text-center text-white transition-all duration-500">
+							<h1 class="text-4xl font-bold">Welcome Back!</h1>
+							<p>Enter your personal details to use all of site features</p>
+							<button class="rounded-2xl w-1/3 h-12 font-medium text-white border" onclick="$('#card').toggleClass('active')">SIGN IN</button>
+						</div>
+					</div>
+				</div>
+				<div class="flex flex-row w-full h-full">
+					<div class="w-1/2 h-full overflow-hidden text-center">
+						<form class="group-[.active]:translate-x-0 flex flex-col items-center justify-around h-full px-10 py-16 transition-transform duration-500 translate-x-full">
+							<h1 class="text-4xl font-bold">Sign In</h1>
+							<div class="flex flex-row justify-center gap-4">
+								<button class="flex items-center justify-center w-12 h-12 bg-white border-2 border-gray-300 rounded-lg"><i class="fa-lg fa-brands fa-google text-gray-600 pointer-events-none"></i></button>
+								<button class="flex items-center justify-center w-12 h-12 bg-white border-2 border-gray-300 rounded-lg"><i class="fa-lg fa-brands fa-facebook-f text-gray-600 pointer-events-none"></i></button>
+								<button class="flex items-center justify-center w-12 h-12 bg-white border-2 border-gray-300 rounded-lg"><i class="fa-lg fa-brands fa-github text-gray-600 pointer-events-none"></i></button>
+								<button class="flex items-center justify-center w-12 h-12 bg-white border-2 border-gray-300 rounded-lg"><i class="fa-lg fa-brands fa-linkedin-in text-gray-600 pointer-events-none"></i></button>
+							</div>
+							<p class="text-gray-500">or use your email and password</p>
+
+							<div class="relative flex items-center w-full h-10">
+								<input id="email" type="email" class="peer absolute inset-0 w-full h-full pl-3 font-medium bg-gray-300 rounded-md" placeholder=" " />
+								<label for="email" class="label rounded-t-md peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent absolute top-0 px-3 font-medium text-gray-400 -translate-y-1/2 bg-gray-300 pointer-events-none">Email</label>
+							</div>
+							<div class="relative flex items-center w-full h-10">
+								<input id="password" type="password" class="peer absolute inset-0 w-full h-full pl-3 font-medium tracking-widest bg-gray-300 rounded-md" placeholder=" " />
+								<label for="password" class="label rounded-t-md peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent absolute top-0 px-3 font-medium text-gray-400 -translate-y-1/2 bg-gray-300 pointer-events-none">Password</label>
+							</div>
+
+							<a href="" class="h-7 text-gray-500">Forgot Your Password?</a>
+							<input type="submit" class="w-1/2 h-10 font-medium text-white bg-blue-600 rounded-lg" value="SIGN IN" />
+						</form>
+					</div>
+
+					<div class="w-1/2 h-full overflow-hidden text-center">
+						<form class="group-[.active]:-translate-x-full flex flex-col items-center justify-around h-full px-10 py-16 transition-transform duration-500 translate-x-0">
+							<h1 class="text-4xl font-bold">Create Account</h1>
+							<div class="flex flex-row justify-center gap-4">
+								<button class="flex items-center justify-center w-12 h-12 bg-white border-2 border-gray-300 rounded-lg"><i class="fa-lg fa-brands fa-google text-gray-600 pointer-events-none"></i></button>
+								<button class="flex items-center justify-center w-12 h-12 bg-white border-2 border-gray-300 rounded-lg"><i class="fa-lg fa-brands fa-facebook-f text-gray-600 pointer-events-none"></i></button>
+								<button class="flex items-center justify-center w-12 h-12 bg-white border-2 border-gray-300 rounded-lg"><i class="fa-lg fa-brands fa-github text-gray-600 pointer-events-none"></i></button>
+								<button class="flex items-center justify-center w-12 h-12 bg-white border-2 border-gray-300 rounded-lg"><i class="fa-lg fa-brands fa-linkedin-in text-gray-600 pointer-events-none"></i></button>
+							</div>
+							<span class="text-gray-500">or use your email for registration</span>
+
+							<div class="relative flex items-center w-full h-10">
+								<input id="name" type="text" class="peer absolute inset-0 w-full h-full pl-3 font-medium bg-gray-300 rounded-md" placeholder=" " />
+								<label for="name" class="label rounded-t-md peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent absolute top-0 px-3 font-medium text-gray-400 -translate-y-1/2 bg-gray-300 pointer-events-none">Name</label>
+							</div>
+							<div class="relative flex items-center w-full h-10">
+								<input id="email" type="email" class="peer absolute inset-0 w-full h-full pl-3 font-medium bg-gray-300 rounded-md" placeholder=" " />
+								<label for="email" class="label rounded-t-md peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent absolute top-0 px-3 font-medium text-gray-400 -translate-y-1/2 bg-gray-300 pointer-events-none">Email</label>
+							</div>
+							<div class="relative flex items-center w-full h-10">
+								<input id="password" type="password" class="peer absolute inset-0 w-full h-full pl-3 font-medium tracking-widest bg-gray-300 rounded-md" placeholder=" " />
+								<label for="password" class="label rounded-t-md peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent absolute top-0 px-3 font-medium text-gray-400 -translate-y-1/2 bg-gray-300 pointer-events-none">Password</label>
+							</div>
+
+							<input type="submit" class="w-1/2 h-10 font-medium text-white bg-blue-600 rounded-lg" value="SIGN UP" />
+						</form>
+					</div>
 				</div>
 			</div>
-			<div id="back" class="absolute w-full h-full -translate-z-5 preserve-3d rotate-y-180 before:w-full before:h-full before:absolute before:[background-position-x:_-2.5rem] before:bg-[url('/assets/images/W3tra4F.gif')] before:-scale-x-100">
-				<h2 class="text-center p-2.5 translate-z-5">Back</h2>
-			</div>
-			<div id="R-side" class="absolute w-10 h-full bg-white -translate-x-[50%] rotate-y-90 bg-[url('/assets/images/W3tra4F.gif')]"></div>
 		</div>
-	</div> -->
-	<div class="flex flex-wrap justify-center gap-8 pt-[50vh]">
-		<div id="card1" class="w-2/5 h-80 bg-slate-700"></div>
-		<div id="card1" class="w-2/5 h-32 bg-slate-700"></div>
-		<div id="card1" class="w-2/5 h-32 bg-slate-700"></div>
-		<div id="card1" class="w-2/5 h-32 bg-slate-700"></div>
 	</div>
+
+	<style>
+		.label::after,
+		.label::before {
+			content: '';
+			position: absolute;
+			width: 100%;
+			left: 0;
+			border-color: black;
+			border-radius: 0.375rem 0.375rem 0 0;
+		}
+		input.peer:focus-visible:not(:placeholder-shown) ~ .label::before,
+		input.peer:-webkit-autofill:focus ~ .label::before {
+			height: 100%;
+			box-shadow: -1px 0 0 #000;
+			border-left-width: 1px;
+			/* background-color: theme('colors.gray.300'); */
+		}
+		.peer:focus-visible:not(:placeholder-shown) ~ .label::after,
+		input.peer:-webkit-autofill:focus ~ .label::after {
+			height: 50%;
+			box-shadow: 1px 0 0 black, 0 -1px 0 black;
+			border-right-width: 1px;
+			border-top-width: 1px;
+		}
+	</style>
 </section>
