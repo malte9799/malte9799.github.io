@@ -53,13 +53,13 @@
 							</div>
 							<p class="text-gray-500">or use your email and password</p>
 
-							<div class="relative flex h-10 w-full items-center">
-								<input id="email" type="email" class="peer absolute inset-0 h-full w-full rounded-md bg-gray-300 pl-3 font-medium" placeholder=" " />
-								<label for="email" class="label pointer-events-none absolute top-0 rounded-t-md bg-gray-300 px-3 font-medium text-gray-400 -translate-y-1/2 peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent">Email</label>
+							<div class="float-label-border float-label-auto h-10 w-full">
+								<input id="email" type="email" class="rounded-md bg-gray-300 px-3 font-medium" placeholder=" " />
+								<label for="email" class="bg-gray-300 px-3 font-medium text-gray-400">Email</label>
 							</div>
-							<div class="relative flex h-10 w-full items-center">
-								<input id="password" type="password" class="peer absolute inset-0 h-full w-full rounded-md bg-gray-300 pl-3 font-medium tracking-widest" placeholder=" " />
-								<label for="password" class="label pointer-events-none absolute top-0 rounded-t-md bg-gray-300 px-3 font-medium text-gray-400 -translate-y-1/2 peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent">Password</label>
+							<div class="float-label-border float-label-auto h-10 w-full">
+								<input id="password" type="password" class="rounded-md bg-gray-300 px-3 font-medium tracking-widest" placeholder=" " />
+								<label for="password" class="bg-gray-300 px-3 font-medium text-gray-400">Password</label>
 							</div>
 
 							<a href="" class="h-7 text-gray-500">Forgot Your Password?</a>
@@ -79,17 +79,17 @@
 							</div>
 							<span class="text-gray-500">or use your email for registration</span>
 
-							<div class="relative flex h-10 w-full items-center">
-								<input id="name" type="text" class="peer absolute inset-0 h-full w-full rounded-md bg-gray-300 pl-3 font-medium" placeholder=" " />
-								<label for="name" class="label pointer-events-none absolute top-0 rounded-t-md bg-gray-300 px-3 font-medium text-gray-400 -translate-y-1/2 peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent">Name</label>
+							<div class="float-label-border float-label-auto h-10 w-full">
+								<input id="name" type="text" class="rounded-md bg-gray-300 px-3 font-medium" placeholder=" " />
+								<label for="name" class="bg-gray-300 px-3 font-medium text-gray-400">Name</label>
 							</div>
-							<div class="relative flex h-10 w-full items-center">
-								<input id="email" type="email" class="peer absolute inset-0 h-full w-full rounded-md bg-gray-300 pl-3 font-medium" placeholder=" " />
-								<label for="email" class="label pointer-events-none absolute top-0 rounded-t-md bg-gray-300 px-3 font-medium text-gray-400 -translate-y-1/2 peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent">Email</label>
+							<div class="float-label-border float-label-auto h-10 w-full">
+								<input id="email" type="email" class="rounded-md bg-gray-300 px-3 font-medium" placeholder=" " />
+								<label for="email" class="bg-gray-300 px-3 font-medium text-gray-400">Email</label>
 							</div>
-							<div class="relative flex h-10 w-full items-center">
-								<input id="password" type="password" class="peer absolute inset-0 h-full w-full rounded-md bg-gray-300 pl-3 font-medium tracking-widest" placeholder=" " />
-								<label for="password" class="label pointer-events-none absolute top-0 rounded-t-md bg-gray-300 px-3 font-medium text-gray-400 -translate-y-1/2 peer-placeholder-shown:top-1/2 peer-placeholder-shown:bg-transparent">Password</label>
+							<div class="float-label-border float-label-auto h-10 w-full">
+								<input id="password" type="password" class="rounded-md bg-gray-300 px-3 font-medium tracking-widest" placeholder=" " />
+								<label for="password" class="bg-gray-300 px-3 font-medium text-gray-400">Password</label>
 							</div>
 
 							<input type="submit" class="h-10 w-1/2 rounded-lg bg-blue-600 font-medium text-white" value="SIGN UP" />
@@ -99,32 +99,4 @@
 			</div>
 		</div>
 	</div>
-
-	<style>
-		.label::after,
-		.label::before {
-			content: '';
-			position: absolute;
-			width: 100%;
-			left: 0;
-			border-color: black;
-			border-radius: 0.375rem 0.375rem 0 0;
-		}
-		input.peer:focus-visible:not(:placeholder-shown) ~ .label::before,
-		input.peer:-webkit-autofill:focus ~ .label::before {
-			height: 100%;
-			box-shadow: -1px 0 0 #000;
-			border-left-width: 1px;
-			/* background-color: theme('colors.gray.300'); */
-		}
-		.peer:focus-visible:not(:placeholder-shown) ~ .label::after,
-		input.peer:-webkit-autofill:focus ~ .label::after {
-			height: 50%;
-			box-shadow:
-				1px 0 0 black,
-				0 -1px 0 black;
-			border-right-width: 1px;
-			border-top-width: 1px;
-		}
-	</style>
 </section>
