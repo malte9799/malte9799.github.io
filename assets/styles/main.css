@@ -578,49 +578,89 @@ video {
   }
 }
 
-.debug-screens::before {
-  position: fixed;
-  z-index: 2147483647;
-  bottom: 0;
+.float-label-auto {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.float-label-auto > input {
+  position: absolute;
+  inset: 0px;
+  padding: 0 0.75rem 0 0.75rem;
+}
+
+.float-label-auto > label {
+  pointer-events: none;
+  position: absolute;
+  top: 0px;
+  translate: 0 -50%;
+  border-radius: 0.375rem 0.375rem 0 0;
+  padding: 0 0.75rem 0 0.75rem;
+}
+
+.float-label-auto > input:-moz-placeholder-shown ~ label {
+  top: 50%;
+  background-color: transparent;
+}
+
+.float-label-auto > input:placeholder-shown ~ label {
+  top: 50%;
+  background-color: transparent;
+}
+
+.float-label-border > label::after {
+  content: '';
+  position: absolute;
+  width: 100%;
   left: 0;
-  padding: .3333333em .5em;
-  font-size: 12px;
-  line-height: 1;
-  font-family: sans-serif;
-  background-color: #000;
-  color: #fff;
-  box-shadow: 0 0 0 1px #fff;
-  content: 'screen: _';
+  border-color: black;
+  border-radius: 0.375rem 0.375rem 0 0;
 }
 
-@media (min-width: 640px) {
-  .debug-screens::before {
-    content: 'screen: sm';
-  }
+.float-label-border > label::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  left: 0;
+  border-color: black;
+  border-radius: 0.375rem 0.375rem 0 0;
 }
 
-@media (min-width: 768px) {
-  .debug-screens::before {
-    content: 'screen: md';
-  }
+.float-label-border > input:focus-visible:not(:-moz-placeholder-shown) ~ label::before {
+  height: 100%;
+  box-shadow: -1px 0 0 black;
+  border-left-width: 1px;
 }
 
-@media (min-width: 1024px) {
-  .debug-screens::before {
-    content: 'screen: lg';
-  }
+.float-label-border > input:focus-visible:not(:placeholder-shown) ~ label::before {
+  height: 100%;
+  box-shadow: -1px 0 0 black;
+  border-left-width: 1px;
 }
 
-@media (min-width: 1280px) {
-  .debug-screens::before {
-    content: 'screen: xl';
-  }
+.float-label-border > input:-webkit-autofill:focus ~ label::before {
+  height: 100%;
+  box-shadow: -1px 0 0 black;
+  border-left-width: 1px;
 }
 
-@media (min-width: 1536px) {
-  .debug-screens::before {
-    content: 'screen: 2xl';
-  }
+.float-label-border > input:focus-visible:not(:-moz-placeholder-shown) ~ label::after {
+  height: 50%;
+  box-shadow: 1px 0 0 black, 0 -1px 0 black;
+  border-width: 1px 1px 0 0;
+}
+
+.float-label-border > input:focus-visible:not(:placeholder-shown) ~ label::after {
+  height: 50%;
+  box-shadow: 1px 0 0 black, 0 -1px 0 black;
+  border-width: 1px 1px 0 0;
+}
+
+.float-label-border > input:-webkit-autofill:focus ~ label::after {
+  height: 50%;
+  box-shadow: 1px 0 0 black, 0 -1px 0 black;
+  border-width: 1px 1px 0 0;
 }
 
 .pointer-events-none {
@@ -1174,10 +1214,6 @@ video {
   padding-bottom: 50vh;
 }
 
-.pl-3 {
-  padding-left: 0.75rem;
-}
-
 .pt-12 {
   padding-top: 3rem;
 }
@@ -1347,11 +1383,6 @@ video {
   translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);
 }
 
-.-translate-y-1\/2 {
-  --tw-translate-y: -50%;
-  translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);
-}
-
 .translate-x-0 {
   --tw-translate-x: 0px;
   translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);
@@ -1432,8 +1463,12 @@ video {
 
 input:-webkit-autofill,
 input:-webkit-autofill:focus {
-  -webkit-transition: background-color 0s 600000s, color 0s 600000s;
-  transition: background-color 0s 600000s, color 0s 600000s;
+  -webkit-transition:
+		background-color 0s 600000s,
+		color 0s 600000s;
+  transition:
+		background-color 0s 600000s,
+		color 0s 600000s;
 }
 
 body {
@@ -1450,6 +1485,9 @@ body {
   transition: -webkit-clip-path cubic-bezier(0.75, 0, 1, 1) 500ms;
   transition: clip-path cubic-bezier(0.75, 0, 1, 1) 500ms;
   transition: clip-path cubic-bezier(0.75, 0, 1, 1) 500ms, -webkit-clip-path cubic-bezier(0.75, 0, 1, 1) 500ms;
+  transition:
+		clip-path cubic-bezier(0.75, 0, 1, 1) 500ms,
+		-webkit-clip-path cubic-bezier(0.75, 0, 1, 1) 500ms;
 }
 
 /* prismjs */
@@ -1587,22 +1625,6 @@ body {
 .group.active .group-\[\.active\]\:translate-x-0 {
   --tw-translate-x: 0px;
   translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);
-}
-
-.peer:-moz-placeholder-shown ~ .peer-placeholder-shown\:top-1\/2 {
-  top: 50%;
-}
-
-.peer:placeholder-shown ~ .peer-placeholder-shown\:top-1\/2 {
-  top: 50%;
-}
-
-.peer:-moz-placeholder-shown ~ .peer-placeholder-shown\:bg-transparent {
-  background-color: transparent;
-}
-
-.peer:placeholder-shown ~ .peer-placeholder-shown\:bg-transparent {
-  background-color: transparent;
 }
 
 .child\:my-8 > * {
