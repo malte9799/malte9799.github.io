@@ -27,21 +27,7 @@
 	<div class="flex flex-col items-center gap-8 py-[20vh]">
 		<div id="" class="flex h-[40rem] w-3/5 items-center justify-center rounded-xl border-2 border-slate-500">
 			<div id="card" class="group relative h-4/5 w-4/5 rounded-3xl bg-white">
-				<div class="absolute left-0 z-10 h-full w-1/2 rounded-l-3xl rounded-r-[30%] bg-blue-500 transition-all duration-500 group-[.active]:left-full group-[.active]:rounded-l-[30%] group-[.active]:rounded-r-3xl group-[.active]:-translate-x-full">
-					<div class="relative flex h-full w-full justify-center overflow-hidden">
-						<div class="absolute flex h-full flex-col items-center justify-center gap-8 px-8 text-center text-white transition-all duration-500 translate-x-0 group-[.active]:-translate-x-[200%]">
-							<h1 class="text-4xl font-bold">Hello, Friend!</h1>
-							<p>Register with your personal details to use all of site features</p>
-							<button class="h-12 w-1/3 rounded-2xl border font-medium text-white" onclick="$('#card').toggleClass('active')">SIGN IN</button>
-						</div>
-						<div class="absolute flex h-full flex-col items-center justify-center gap-8 px-8 text-center text-white transition-all duration-500 translate-x-[200%] group-[.active]:translate-x-0">
-							<h1 class="text-4xl font-bold">Welcome Back!</h1>
-							<p>Enter your personal details to use all of site features</p>
-							<button class="h-12 w-1/3 rounded-2xl border font-medium text-white" onclick="$('#card').toggleClass('active')">SIGN IN</button>
-						</div>
-					</div>
-				</div>
-				<div class="flex h-full w-full flex-row">
+				<div class="absolute flex h-full w-full flex-row">
 					<div class="h-full w-1/2 overflow-hidden text-center">
 						<form class="flex h-full flex-col items-center justify-around px-10 py-16 transition-transform duration-500 translate-x-full group-[.active]:translate-x-0">
 							<h1 class="text-4xl font-bold">Sign In</h1>
@@ -53,11 +39,11 @@
 							</div>
 							<p class="text-gray-500">or use your email and password</p>
 
-							<div class="float-label-border float-label-auto h-10 w-full">
+							<div class="float-label-auto float-label-border h-10 w-full">
 								<input id="email" type="email" class="rounded-md bg-gray-300 px-3 font-medium" placeholder=" " />
 								<label for="email" class="bg-gray-300 px-3 font-medium text-gray-400">Email</label>
 							</div>
-							<div class="float-label-border float-label-auto h-10 w-full">
+							<div class="float-label-auto float-label-border h-10 w-full">
 								<input id="password" type="password" class="rounded-md bg-gray-300 px-3 font-medium tracking-widest" placeholder=" " />
 								<label for="password" class="bg-gray-300 px-3 font-medium text-gray-400">Password</label>
 							</div>
@@ -79,21 +65,35 @@
 							</div>
 							<span class="text-gray-500">or use your email for registration</span>
 
-							<div class="float-label-border float-label-auto h-10 w-full">
+							<div class="float-label-auto float-label-border h-10 w-full">
 								<input id="name" type="text" class="rounded-md bg-gray-300 px-3 font-medium" placeholder=" " />
 								<label for="name" class="bg-gray-300 px-3 font-medium text-gray-400">Name</label>
 							</div>
-							<div class="float-label-border float-label-auto h-10 w-full">
+							<div class="float-label-auto float-label-border h-10 w-full">
 								<input id="email" type="email" class="rounded-md bg-gray-300 px-3 font-medium" placeholder=" " />
 								<label for="email" class="bg-gray-300 px-3 font-medium text-gray-400">Email</label>
 							</div>
-							<div class="float-label-border float-label-auto h-10 w-full">
+							<div class="float-label-auto float-label-border h-10 w-full">
 								<input id="password" type="password" class="rounded-md bg-gray-300 px-3 font-medium tracking-widest" placeholder=" " />
 								<label for="password" class="bg-gray-300 px-3 font-medium text-gray-400">Password</label>
 							</div>
 
 							<input type="submit" class="h-10 w-1/2 rounded-lg bg-blue-600 font-medium text-white" value="SIGN UP" />
 						</form>
+					</div>
+				</div>
+				<div class="absolute left-0 h-full w-1/2 rounded-l-3xl rounded-r-[30%] bg-blue-500 transition-all duration-500 group-[.active]:left-full group-[.active]:rounded-l-[30%] group-[.active]:rounded-r-3xl group-[.active]:-translate-x-full">
+					<div class="relative flex h-full w-full justify-center overflow-hidden">
+						<div class="absolute flex h-full flex-col items-center justify-center gap-8 px-8 text-center text-white transition-all duration-500 translate-x-0 group-[.active]:-translate-x-[200%]">
+							<h1 class="text-4xl font-bold">Hello, Friend!</h1>
+							<p>Register with your personal details to use all of site features</p>
+							<button class="h-12 w-1/3 rounded-2xl border font-medium text-white" onclick="$('#card').toggleClass('active')">SIGN IN</button>
+						</div>
+						<div class="absolute flex h-full flex-col items-center justify-center gap-8 px-8 text-center text-white transition-all duration-500 translate-x-[200%] group-[.active]:translate-x-0">
+							<h1 class="text-4xl font-bold">Welcome Back!</h1>
+							<p>Enter your personal details to use all of site features</p>
+							<button class="h-12 w-1/3 rounded-2xl border font-medium text-white" onclick="$('#card').toggleClass('active')">SIGN IN</button>
+						</div>
 					</div>
 				</div>
 			</div>
