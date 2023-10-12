@@ -1,6 +1,6 @@
 // Global functions and variables
-window.sleep = (time) => {
-	return new Promise((resolve) => setTimeout(resolve, time));
+window.sleep = time => {
+	return new Promise(resolve => setTimeout(resolve, time));
 };
 
 window.getUrlParams = (search = undefined) => {
@@ -13,7 +13,7 @@ window.setUrlParam = (key, value, pushState = false, replaceOld = false) => {
 	current[key] = value;
 
 	let newParams = '';
-	Object.keys(current).forEach((key) => {
+	Object.keys(current).forEach(key => {
 		let prefix = newParams == '' ? '?' : '&';
 		newParams += prefix + key + '=' + current[key];
 	});
@@ -25,7 +25,7 @@ window.removeUrlParam = (key, pushState = false) => {
 	delete current[key];
 
 	let newParams = '';
-	Object.keys(current).forEach((key) => {
+	Object.keys(current).forEach(key => {
 		let prefix = newParams == '' ? '?' : '&';
 		newParams += prefix + key + '=' + current[key];
 	});
@@ -45,7 +45,7 @@ window.copyToClipboard = (input, isElement = false) => {
 window.templates = {};
 window.isMobile = window.matchMedia('only screen and (max-width: 760px)').matches;
 
-window.img_not_found = 'https://cdn.jsdelivr.net/gh/malte9799/cdn/fluentui-emoji/not_found.png';
+window.img_not_found = 'https://malte9799.github.io/cdn/fluentui-emoji/not_found.png';
 
 Number.prototype.round = function (places) {
 	return +(Math.round(this + 'e+' + places) + 'e-' + places);
