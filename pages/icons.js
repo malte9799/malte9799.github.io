@@ -6,7 +6,6 @@ window.templates.icon_card = `
   </button>
 </article>
 `;
-
 window.templates.icon_detail = `
 <div class="z-.1 event fixed inset-0 w-screen overflow-y-auto bg-gray-800 bg-opacity-50">
   <div id="modal" class="flex min-h-full items-start justify-center text-center">
@@ -43,7 +42,6 @@ window.templates.icon_detail = `
   </div>
 </div>
 `;
-
 window.templates.icon_detail_selector = `<div class="child-first:rounded-l-2xl child-first:border-l-4 child-last:rounded-r-2xl child-last:border-r-4 flex h-full max-h-[50%] min-h-[1rem] flex-row"></div>`;
 window.templates.icon_detail_selector_img = `<button class="flex w-full flex-1 grow items-center justify-center border-x-2 border-y-4 border-gray-800 transition-colors hover:bg-gray-800"><img class="max-h-full" width="100vh" /></button>`;
 
@@ -56,21 +54,21 @@ $(function () {
 	if (!window.getUrlParams('c')) window.setUrlParam('c', 'medium');
 
 	let p = window.getUrlParams('p');
-	getIconData().then((data) => {
+	getIconData().then(data => {
 		icon_data = data;
 		data = data.slice(icons_per_page * (p - 1), icons_per_page * p);
 
 		if (window.getUrlParams('view')) show_details(window.getUrlParams('view').split('-')[0]);
 
 		let icon_container = $('#icon_container');
-		data.forEach((icon) => {
+		data.forEach(icon => {
 			icon_container.append(createIconArticle(icon));
 		});
 	});
 });
 
 async function getIconData() {
-	const res = await fetch('https://cdn.jsdelivr.net/gh/malte9799/cdn/fluentui-emoji/list.json');
+	const res = await fetch('https://malte9799.github.io/cdn/fluentui-emoji/list.json');
 	if (!res.ok) throw new Error('Network response was not ok');
 	const data = await res.json();
 	return data;
@@ -122,7 +120,7 @@ function show_details(icon) {
 	let img = $($.parseHTML(window.templates.icon_detail_selector_img.trim()));
 
 	temp.find('#icon_name').html(`${icon}<span id="icon_style" class="pointer-events-none text-lg text-gray-500 transition-colors group-hover:text-blue-400">_${icon_style}</span>`);
-	temp.find('#icon_name').on('click', (e) => {
+	temp.find('#icon_name').on('click', e => {
 		window.copyToClipboard(window.getUrlParams('view').replace('-', '_'));
 		$(e.target).attr('aria-label', 'Copied');
 		window.sleep(2000).then(() => $(e.target).attr('aria-label', 'Copy Icon Name'));
@@ -132,7 +130,7 @@ function show_details(icon) {
 	if (color) {
 		color_selector = selector.clone();
 		color_selector.attr('id', 'color_selector');
-		colors.forEach((c) => {
+		colors.forEach(c => {
 			let button = img.clone();
 			button.on('click', () => update_details('color', c));
 			let i = button.find('img').attr('src', iconToUrl(`${icon}_${style}_${c}`));
@@ -142,7 +140,7 @@ function show_details(icon) {
 	}
 
 	selector.attr('id', 'style_selector');
-	styles.forEach((s) => {
+	styles.forEach(s => {
 		let icon_style = color ? `${s}_${color}` : s;
 		let button = img.clone();
 		button.on('click', () => update_details('style', s));
@@ -154,19 +152,30 @@ function show_details(icon) {
 
 	temp.find('#code').html(Prism.highlight(`<img fluentui="${icon}_${icon_style}">`, Prism.languages.markup, 'html'));
 
-	temp.hide().fadeIn(500);
+	temp.hide();
 	$('section').append(temp);
+	temp.fadeIn(200);
 
-	$(window).on('click.temp', (e) => {
+	$(window).on('click.temp', e => {
 		if (e.target.id == 'modal') {
-			window.removeUrlParam('view');
-			$(window).off('click.temp');
-			$(e.target)
-				.parent()
-				.fadeOut(200, () => {
-					$('#modal').parent().remove();
-				});
+			close_details();
 		}
+	});
+	$(document).on('keydown.temp', e => {
+		if (e.key == 'Escape') {
+			close_details();
+		}
+	});
+}
+
+function close_details() {
+	window.removeUrlParam('view');
+	$(window).off('click.temp');
+	$(document).off('keydown.temp');
+
+	const modal = $('#modal').parent();
+	$(modal).fadeOut(200, () => {
+		modal.remove();
 	});
 }
 
