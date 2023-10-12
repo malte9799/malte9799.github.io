@@ -8,8 +8,8 @@
 
 		<!-- ########## PRECONNECT ######### -->
 		<link rel="preconnect" href="https://ajax.googleapis.com" />
-		<link rel="preconnect" href="https://cdn.jsdelivr.net" />
 		<link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+		<link rel="preconnect" href="https://malte9799.github.io" />
 
 		<!-- ########## LIBRARIES ########## -->
 		<!-- JQuery -->
@@ -21,30 +21,31 @@
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/balloon-css/1.2.0/balloon.min.css" integrity="sha512-6jHrqOB5TcbWsW52kWP9TTx06FHzpj7eTOnuxQrKaqSvpcML2HTDR2/wWWPOh/YvcQQBGdomHL/x+V1Hn+AWCA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 		<!-- ############ FONTS ############ -->
-		<link href="https://cdn.jsdelivr.net/gh/malte9799/cdn@main/fonts/CeraRoundPro/CeraRoundPro.css" rel="stylesheet" />
-		<link href="https://cdn.jsdelivr.net/gh/malte9799/cdn@main/fonts/Menlo/Menlo.css" rel="stylesheet" />
+		<link rel="stylesheet" href="https://malte9799.github.io/cdn/fonts/CeraRoundPro.css" />
 
-		<!-- ########### INTERNAL ########## -->
+		<!-- ############ ASSETS ########### -->
 		<link rel="stylesheet" href="/assets/styles/main.css" />
 		<script src="/scripts/index.js" type="module"></script>
 	</head>
-	<body class="bg-gray-900" style="background-color: #111827">
-		<!-- <div id="menu" class="fixed h-full transition-all duration-500 ease-in-out -translate-x-full z-inf bg-slate-800 w-80 left-16 [&.expanded]:left-0 [&.expanded]:translate-x-0">
-			<svg class="absolute top-0 w-16 h-full translate-x-full right-16" version="1.1" id="blob" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+	<body style="background-color: #111827">
+		<div id="menu" class="fixed left-16 z-inf h-full w-80 bg-slate-800 transition-all duration-500 ease-in-out -translate-x-full [&.expanded]:left-0 [&.expanded]:translate-x-0">
+			<svg class="absolute right-16 top-0 h-full w-16 translate-x-full" version="1.1" id="blob" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 				<path class="h-full fill-slate-800" id="blob-path" />
 			</svg>
-			<div id="hamburger" class="absolute flex flex-col justify-between w-6 h-5 -mt-2 !ease-out translate-y-7 right-5">
-				<div class="w-full h-1 bg-white rounded-full"></div>
-				<div class="w-full h-1 bg-white rounded-full"></div>
-				<div class="w-full h-1 bg-white rounded-full"></div>
+			<div id="hamburger" class="absolute right-5 -mt-2 flex h-5 w-6 flex-col justify-between transition-all ease-out translate-y-7">
+				<div class="h-1 w-full rounded-full bg-white"></div>
+				<div class="h-1 w-full rounded-full bg-white"></div>
+				<div class="h-1 w-full rounded-full bg-white"></div>
 			</div>
-			<div id="menu-inner" class="relative w-full h-full">
-				<ul class="absolute w-4/5 p-0 ml-8 text-white list-none top-3 child:my-8">
+			<div id="menu-inner" class="relative h-full w-full">
+				<ul class="absolute top-3 ml-8 w-4/5 list-none p-0 text-white child:my-8">
 					<li><a link="index">Index</a></li>
 					<li><a link="icons">Icons</a></li>
 				</ul>
 			</div>
-		</div> -->
+		</div>
+
 		<div id="cursor" class="cursor fixed z-inf mix-blend-difference">
 			<div id="cursor-circle" class="cursor cursor-circle pointer-events-none fixed h-5 w-5 rounded-full border"></div>
 			<div id="cursor-dot" class="cursor cursor-dot pointer-events-none fixed h-1 w-1 rounded-full bg-white"></div>
