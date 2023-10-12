@@ -34,28 +34,28 @@ module.exports = {
 		},
 
 		plugin(function ({ addComponents }) {
-			const after_before = {
-				content: "''",
-				position: 'absolute',
-				width: '100%',
-				left: 0,
+			const label_default = {
+				'content': "''",
+				'position': 'absolute',
+				'width': '100%',
+				'left': 0,
 				'border-color': 'black',
 				'border-radius': '0.375rem 0.375rem 0 0',
 			};
 			const label_before = {
-				height: '100%',
+				'height': '100%',
 				'box-shadow': '-1px 0 0 black',
 				'border-left-width': '1px',
 			};
 			const label_after = {
-				height: '50%',
+				'height': '50%',
 				'box-shadow': '1px 0 0 black, 0 -1px 0 black',
 				'border-width': '1px 1px 0 0',
 			};
 			addComponents({
 				'.float-label-auto': {
-					position: 'relative',
-					display: 'flex',
+					'position': 'relative',
+					'display': 'flex',
 					'align-items': 'center',
 					'& > input': {
 						position: 'absolute',
@@ -64,26 +64,24 @@ module.exports = {
 					},
 					'& > label': {
 						'pointer-events': 'none',
-						position: 'absolute',
-						top: '0px',
-						translate: '0 -50%',
+						'position': 'absolute',
+						'top': '0px',
+						'translate': '0 -50%',
 						'border-radius': '0.375rem 0.375rem 0 0',
-						padding: '0 0.75rem 0 0.75rem',
+						'padding': '0 0.75rem 0 0.75rem',
 					},
-
 					'& > input:placeholder-shown ~ label': {
-						top: '50%',
+						'top': '50%',
 						'background-color': 'transparent',
 					},
 				},
 			});
 			addComponents({
 				'.float-label-border': {
-					'& > label::after': after_before,
-					'& > label::before': after_before,
+					'& > label::after': label_default,
+					'& > label::before': label_default,
 					'& > input:focus-visible:not(:placeholder-shown) ~ label::before': label_before,
 					'& > input:-webkit-autofill:focus ~ label::before': label_before,
-
 					'& > input:focus-visible:not(:placeholder-shown) ~ label::after': label_after,
 					'& > input:-webkit-autofill:focus ~ label::after': label_after,
 				},
