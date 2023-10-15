@@ -49,16 +49,16 @@ var icons_per_page = 200;
 var icon_data;
 
 $(function () {
-	if (!window.getUrlParams('p')) window.setUrlParam('p', 1);
-	if (!window.getUrlParams('s')) window.setUrlParam('s', '3d');
-	if (!window.getUrlParams('c')) window.setUrlParam('c', 'medium');
+	if (!window.urlParam.get('p')) window.urlParam.set('p', 1);
+	if (!window.urlParam.get('s')) window.urlParam.set('s', '3d');
+	if (!window.urlParam.get('c')) window.urlParam.set('c', 'medium');
 
-	let p = window.getUrlParams('p');
+	let p = window.urlParam.get('p');
 	getIconData().then(data => {
 		icon_data = data;
 		data = data.slice(icons_per_page * (p - 1), icons_per_page * p);
 
-		if (window.getUrlParams('view')) show_details(window.getUrlParams('view').split('-')[0]);
+		if (window.urlParam.get('view')) show_details(window.urlParam.get('view').split('-')[0]);
 
 		let icon_container = $('#icon_container');
 		data.forEach(icon => {
@@ -78,8 +78,8 @@ function createIconArticle(icon) {
 	let icon_name = icon.replace('-color', '');
 	let hasColor = icon.includes('-color');
 
-	let style = window.getUrlParams('s');
-	let color = window.getUrlParams('c');
+	let style = window.urlParam.get('s');
+	let color = window.urlParam.get('c');
 
 	let icon_style = hasColor ? `${style}_${color}` : style;
 
@@ -99,16 +99,16 @@ function createIconArticle(icon) {
 
 function show_details(icon) {
 	let style, color;
-	if (window.getUrlParams('view')) {
-		[style, ...color] = window.getUrlParams('view').split('-').slice(1);
+	if (window.urlParam.get('view')) {
+		[style, ...color] = window.urlParam.get('view').split('-').slice(1);
 		color = color.join('-');
 	} else {
-		style = window.getUrlParams('s');
-		color = icon_data.includes(icon + '-color') ? window.getUrlParams('c') : undefined;
+		style = window.urlParam.get('s');
+		color = icon_data.includes(icon + '-color') ? window.urlParam.get('c') : undefined;
 	}
 
 	let icon_style = color ? `${style}-${color}` : style;
-	window.setUrlParam('view', `${icon}-${icon_style}`);
+	window.urlParam.set('view', `${icon}-${icon_style}`);
 	icon_style = icon_style.replace('-', '_');
 
 	let styles = ['3d', 'color', 'flat'];
@@ -121,7 +121,7 @@ function show_details(icon) {
 
 	temp.find('#icon_name').html(`${icon}<span id="icon_style" class="pointer-events-none text-lg text-gray-500 transition-colors group-hover:text-blue-400">_${icon_style}</span>`);
 	temp.find('#icon_name').on('click', e => {
-		window.copyToClipboard(window.getUrlParams('view').replace('-', '_'));
+		window.copyToClipboard(window.urlParam.get('view').replace('-', '_'));
 		$(e.target).attr('aria-label', 'Copied');
 		window.sleep(2000).then(() => $(e.target).attr('aria-label', 'Copy Icon Name'));
 	});
@@ -169,7 +169,7 @@ function show_details(icon) {
 }
 
 function close_details() {
-	window.removeUrlParam('view');
+	window.urlParam.remove('view');
 	$(window).off('click.temp');
 	$(document).off('keydown.temp');
 
@@ -184,13 +184,13 @@ function update_details(type, value) {
 	const colors = ['default', 'light', 'medium-light', 'medium', 'medium-dark', 'dark'];
 
 	let icon = $('#modal').find('#icon_name').html().split('<')[0];
-	let [style, ...color] = window.getUrlParams('view').split('-').slice(1);
+	let [style, ...color] = window.urlParam.get('view').split('-').slice(1);
 	color = color.join('-');
 	if (type == 'style') style = value;
 	if (type == 'color') color = value;
 	let icon_style_ = color ? `${style}-${color}` : style;
 	let icon_style = icon_style_.replace('-', '_');
-	window.setUrlParam('view', `${icon}-${icon_style_}`);
+	window.urlParam.set('view', `${icon}-${icon_style_}`);
 
 	const modal = $('#modal');
 	modal.find('#icon_style').html('_' + icon_style);

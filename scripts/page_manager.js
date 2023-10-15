@@ -2,23 +2,19 @@ $(loadPage);
 $(window).on('popstate ', () => loadPage({ x: innerWidth / 2, y: innerHeight / 2 }));
 
 function averageRGB(color1, color2) {
-	const regex = /rgb\((\d+), (\d+), (\d+)\)/;
-	const match1 = color1.match(regex).slice(1);
-	const match2 = color2.match(regex).slice(1);
+	const rgb1 = window.rgb.fromString(color1);
+	const rgb2 = window.rgb.fromString(color2);
 
-	const average = match1.map((value, index) => {
-		return Math.round((Number(value) + Number(match2[index])) / 2);
+	const average = rgb1.map((value, index) => {
+		return Math.round((Number(value) + Number(rgb2[index])) / 2);
 	});
-
-	return `rgb(${average.join(', ')})`;
+	return window.rgb.toString(average);
 }
 
 function changeColor(color) {
-	let colorObj = new Color(color);
-	let [h, s, l] = colorObj.get('hsl', false);
+	let [h, s, l] = window.rgb.toHSL(color);
 	l = l <= 25 ? (l += 5) : (l -= 5);
-	colorObj.update('hsl', h, s, l);
-	return colorObj.get();
+	return window.hsl.toRGB(h, s, l, true);
 }
 
 function loadPage(overwriteMouse = undefined) {
@@ -26,18 +22,18 @@ function loadPage(overwriteMouse = undefined) {
 	$('#menu').removeClass('expanded');
 	$('.included').addClass('old');
 	let section_old = $('section:not(.old)');
-	let page = window.getUrlParams('page') || 'index';
-	$.get(`/pages/${page}.html`, (res) => {
+	let page = window.urlParam.get('page') || 'index';
+	$.get(`/pages/${page}.html`, res => {
 		let section_new = $.parseHTML(res.match(/<section.*>[\s\S]*<\/section>/gm)[0]);
 		$(section_new).addClass('fullscreen');
 		$('body').append(section_new);
 		$('body')
 			.find('a[link]')
-			.on('click', (e) => {
+			.on('click', e => {
 				e.preventDefault();
 				let page = $(e.target).attr('link');
-				if ((window.getUrlParams('page') || 'index') == page) return;
-				window.setUrlParam('page', page, true, true);
+				if ((window.urlParam.get('page') || 'index') == page) return;
+				window.urlParam.set('page', page, true, true);
 				loadPage();
 			})
 			.each((i, e) => {
@@ -106,12 +102,12 @@ function page_transition(section_old, section_new, overwriteMouse) {
 }
 
 function removeOldEventListeners() {
-	Object.values($._data(window, 'events')).forEach((e) => {
+	Object.values($._data(window, 'events')).forEach(e => {
 		if (e[0].namespace == 'temp') {
 			$(window).off(`${e[0].type}.temp`);
 		}
 	});
-	Object.values($._data(document, 'events')).forEach((e) => {
+	Object.values($._data(document, 'events')).forEach(e => {
 		if (e[0].namespace == 'temp') {
 			$(document).off(`${e[0].type}.temp`);
 		}
