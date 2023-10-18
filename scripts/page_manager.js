@@ -6,7 +6,7 @@ function averageRGB(color1, color2) {
 	const rgb2 = window.rgb.fromString(color2);
 
 	const average = rgb1.map((value, index) => {
-		return Math.round((Number(value) + Number(rgb2[index])) / 2);
+		return Math.round((parseInt(value) + parseInt(rgb2[index])) / 2);
 	});
 	return window.rgb.toString(average);
 }

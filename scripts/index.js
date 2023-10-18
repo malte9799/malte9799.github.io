@@ -1,4 +1,7 @@
 import '/scripts/global.js';
-import '/scripts/cursor.js';
-import '/scripts/page_manager.js';
-import '/scripts/navbar.js';
+import '/scripts/page_manager2.js';
+
+// import '/pages/index.js';
+
+import '/components/cursor.js';
+import '/components/navbar.js';

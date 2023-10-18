@@ -2,7 +2,7 @@
 const plugin = require('tailwindcss/plugin');
 
 module.exports = {
-	content: ['./index.html', './pages/*.{html,js}', './scripts/*.js'],
+	content: ['./index.html', './pages/*.{html,js}', './scripts/*.js', './components/*.js'],
 	theme: {
 		extend: {
 			zIndex: {
