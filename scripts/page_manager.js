@@ -21,82 +21,55 @@ function loadPage(overwriteMouse = undefined) {
 	removeOldEventListeners();
 	$('#menu').removeClass('expanded');
 	$('.included').addClass('old');
-	let section_old = $('section:not(.old)');
+	const $page_old = $('main:not(.old)');
 	let page = window.urlParam.get('page') || 'index';
-	$.get(`/pages/${page}.html`, res => {
-		let section_new = $.parseHTML(res.match(/<section.*>[\s\S]*<\/section>/gm)[0]);
-		$(section_new).addClass('fullscreen');
-		$('body').append(section_new);
-		$('body')
+	$.getScript(`/pages/${page}.js`, res => {
+		const $page_new = $(getPageContent());
+		$page_new
 			.find('a[link]')
+			.each((i, e) => {
+				e.href = '?page=' + $(e).attr('link');
+			})
 			.on('click', e => {
 				e.preventDefault();
 				let page = $(e.target).attr('link');
 				if ((window.urlParam.get('page') || 'index') == page) return;
 				window.urlParam.set('page', page, true, true);
 				loadPage();
-			})
-			.each((i, e) => {
-				e.href = '?page=' + $(e).attr('link');
 			});
 
-		if (section_old.length) page_transition(section_old, $(section_new), overwriteMouse);
+		$('body').append($page_new);
 
-		let match = res.match(/<include>[\s\S]*<\/include>/);
-		if (!match) return;
-		let includes = $.parseHTML(match[0], true);
-		loadScripts($(includes).find('script'));
-		$(includes)
-			.find('link')
-			.each((i, e) => {
-				$('head').append(`<link class="included" rel="stylesheet" href="${$(e).attr('href')}">`);
-			});
+		if ($page_old.length) page_transition($page_old, $page_new, overwriteMouse);
 	});
 }
 
-function loadScripts(scripts) {
-	if (!scripts || scripts.length == 0) return;
-	if (scripts.eq(0).prop('async')) {
-		$.getScript(scripts.eq(0).attr('src')).done(() => {
-			loadScripts(scripts.slice(1));
-		});
-	} else {
-		$.getScript(scripts.eq(0).attr('src'));
-		loadScripts(scripts.slice(1));
-	}
-}
+function page_transition($page_old, $page_new, overwriteMouse) {
+	const x = overwriteMouse?.x || window.mousePos.x;
+	const y = overwriteMouse?.y || window.mousePos.y;
+	const $body = $('body');
 
-function page_transition(section_old, section_new, overwriteMouse) {
-	let x = overwriteMouse?.x || window.mousePos.x;
-	let y = overwriteMouse?.y || window.mousePos.y;
+	$page_old.addClass('old z-1').removeClass('z-3');
+	$page_new.addClass('z-3');
 
-	section_old.addClass('old', 'z-1');
-	section_old.removeClass('z-3');
-	section_new.addClass('z-3');
+	const color_old = $page_old.get(0).style.backgroundColor || $body.get(0).style.backgroundColor;
+	const color_new = $page_new.get(0).style.backgroundColor || $body.get(0).style.backgroundColor;
+	const transition_color = color_old == color_new ? changeColor(color_old) : averageRGB(color_old, color_new);
+	$page_new.css('background-color', color_new);
 
-	let color_old = section_old.get(0).style.backgroundColor;
-	let color_new = section_new.get(0).style.backgroundColor;
-	let body_color = $('body').get(0).style.backgroundColor;
+	const $circle = $(`<div class="fullscreen z-2" style="clip-path:circle(0% at ${x}px ${y}px); background-color:${transition_color};"></div>`);
+	$body.append($circle);
+	$page_new.css('clip-path', `circle(0% at ${x}px ${y}px)`);
 
-	if (!color_new) section_new.css('background-color', body_color);
-	color_new = color_new || body_color;
-	color_old = color_old || body_color;
-
-	let transition_color = color_old == color_new ? changeColor(color_old) : averageRGB(color_old, color_new);
-
-	let circle = $.parseHTML(`<div class="fullscreen z-2" style="clip-path:circle(0% at ${x}px ${y}px); background-color:${transition_color};"></div>`);
-	$('body').append(circle);
-	section_new.css('clip-path', `circle(0% at ${x}px ${y}px)`);
-
-	sleep(50).then(() => {
-		section_new.css('clip-path', `circle(150% at ${x}px ${y}px)`);
-		$(circle).css('clip-path', `circle(300% at ${x}px ${y}px)`);
+	window.sleep(50).then(() => {
+		$page_new.css('clip-path', `circle(150% at ${x}px ${y}px)`);
+		$circle.css('clip-path', `circle(300% at ${x}px ${y}px)`);
 	});
 
 	sleep(600).then(() => {
-		section_new.css('clip-path', '');
-		section_old.remove();
-		$(circle).remove();
+		$page_new.css('clip-path', '');
+		$page_old.remove();
+		$circle.remove();
 		$('.included.old').remove();
 	});
 }
