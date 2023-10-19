@@ -560,12 +560,36 @@ video {
   position: fixed;
 }
 
+.absolute {
+  position: absolute;
+}
+
 .relative {
   position: relative;
 }
 
 .inset-0 {
   inset: 0px;
+}
+
+.left-16 {
+  left: 4rem;
+}
+
+.right-16 {
+  right: 4rem;
+}
+
+.right-5 {
+  right: 1.25rem;
+}
+
+.top-0 {
+  top: 0px;
+}
+
+.top-3 {
+  top: 0.75rem;
 }
 
 .z-1 {
@@ -612,6 +636,14 @@ video {
 
 .mt-8 {
   margin-top: 2rem;
+}
+
+.-mt-2 {
+  margin-top: -0.5rem;
+}
+
+.ml-8 {
+  margin-left: 2rem;
 }
 
 .box-border {
@@ -685,6 +717,22 @@ video {
   width: 100vw;
 }
 
+.w-16 {
+  width: 4rem;
+}
+
+.w-4\/5 {
+  width: 80%;
+}
+
+.w-6 {
+  width: 1.5rem;
+}
+
+.w-80 {
+  width: 20rem;
+}
+
 .max-w-7xl {
   max-width: 80rem;
 }
@@ -699,6 +747,10 @@ video {
 
 .basis-full {
   flex-basis: 100%;
+}
+
+.list-none {
+  list-style-type: none;
 }
 
 .flex-row {
@@ -727,6 +779,10 @@ video {
 
 .justify-center {
   justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
 }
 
 .justify-evenly {
@@ -818,6 +874,10 @@ video {
 
 .bg-opacity-50 {
   --tw-bg-opacity: 0.5;
+}
+
+.fill-slate-800 {
+  fill: #1e293b;
 }
 
 .p-0 {
@@ -930,8 +990,31 @@ video {
   transition-duration: 150ms;
 }
 
+.duration-500 {
+  transition-duration: 500ms;
+}
+
 .ease-out {
   transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+.ease-in-out {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.-translate-x-full {
+  --tw-translate-x: -100%;
+  translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);
+}
+
+.translate-x-full {
+  --tw-translate-x: 100%;
+  translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);
+}
+
+.translate-y-7 {
+  --tw-translate-y: 1.75rem;
+  translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);
 }
 
 .transform {
@@ -1057,6 +1140,11 @@ body {
   color: rgb(96 165 250 / var(--tw-text-opacity));
 }
 
+.child\:my-8 > * {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
 @media (min-width: 768px) {
   .md\:mx-auto {
     margin-left: auto;
@@ -1080,4 +1168,13 @@ body {
   .xl\:basis-0 {
     flex-basis: 0px;
   }
+}
+
+.\[\&\.expanded\]\:left-0.expanded {
+  left: 0px;
+}
+
+.\[\&\.expanded\]\:translate-x-0.expanded {
+  --tw-translate-x: 0px;
+  translate: var(--tw-translate-x) var(--tw-translate-y) var(--tw-translate-z);
 }
