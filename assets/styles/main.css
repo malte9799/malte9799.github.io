@@ -769,6 +769,10 @@ video {
   margin-top: 2rem;
 }
 
+.ml-40 {
+  margin-left: 10rem;
+}
+
 .box-border {
   box-sizing: border-box;
 }
@@ -1220,6 +1224,10 @@ video {
 
 .pt-\[25\%\] {
   padding-top: 25%;
+}
+
+.pl-40 {
+  padding-left: 10rem;
 }
 
 .text-left {
