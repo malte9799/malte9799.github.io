@@ -9,8 +9,8 @@ window.urlParam = {
 		decodeURIComponent(window.location.search).replace(/[?&]+([^=&]+)=([^&]*)/g, (m, key, value) => (params[key] = value));
 		return search ? params[search] : params;
 	},
-	set: (key, value, pushState = false, replaceOld = false) => {
-		let current = replaceOld ? [] : window.urlParam.get();
+	set: (key, value, pushState = false, clearOld = false) => {
+		let current = clearOld ? [] : window.urlParam.get();
 		current[key] = value;
 
 		let newParams = '';
