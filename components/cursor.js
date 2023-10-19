@@ -2,39 +2,29 @@ class CursorElement extends HTMLElement {
 	constructor() {
 		super();
 
-		const cursor = $('<div class="fixed z-inf mix-blend-difference"></div>');
+		$(this).addClass('fixed z-inf mix-blend-difference');
+
 		this.circle = $('<div class="pointer-events-none fixed h-5 w-5 rounded-full border"></div>');
+		$(this).append(this.circle);
+
 		this.dot = $('<div class="pointer-events-none fixed h-1 w-1 rounded-full bg-white"></div>');
+		$(this).append(this.dot);
 
-		cursor.append(this.circle);
-		cursor.append(this.dot);
-
-		$(this).replaceWith($(cursor));
-
-		this.onClick = this.onClick.bind(this);
-		this.updateCursor = this.updateCursor.bind(this);
-		this.onLoad = this.onLoad.bind(this);
-		this.onUnload = this.onUnload.bind(this);
-
-		this.onLoad();
-		$(window).on('pagehide', this.onUnload);
-		$(document).on('mousemove', this.updateCursor);
-		$(document).on('scroll', this.updateCursor);
-		$(document).on('click', this.onClick);
+		$(window).on('pagehide', this.onUnload.bind(this));
+		$(document).on('mousemove', this.updateCursor.bind(this));
+		$(document).on('scroll', this.updateCursor.bind(this));
+		$(document).on('click', this.onClick.bind(this));
 
 		this.click = false;
 		this.scale = 1;
 	}
 
 	connectedCallback() {
-		this.updateCursor();
-	}
-
-	onLoad() {
 		window.mousePos = JSON.parse(localStorage.getItem('mousePos')) || { x: innerWidth / 2, y: innerHeight / 2 };
 		this.updateCursor();
 		window.sleep(100).then(() => {
 			this.circle.css('transition', 'transform ease-out 0.1s');
+			this.updateCursor();
 		});
 	}
 
