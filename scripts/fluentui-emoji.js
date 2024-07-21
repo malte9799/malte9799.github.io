@@ -14,7 +14,7 @@ function iconToUrl(icon) {
 
 	name = name.charAt(0).toUpperCase() + name.slice(1);
 	name = name.split('_').join('%20');
-	let ending = icon.includes('3d') ? '.png' : '.svg';
+	let ending = icon.includes('3d') || icon.includes('animated') ? '.png' : '.svg';
 	let param;
 
 	if (rest.includes('_') && rest != 'high_contrast') {
