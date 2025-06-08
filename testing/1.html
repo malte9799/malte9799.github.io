@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connected Spheres</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            font-size: 14px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <div id="status">Window 1 - Open another window to see connections</div>
+    </div>
+    <div id="container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        class ConnectedSpheres {
+            constructor() {
+                this.windowId = this.generateWindowId();
+                this.isSecondWindow = false;
+                this.points = [];
+                this.pointPositions = [];
+                this.lines = [];
+                this.numPoints = 500;
+                
+                this.init();
+                this.setupWindowCommunication();
+                this.animate();
+            }
+            
+            generateWindowId() {
+                return Math.random().toString(36).substr(2, 9);
+            }
+            
+            init() {
+                // Scene setup
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setClearColor(0x000000);
+                document.getElementById('container').appendChild(this.renderer.domElement);
+                
+                // Create sphere of points
+                this.createPointSphere();
+                
+                // Position camera
+                this.camera.position.z = 5;
+                
+                // Handle window resize
+                window.addEventListener('resize', () => this.onWindowResize());
+                
+                // Mouse interaction for rotation
+                this.setupMouseControls();
+            }
+            
+            createPointSphere() {
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(this.numPoints * 3);
+                
+                // Generate points on sphere surface using spherical coordinates
+                for (let i = 0; i < this.numPoints; i++) {
+                    const i3 = i * 3;
+                    
+                    // Uniform distribution on sphere
+                    const u = Math.random();
+                    const v = Math.random();
+                    const theta = 2 * Math.PI * u;
+                    const phi = Math.acos(2 * v - 1);
+                    
+                    const radius = 2;
+                    const x = radius * Math.sin(phi) * Math.cos(theta);
+                    const y = radius * Math.sin(phi) * Math.sin(theta);
+                    const z = radius * Math.cos(phi);
+                    
+                    positions[i3] = x;
+                    positions[i3 + 1] = y;
+                    positions[i3 + 2] = z;
+                    
+                    // Store positions for connection lines
+                    this.pointPositions.push({ x, y, z });
+                }
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                // Determine color based on window
+                const color = this.isSecondWindow ? 0xff6b6b : 0x64b5f6;
+                const material = new THREE.PointsMaterial({
+                    color: color,
+                    size: 3,
+                    sizeAttenuation: true
+                });
+                
+                this.pointCloud = new THREE.Points(geometry, material);
+                this.scene.add(this.pointCloud);
+            }
+            
+            setupMouseControls() {
+                let mouseX = 0, mouseY = 0;
+                let isMouseDown = false;
+                
+                document.addEventListener('mousedown', () => isMouseDown = true);
+                document.addEventListener('mouseup', () => isMouseDown = false);
+                document.addEventListener('mousemove', (event) => {
+                    if (isMouseDown) {
+                        mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+                        mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+                        
+                        this.pointCloud.rotation.y = mouseX * Math.PI;
+                        this.pointCloud.rotation.x = mouseY * Math.PI * 0.5;
+                    }
+                });
+                
+                // Auto rotation when not interacting
+                this.autoRotate = true;
+                setTimeout(() => {
+                    if (!isMouseDown) {
+                        this.autoRotate = true;
+                    }
+                }, 1000);
+            }
+            
+            setupWindowCommunication() {
+                // Check if this is a second window
+                const windowCount = parseInt(sessionStorage.getItem('windowCount') || '0') + 1;
+                sessionStorage.setItem('windowCount', windowCount.toString());
+                
+                if (windowCount > 1) {
+                    this.isSecondWindow = true;
+                    this.recreatePointSphere();
+                    this.createConnectionLines();
+                    document.getElementById('status').textContent = `Window ${windowCount} - Connected!`;
+                } else {
+                    document.getElementById('status').textContent = 'Window 1 - Open another window to see connections';
+                }
+                
+                // Listen for storage changes (other windows)
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'windowCount') {
+                        const count = parseInt(e.newValue || '0');
+                        if (count > 1 && !this.isSecondWindow) {
+                            this.createConnectionLines();
+                        }
+                    }
+                });
+                
+                // Broadcast when window closes
+                window.addEventListener('beforeunload', () => {
+                    const count = Math.max(0, parseInt(sessionStorage.getItem('windowCount') || '1') - 1);
+                    sessionStorage.setItem('windowCount', count.toString());
+                });
+            }
+            
+            recreatePointSphere() {
+                // Remove old point cloud
+                this.scene.remove(this.pointCloud);
+                
+                // Create new one with different color
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(this.numPoints * 3);
+                
+                for (let i = 0; i < this.numPoints; i++) {
+                    const i3 = i * 3;
+                    const pos = this.pointPositions[i];
+                    positions[i3] = pos.x;
+                    positions[i3 + 1] = pos.y;
+                    positions[i3 + 2] = pos.z;
+                }
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                const material = new THREE.PointsMaterial({
+                    color: 0xff6b6b, // Red color for second window
+                    size: 3,
+                    sizeAttenuation: true
+                });
+                
+                this.pointCloud = new THREE.Points(geometry, material);
+                this.scene.add(this.pointCloud);
+            }
+            
+            createConnectionLines() {
+                // Create lines connecting to "other window" points
+                const lineGeometry = new THREE.BufferGeometry();
+                const linePositions = new Float32Array(this.numPoints * 6); // 2 points per line, 3 coords each
+                
+                for (let i = 0; i < this.numPoints; i++) {
+                    const i6 = i * 6;
+                    const pos = this.pointPositions[i];
+                    
+                    // Start point (current sphere)
+                    linePositions[i6] = pos.x;
+                    linePositions[i6 + 1] = pos.y;
+                    linePositions[i6 + 2] = pos.z;
+                    
+                    // End point (offset to simulate other window)
+                    const offset = this.isSecondWindow ? -1.5 : 1.5;
+                    linePositions[i6 + 3] = pos.x + offset;
+                    linePositions[i6 + 4] = pos.y;
+                    linePositions[i6 + 5] = pos.z;
+                }
+                
+                lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+                
+                const lineMaterial = new THREE.LineBasicMaterial({
+                    color: 0x333333,
+                    opacity: 0.3,
+                    transparent: true
+                });
+                
+                this.connectionLines = new THREE.LineSegments(lineGeometry, lineMaterial);
+                this.scene.add(this.connectionLines);
+            }
+            
+            onWindowResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                // Auto rotation
+                if (this.autoRotate) {
+                    this.pointCloud.rotation.y += 0.005;
+                    this.pointCloud.rotation.x += 0.002;
+                    
+                    if (this.connectionLines) {
+                        this.connectionLines.rotation.y += 0.005;
+                        this.connectionLines.rotation.x += 0.002;
+                    }
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+        
+        // Initialize the application
+        new ConnectedSpheres();
+    </script>
+</body>
+</html>
