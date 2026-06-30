@@ -1,0 +1,273 @@
+:root {
+  --bg: #1c1a17;
+  --panel: #262320;
+  --panel-edge: #38332d;
+  --ink: #f3ede0;
+  --muted: #9b9182;
+  --home: #e6b422;
+  --bug: #c8323f;
+  --accent: #7fb069;
+  --accent-ink: #14210d;
+  --grid-line: #3a352e;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inconsolata", ui-monospace, "SF Mono", Menlo, monospace;
+  -webkit-font-smoothing: antialiased;
+}
+#app {
+  max-width: 460px;
+  margin: 0 auto;
+  /* padding-top leaves room for the fixed .back-link (top:18px + ~22px tall) */
+  padding: 56px 18px 48px;
+}
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+h1 {
+  font-size: 20px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin: 0;
+}
+.tag {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+#canvas-wrap {
+  position: relative;
+  border: 2px solid var(--panel-edge);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #14120f;
+  line-height: 0;
+}
+canvas {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+.status {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 10px 2px 14px;
+}
+.status .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted);
+}
+.status.solved { color: var(--accent); }
+.status.solved .dot { background: var(--accent); }
+.status.dead { color: var(--bug); }
+.status.dead .dot { background: var(--bug); }
+.row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.row.tight { margin-bottom: 12px; }
+button {
+  flex: 1;
+  appearance: none;
+  border: 1px solid var(--panel-edge);
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  padding: 9px 6px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.05s;
+  white-space: nowrap;
+}
+button:hover { background: #2f2b26; border-color: #4a443c; }
+button:active { transform: translateY(1px); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button.primary {
+  background: #4a7a38;
+  color: #c8dfc0;
+  border-color: #3d6630;
+  font-weight: 700;
+}
+button.primary:hover { background: #537f40; border-color: #456e35; }
+button.active {
+  background: #5a4a18;
+  color: #d4b96a;
+  border-color: #4a3d14;
+  font-weight: 700;
+}
+button.active:hover { background: #635220; border-color: #52431a; }
+button.hint-confirm {
+  background: #5a4a18;
+  color: #d4b96a;
+  border-color: #4a3d14;
+  font-weight: 700;
+}
+button.hint-confirm:hover { background: #635220; border-color: #52431a; }
+.preset-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.preset-row label {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.preset-row select {
+  flex: 1;
+  appearance: none;
+  border: 1px solid var(--panel-edge);
+  background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239b9182'/%3E%3C/svg%3E") no-repeat right 10px center;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 9px 28px 9px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+.preset-row select:hover { border-color: #4a443c; }
+.preset-row select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.controls {
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.ctl {
+  display: grid;
+  grid-template-columns: 96px 1fr 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 0;
+}
+.ctl + .ctl { border-top: 1px solid var(--grid-line); }
+.ctl label {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+.ctl input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.ctl .val {
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.ctl .val.bad { color: var(--bug); }
+.apply-row { margin-top: 12px; }
+.hint-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 8px 2px 0;
+  min-height: 14px;
+  letter-spacing: 0.04em;
+}
+/* Padding enlarges the clickable area without a visible background/border;
+   negative margin compensates so the link still lines up the same as plain text. */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  margin: -10px;
+  padding: 10px;
+  transition: color 0.12s;
+}
+.back-link:hover { color: var(--ink); }
+
+/* Normal layout has no top bar, so pin the back-link fixed top-left there.
+   The fullscreen overlay bars (Snake/Conway, Conway's custom bar) instead
+   place it as a normal flex child so it vertically aligns with their buttons. */
+#app > a.back-link {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 11;
+}
+
+/* ---- info modal ---- */
+.info-btn {
+  flex: none !important;
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  font-size: 15px !important;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.info-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20,18,15,0.82);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(2px);
+}
+.info-modal {
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 360px;
+  padding: 22px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.info-modal canvas {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+  border-radius: 8px;
+  border: 1px solid var(--panel-edge);
+}
+.info-caption {
+  font-size: 12px;
+  color: var(--ink);
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+  min-height: 2.4em;
+}
+#info-close {
+  flex: none;
+  align-self: flex-end;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

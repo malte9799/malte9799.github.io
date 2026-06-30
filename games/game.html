@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Game</title>
+<link rel="stylesheet" href="shared.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<script src="game.js"></script>
+<script>
+  const _gameName = new URLSearchParams(location.search).get("game");
+  if (_gameName) document.title = _gameName.charAt(0).toUpperCase() + _gameName.slice(1);
+</script>
+</head>
+<body>
+<div id="app"></div>
+<script>
+  // Loaded last so #app exists and game.js is ready.
+  // The game script calls initGame() at top level before p5 setup().
+  const s = document.createElement("script");
+  s.src = _gameName + ".js";
+  document.body.appendChild(s);
+</script>
+</body>
+</html>
