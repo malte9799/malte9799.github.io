@@ -2,6 +2,18 @@
 // Infinite sparse grid via Map, smooth zoom/pan, preset library, tool palette
 // Cell age color mapping (Cyan -> Green -> Gold -> Orange), birth scaling, and fading death trails.
 
+// LEXICON_SHAPES (from conway-shapes.js, generated from lexicon.txt by parse-lexicon.py)
+// is loaded via a dynamically injected <script> tag below, same trick game.html uses to
+// load the per-game script, so this keeps working over file:// with no build step or fetch().
+// It arrives after this script runs, so the shape-search UI renders once onShapesLoaded fires.
+let onShapesLoaded = () => {};
+(function loadShapesScript() {
+  const s = document.createElement("script");
+  s.src = "conway-shapes.js";
+  s.onload = () => onShapesLoaded();
+  document.head.appendChild(s);
+})();
+
 initGame({
   title:    "Conway's Life",
   tag:      "evolution heatmap · age trails",
@@ -49,44 +61,35 @@ let lastPaintPos = null;
 let pendingPreset = null;
 let ghostX = 0, ghostY = 0;
 
-// ── presets (generated from lexicon.txt at build time — see build-presets.js) ──
+// ── shape library ────────────────────────────────────────────────────────────
+// All placeable shapes come from LEXICON_SHAPES (games/conway-shapes.js), parsed
+// from the Life Lexicon (lexicon.txt) by parse-lexicon.py. FEATURED just picks a
+// handful of well-known names to show before the user searches for anything.
+// LEXICON_SHAPES entries look like { name, w, h, cells: [[x,y], ...] }.
 
-const PRESET_GROUPS = [
-  { label: "Still Lifes",  keys: ["Block","Beehive","Loaf","Boat","Tub","Eater"] },
-  { label: "Oscillators",  keys: ["Blinker","Toad","Beacon","Pulsar","Pentadecathlon","Queen Bee Shuttle"] },
-  { label: "Spaceships",   keys: ["Glider","Copperhead","Dart","Spider","Weekender","Canada Goose"] },
-  { label: "Methuselahs",  keys: ["R-Pentomino","Diehard","Acorn","Infinite Growth","Switch Engine"] },
-  { label: "Guns",         keys: ["Gosper Glider Gun","Simkin Glider Gun","B-52 Bomber"] },
+const FEATURED = [
+  "block","beehive","loaf","boat","tub","eater1",
+  "blinker","toad","beacon","pulsar","pentadecathlon","queen bee shuttle",
+  "glider","copperhead","dart","spider","weekender","Canada goose",
+  "R-pentomino","diehard","acorn","infinite growth","switch engine",
+  "Gosper glider gun","Simkin glider gun","B-52 bomber",
 ];
 
-// Generated from lexicon.txt by build-presets.js — do not edit by hand
-const PRESETS = {
-  "Block": [[0,0],[1,0],[0,1],[1,1]],
-  "Beehive": [[1,0],[2,0],[0,1],[3,1],[1,2],[2,2]],
-  "Loaf": [[1,0],[2,0],[0,1],[3,1],[1,2],[3,2],[2,3]],
-  "Boat": [[0,0],[1,0],[0,1],[2,1],[1,2]],
-  "Tub": [[1,0],[0,1],[2,1],[1,2]],
-  "Eater": [[0,0],[1,0],[0,1],[1,2],[2,2],[3,2],[3,3]],
-  "Blinker": [[0,0],[1,0],[2,0]],
-  "Toad": [[1,0],[2,0],[3,0],[0,1],[1,1],[2,1]],
-  "Beacon": [[0,0],[1,0],[0,1],[3,2],[2,3],[3,3]],
-  "Pulsar": [[2,0],[3,0],[4,0],[8,0],[9,0],[10,0],[0,2],[5,2],[7,2],[12,2],[0,3],[5,3],[7,3],[12,3],[0,4],[5,4],[7,4],[12,4],[2,5],[3,5],[4,5],[8,5],[9,5],[10,5],[2,7],[3,7],[4,7],[8,7],[9,7],[10,7],[0,8],[5,8],[7,8],[12,8],[0,9],[5,9],[7,9],[12,9],[0,10],[5,10],[7,10],[12,10],[2,12],[3,12],[4,12],[8,12],[9,12],[10,12]],
-  "Pentadecathlon": [[2,0],[7,0],[0,1],[1,1],[3,1],[4,1],[5,1],[6,1],[8,1],[9,1],[2,2],[7,2]],
-  "Queen Bee Shuttle": [[9,0],[7,1],[9,1],[6,2],[8,2],[0,3],[1,3],[5,3],[8,3],[0,4],[1,4],[6,4],[8,4],[7,5],[9,5],[18,5],[19,5],[9,6],[18,6],[20,6],[20,7],[20,8],[21,8]],
-  "Glider": [[0,0],[1,0],[2,0],[0,1],[1,2]],
-  "Copperhead": [[1,0],[2,0],[3,0],[4,0],[1,2],[4,2],[0,3],[2,3],[3,3],[5,3],[0,4],[5,4],[0,6],[5,6],[0,7],[1,7],[4,7],[5,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[1,9],[4,9],[2,10],[3,10],[2,11],[3,11]],
-  "Dart": [[7,0],[6,1],[8,1],[5,2],[9,2],[6,3],[7,3],[8,3],[4,5],[5,5],[9,5],[10,5],[2,6],[6,6],[8,6],[12,6],[1,7],[2,7],[6,7],[8,7],[12,7],[13,7],[0,8],[6,8],[8,8],[14,8],[1,9],[3,9],[4,9],[6,9],[8,9],[10,9],[11,9],[13,9]],
-  "Spider": [[6,0],[10,0],[11,0],[12,0],[18,0],[19,0],[20,0],[24,0],[3,1],[4,1],[6,1],[7,1],[8,1],[9,1],[10,1],[12,1],[13,1],[17,1],[18,1],[20,1],[21,1],[22,1],[23,1],[24,1],[26,1],[27,1],[1,2],[3,2],[4,2],[6,2],[12,2],[14,2],[16,2],[18,2],[24,2],[26,2],[27,2],[29,2],[0,3],[4,3],[6,3],[10,3],[11,3],[12,3],[13,3],[14,3],[16,3],[17,3],[18,3],[19,3],[20,3],[24,3],[26,3],[30,3],[4,4],[5,4],[6,4],[12,4],[13,4],[17,4],[18,4],[24,4],[25,4],[26,4],[1,5],[4,5],[6,5],[7,5],[8,5],[22,5],[23,5],[24,5],[26,5],[29,5],[3,6],[27,6]],
-  "Weekender": [[1,0],[14,0],[1,1],[14,1],[0,2],[2,2],[13,2],[15,2],[1,3],[14,3],[1,4],[14,4],[2,5],[6,5],[7,5],[8,5],[9,5],[13,5],[6,6],[7,6],[8,6],[9,6],[2,7],[3,7],[4,7],[5,7],[10,7],[11,7],[12,7],[13,7],[4,9],[11,9],[5,10],[6,10],[9,10],[10,10]],
-  "Canada Goose": [[0,0],[1,0],[2,0],[0,1],[10,1],[11,1],[1,2],[8,2],[9,2],[10,2],[12,2],[3,3],[4,3],[7,3],[8,3],[4,4],[8,5],[4,6],[5,6],[9,6],[3,7],[5,7],[7,7],[8,7],[3,8],[5,8],[8,8],[10,8],[11,8],[2,9],[7,9],[8,9],[2,10],[3,10],[2,11],[3,11]],
-  "R-Pentomino": [[1,0],[2,0],[0,1],[1,1],[1,2]],
-  "Diehard": [[6,0],[0,1],[1,1],[1,2],[5,2],[6,2],[7,2]],
-  "Acorn": [[1,0],[3,1],[0,2],[1,2],[4,2],[5,2],[6,2]],
-  "Infinite Growth": [[6,0],[4,1],[6,1],[7,1],[4,2],[6,2],[4,3],[2,4],[0,5],[2,5]],
-  "Switch Engine": [[1,0],[3,0],[0,1],[1,2],[4,2],[3,3],[4,3],[5,3]],
-  "Gosper Glider Gun": [[24,0],[22,1],[24,1],[12,2],[13,2],[20,2],[21,2],[34,2],[35,2],[11,3],[15,3],[20,3],[21,3],[34,3],[35,3],[0,4],[1,4],[10,4],[16,4],[20,4],[21,4],[0,5],[1,5],[10,5],[14,5],[16,5],[17,5],[22,5],[24,5],[10,6],[16,6],[24,6],[11,7],[15,7],[12,8],[13,8]],
-  "Simkin Glider Gun": [[0,0],[1,0],[7,0],[8,0],[0,1],[1,1],[7,1],[8,1],[4,3],[5,3],[4,4],[5,4],[22,9],[23,9],[25,9],[26,9],[21,10],[27,10],[21,11],[28,11],[31,11],[32,11],[21,12],[22,12],[23,12],[27,12],[31,12],[32,12],[26,13],[24,18],[26,18],[27,18],[24,19],[25,19],[27,19]],
-  "B-52 Bomber": [[1,0],[2,0],[1,1],[2,1],[20,1],[19,2],[21,2],[34,2],[36,2],[20,3],[33,3],[0,4],[1,4],[9,4],[10,4],[34,4],[37,4],[0,5],[1,5],[3,5],[9,5],[10,5],[34,5],[36,5],[38,5],[3,6],[27,6],[35,6],[38,6],[3,7],[27,7],[28,7],[36,7],[37,7],[0,8],[3,8],[21,8],[22,8],[28,8],[1,9],[2,9],[21,9],[21,10],[22,10],[23,10],[36,11],[37,11],[36,12],[37,12],[1,13],[2,13],[0,14],[3,14],[0,15],[2,15],[4,15],[21,15],[23,15],[28,15],[29,15],[35,15],[36,15],[1,16],[4,16],[22,16],[23,16],[28,16],[29,16],[35,16],[36,16],[38,16],[5,17],[18,17],[22,17],[38,17],[2,18],[4,18],[17,18],[19,18],[38,18],[18,19],[35,19],[38,19],[36,20],[37,20]]
+function findShape(name) {
+  return SHAPES_BY_NAME.get(name.toLowerCase());
+}
+
+let SHAPES_BY_NAME = new Map();
+let SHAPE_LIST = [];
+let shapesReady = false;
+
+onShapesLoaded = () => {
+  SHAPE_LIST = (typeof LEXICON_SHAPES !== "undefined" ? LEXICON_SHAPES : []);
+  SHAPES_BY_NAME = new Map(SHAPE_LIST.map(s => [s.name.toLowerCase(), s]));
+  shapesReady = true;
+  // buildUI() (further down this file) may not have run yet — if #shape-search
+  // isn't in the DOM yet, buildShapeSearch() runs again from buildUI() itself.
+  buildShapeSearch();
 };
 
 
@@ -236,7 +239,8 @@ new p5(function(p) {
       const { x: mx, y: my } = canvasMousePos(e);
 
       if (pendingPreset && !isRightBtn) {
-        placePreset(PRESETS[pendingPreset], ghostX, ghostY);
+        const shape = findShape(pendingPreset);
+        if (shape) placePreset(shape.cells, ghostX, ghostY);
         cancelPreset();
         return;
       }
@@ -401,8 +405,9 @@ new p5(function(p) {
 
   function drawGhost(p) {
     if (!pendingPreset) return;
-    const cells = PRESETS[pendingPreset];
-    if (!cells) return;
+    const shape = findShape(pendingPreset);
+    if (!shape) return;
+    const cells = shape.cells;
     const mx = p.mouseX, my = p.mouseY;
     const { x: wx, y: wy } = screenToWorld(mx, my, p);
 
@@ -490,8 +495,8 @@ function clearGrid() {
 
 function cancelPreset() {
   pendingPreset = null;
-  const sel = document.getElementById("preset-insert");
-  if (sel) sel.selectedIndex = 0;
+  const search = document.getElementById("shape-search");
+  if (search) search.value = "";
   const hint = document.getElementById("preset-hint");
   if (hint) hint.textContent = "";
 }
@@ -547,20 +552,15 @@ function randomFill() {
  
       <div style="width:1px;height:20px;background:var(--panel-edge);flex-shrink:0"></div>
  
-      <!-- preset insert -->
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <!-- preset insert: search + select with shape preview thumbnails -->
+      <div style="position:relative;display:flex;align-items:center;gap:8px;flex-shrink:0" id="shape-picker">
         <span style="font-size:11px;color:var(--muted);letter-spacing:0.05em">Insert</span>
-        <select id="preset-insert" style="appearance:none;border:1px solid var(--panel-edge);background:var(--panel);color:var(--ink);font:inherit;font-size:12px;padding:6px 26px 6px 10px;border-radius:7px;cursor:pointer;background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2210%22 height=%226%22%3E%3Cpath d=%22M0 0l5 6 5-6z%22 fill=%22%239b9182%22/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 8px center">
-          <option value="">— choose —</option>
-          ${PRESET_GROUPS.map(g => {
-            const opts = g.keys.filter(k => PRESETS[k]).map(k =>
-              `<option value="${k}">${k}</option>`).join("");
-            return opts ? `<optgroup label="${g.label}">${opts}</optgroup>` : "";
-          }).join("")}
-        </select>
+        <input id="shape-search" type="text" autocomplete="off" placeholder="Loading shapes…" disabled
+          style="width:150px;border:1px solid var(--panel-edge);background:var(--panel);color:var(--ink);font:inherit;font-size:12px;padding:6px 10px;border-radius:7px" />
+        <div id="shape-panel" style="display:none;position:absolute;top:calc(100% + 6px);left:0;width:300px;max-height:360px;overflow-y:auto;background:var(--panel);border:1px solid var(--panel-edge);border-radius:9px;box-shadow:0 16px 32px rgba(0,0,0,0.45);z-index:20;padding:4px"></div>
         <span id="preset-hint" style="font-size:11px;color:var(--muted);letter-spacing:0.04em;min-width:120px"></span>
       </div>
- 
+
       <div style="width:1px;height:20px;background:var(--panel-edge);flex-shrink:0"></div>
  
       <!-- grid ops -->
@@ -633,12 +633,130 @@ function randomFill() {
     if (e.key === "c" || e.key === "C") { clearGrid(); cancelPreset(); }
   });
 
-  document.getElementById("preset-insert").addEventListener("change", function() {
-    if (!this.value) { pendingPreset = null; document.getElementById("preset-hint").textContent = ""; return; }
-    pendingPreset = this.value;
-    document.getElementById("preset-hint").textContent = "Left-click to place · Esc to cancel";
-    this.blur();
-  });
+  if (shapesReady) buildShapeSearch();
 
   updateStatus();
 })();
+
+// ── shape search/select popup ─────────────────────────────────────────────────
+// Filters LEXICON_SHAPES by name; each result row shows a tiny canvas preview
+// of the pattern next to its name. Click (or Enter) sets pendingPreset so the
+// existing ghost-preview/click-to-place flow in the p5 sketch takes over.
+
+const SHAPE_RESULTS_LIMIT = 60;
+
+function drawShapeThumb(canvas, shape) {
+  const ctx = canvas.getContext("2d");
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  const pad = 3;
+  const cell = Math.max(1, Math.min((w - pad * 2) / shape.w, (h - pad * 2) / shape.h));
+  const offX = (w - shape.w * cell) / 2;
+  const offY = (h - shape.h * cell) / 2;
+  ctx.fillStyle = "#7fb069";
+  for (const [x, y] of shape.cells) {
+    ctx.fillRect(offX + x * cell, offY + y * cell, Math.max(1, cell - 0.5), Math.max(1, cell - 0.5));
+  }
+}
+
+let _shapeSearchWired = false;
+
+function buildShapeSearch() {
+  const search  = document.getElementById("shape-search");
+  const panel   = document.getElementById("shape-panel");
+  const hint    = document.getElementById("preset-hint");
+  if (!search || !panel || !shapesReady) return;
+
+  search.disabled = false;
+  search.placeholder = "Search shapes…";
+
+  if (_shapeSearchWired) return; // avoid double-binding if both load orderings fire
+  _shapeSearchWired = true;
+
+  let activeIndex = -1;
+  let currentResults = [];
+
+  function renderResults(query) {
+    const q = query.trim().toLowerCase();
+    let list;
+    if (!q) {
+      list = FEATURED.map(findShape).filter(Boolean);
+    } else {
+      list = SHAPE_LIST.filter(s => s.name.toLowerCase().includes(q)).slice(0, SHAPE_RESULTS_LIMIT);
+    }
+    currentResults = list;
+    activeIndex = -1;
+
+    if (list.length === 0) {
+      panel.innerHTML = `<div style="padding:10px;font-size:12px;color:var(--muted)">No shapes match "${query}"</div>`;
+      return;
+    }
+
+    panel.innerHTML = list.map((s, i) =>
+      `<div class="shape-row" data-i="${i}" style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;cursor:pointer">
+        <canvas width="40" height="40" style="flex-shrink:0;width:40px!important;height:40px!important;background:#14120f;border-radius:4px"></canvas>
+        <span style="font-size:12px;letter-spacing:0.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${s.name}</span>
+      </div>`
+    ).join("");
+
+    const rows = panel.querySelectorAll(".shape-row");
+    rows.forEach((row, i) => {
+      drawShapeThumb(row.querySelector("canvas"), list[i]);
+      row.addEventListener("mouseenter", () => setActive(i));
+      row.addEventListener("mousedown", (e) => { e.preventDefault(); chooseShape(list[i]); });
+    });
+  }
+
+  function setActive(i) {
+    const rows = panel.querySelectorAll(".shape-row");
+    rows.forEach(r => r.style.background = "");
+    activeIndex = i;
+    if (rows[i]) rows[i].style.background = "#3a352e";
+  }
+
+  function chooseShape(shape) {
+    pendingPreset = shape.name;
+    search.value = shape.name;
+    hint.textContent = "Left-click to place · Esc to cancel";
+    closePanel();
+    search.blur();
+  }
+
+  function openPanel() {
+    panel.style.display = "block";
+    renderResults(search.value === pendingPreset ? "" : search.value);
+  }
+
+  function closePanel() {
+    panel.style.display = "none";
+  }
+
+  search.addEventListener("focus", openPanel);
+  search.addEventListener("input", () => {
+    if (pendingPreset) { pendingPreset = null; hint.textContent = ""; }
+    panel.style.display = "block";
+    renderResults(search.value);
+  });
+
+  search.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive(Math.min(activeIndex + 1, currentResults.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive(Math.max(activeIndex - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (currentResults[activeIndex]) chooseShape(currentResults[activeIndex]);
+    } else if (e.key === "Escape") {
+      closePanel();
+      search.blur();
+      cancelPreset();
+    }
+  });
+
+  document.addEventListener("mousedown", (e) => {
+    const picker = document.getElementById("shape-picker");
+    if (picker && !picker.contains(e.target)) closePanel();
+  });
+}

@@ -223,7 +223,19 @@ const GAMES = [
     id: "tictactoe",
     title: "Tic Tac Toe",
     desc: "Tic² Tac² Toe²",
-    preview: () => {},
+    preview: drawTicTacToe,
+  },
+  {
+    id: "flood",
+    title: "Flood It",
+    desc: "flood the board",
+    preview: drawFlood,
+  },
+  {
+    id: "sudoku",
+    title: "Sudoku",
+    desc: "9×9 · 6×6 · 4×4",
+    preview: drawSudoku,
   },
 ];
 
@@ -291,7 +303,7 @@ function drawBugs(p, w, h) {
 
   p.noStroke();
   homes.forEach(e => {
-    p.fill(230, 180, 34, 55); p.rect(e.i * cs, e.j * cs, cs, cs);
+    p.fill(230, 180, 34, 40); p.rect(e.i * cs, e.j * cs, cs, cs);
     p.fill(230, 180, 34);
     const r = cs * 0.16;
     p.rect(e.i * cs + cs/2 - r/2, e.j * cs + cs/2 - r/2, r, r, 2);
@@ -300,8 +312,20 @@ function drawBugs(p, w, h) {
   for (let g = 0; g <= w + 0.5; g += cs) { p.line(g, 0, g, h); p.line(0, g, w, g); }
   p.noStroke();
   bugs.forEach(b => {
+    const isHome = homes.some(e => e.i === b.i && e.j === b.j);
+    const cx = b.i * cs + cs/2, cy = b.j * cs + cs/2;
+    const rBase = cs * 0.52;
+    if (isHome) {
+      p.noFill();
+      p.stroke(127, 176, 105, 180);
+      p.strokeWeight(2);
+      p.circle(cx, cy, rBase * 1.15);
+      p.noStroke();
+    }
     p.fill(200, 50, 63);
-    p.circle(b.i * cs + cs/2, b.j * cs + cs/2, cs * 0.52);
+    p.circle(cx, cy, rBase);
+    p.fill(isHome ? p.color(190, 240, 150) : p.color(250, 100, 110));
+    p.circle(cx, cy, rBase * 0.3);
   });
 }
 
@@ -310,35 +334,61 @@ function drawSnake(p, w, h) {
     const cs = Math.floor(Math.min(w / gw, h / gh));
     const ox = Math.floor((w - cs * gw) / 2), oy = Math.floor((h - cs * gh) / 2);
     p.background(20, 18, 15);
-    p.stroke(32, 29, 26); p.strokeWeight(1);
+    p.stroke(28, 25, 22); p.strokeWeight(1);
     for (let x = 0; x <= gw; x++) p.line(ox + x*cs, oy, ox + x*cs, oy + gh*cs);
     for (let y = 0; y <= gh; y++) p.line(ox, oy + y*cs, ox + gw*cs, oy + y*cs);
     p.noStroke();
-    // food
-    p.fill(230, 180, 34);
-    [[8,6],[14,3],[5,9]].forEach(([x,y]) => p.ellipse(ox+x*cs+cs/2, oy+y*cs+cs/2, cs*0.7, cs*0.7));
+    // food — outer glow, core, bright center
+    [[8,6],[14,3],[5,9]].forEach(([x,y]) => {
+      const cx = ox+x*cs+cs/2, cy = oy+y*cs+cs/2;
+      p.fill(230, 180, 34, 30); p.circle(cx, cy, cs * 0.9);
+      p.fill(230, 180, 34); p.circle(cx, cy, cs * 0.55);
+      p.fill(243, 237, 224); p.circle(cx, cy, cs * 0.25);
+    });
+
+    function drawSnakeBody(body, dir, color, headColor) {
+      const [r, g, b] = color, [hr, hg, hb] = headColor;
+      // connecting tube
+      body.forEach((seg, i) => {
+        if (i === 0) return;
+        const prev = body[i - 1];
+        const cx1 = ox+seg.x*cs+cs/2, cy1 = oy+seg.y*cs+cs/2;
+        const cx2 = ox+prev.x*cs+cs/2, cy2 = oy+prev.y*cs+cs/2;
+        const factor = i / (body.length - 1);
+        p.stroke(lerp(hr, r, factor), lerp(hg, g, factor), lerp(hb, b, factor), 220);
+        p.strokeWeight(cs * 0.74);
+        p.line(cx1, cy1, cx2, cy2);
+      });
+      p.noStroke();
+      // segment nodes
+      body.forEach((seg, i) => {
+        const cx = ox+seg.x*cs+cs/2, cy = oy+seg.y*cs+cs/2;
+        const factor = i / (body.length - 1);
+        if (i === 0) {
+          p.fill(hr, hg, hb, 40); p.circle(cx, cy, cs * 0.95);
+          p.fill(hr, hg, hb); p.circle(cx, cy, cs * 0.46);
+          p.fill(20, 18, 15);
+          const eyeOff = cs * 0.16;
+          if (dir.x !== 0) {
+            p.circle(cx + dir.x*eyeOff, cy - eyeOff, cs * 0.08);
+            p.circle(cx + dir.x*eyeOff, cy + eyeOff, cs * 0.08);
+          } else {
+            p.circle(cx - eyeOff, cy + dir.y*eyeOff, cs * 0.08);
+            p.circle(cx + eyeOff, cy + dir.y*eyeOff, cs * 0.08);
+          }
+        } else {
+          p.fill(lerp(hr, r, factor), lerp(hg, g, factor), lerp(hb, b, factor), 220);
+          p.circle(cx, cy, cs * 0.42);
+        }
+      });
+    }
+
     // P1 snake (green) - long, upper area, right then curves down
-    const s1 = [{x:2,y:4},{x:3,y:4},{x:4,y:4},{x:5,y:4},{x:6,y:4},{x:7,y:4},{x:7,y:5},{x:7,y:6},{x:8,y:6}];
-    const s1Segs = s1.length;
-    s1.forEach((seg,i) => {
-      const factor = i / (s1Segs - 1);
-      p.fill(Math.round(lerp(190, 127, factor)), Math.round(lerp(240, 176, factor)), Math.round(lerp(150, 105, factor)));
-      p.circle(ox+seg.x*cs+cs/2, oy+seg.y*cs+cs/2, cs * 0.42);
-    });
-    // P1 head glow
-    p.fill(190, 240, 150, 40);
-    p.circle(ox+s1[0].x*cs+cs/2, oy+s1[0].y*cs+cs/2, cs*0.9);
+    const s1 = [{x:8,y:6},{x:7,y:6},{x:7,y:5},{x:7,y:4},{x:6,y:4},{x:5,y:4},{x:4,y:4},{x:3,y:4},{x:2,y:4}];
+    drawSnakeBody(s1, {x:1,y:0}, [127,176,105], [190,240,150]);
     // P2 snake (blue) - long, lower area, left then curves up
-    const s2 = [{x:17,y:8},{x:16,y:8},{x:15,y:8},{x:14,y:8},{x:13,y:8},{x:13,y:7},{x:13,y:6},{x:12,y:6},{x:11,y:6}];
-    const s2Segs = s2.length;
-    s2.forEach((seg,i) => {
-      const factor = i / (s2Segs - 1);
-      p.fill(Math.round(lerp(150, 90, factor)), Math.round(lerp(210, 160, factor)), Math.round(lerp(255, 210, factor)));
-      p.circle(ox+seg.x*cs+cs/2, oy+seg.y*cs+cs/2, cs * 0.42);
-    });
-    // P2 head glow
-    p.fill(150, 210, 255, 40);
-    p.circle(ox+s2[0].x*cs+cs/2, oy+s2[0].y*cs+cs/2, cs*0.9);
+    const s2 = [{x:11,y:6},{x:12,y:6},{x:13,y:6},{x:13,y:7},{x:13,y:8},{x:14,y:8},{x:15,y:8},{x:16,y:8},{x:17,y:8}];
+    drawSnakeBody(s2, {x:1,y:0}, [90,160,210], [150,210,255]);
   }
 
 function drawNonogram(p, w, h) {
@@ -417,7 +467,7 @@ function drawNonogram(p, w, h) {
       const x = gx + i * cw, y = gy + j * ch;
       const v = filled[i][j];
       if (v === 1) {
-        p.fill(230, 225, 210); p.noStroke(); p.rect(x, y, cw, ch);
+        p.fill(243, 237, 224); p.noStroke(); p.rect(x, y, cw, ch);
       } else if (v === 2) {
         p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
         p.stroke(80, 72, 64); p.strokeWeight(1.5);
@@ -461,11 +511,18 @@ function drawConway(p, w, h) {
   p.stroke(30, 27, 24); p.strokeWeight(1);
   for (let x = -Math.ceil(w/2/cs)-1; x <= Math.ceil(w/2/cs)+1; x++) p.line(offX+x*cs,0,offX+x*cs,h);
   for (let y = -Math.ceil(h/2/cs)-1; y <= Math.ceil(h/2/cs)+1; y++) p.line(0,offY+y*cs,w,offY+y*cs);
-  // cells
-  p.fill(127, 176, 105);
+  // cells — age-colored: newborn cyan, young green, mature gold, old orange
+  // (deterministic age per cell from its coordinates, just for visual variety)
   p.noStroke();
   for (const k of cells) {
     const [cx, cy] = k.split(",").map(Number);
+    const ageRoll = Math.abs((cx * 31 + cy * 17) % 20);
+    let col;
+    if (ageRoll < 3) col = [90, 180, 190];
+    else if (ageRoll < 10) col = [127, 176, 105];
+    else if (ageRoll < 16) col = [230, 180, 34];
+    else col = [220, 120, 60];
+    p.fill(col[0], col[1], col[2]);
     const sx = offX + cx * cs, sy = offY + cy * cs;
     p.rect(sx + 1, sy + 1, cs - 2, cs - 2, 2);
   }
@@ -489,7 +546,7 @@ function draw2048(p, w, h) {
   ];
 
   const COLORS = {
-    0: [28,25,22], 2:[58,54,48], 4:[72,66,56], 8:[180,110,48],
+    0: [38,35,32], 2:[58,54,48], 4:[72,66,56], 8:[180,110,48],
     16:[200,90,40], 32:[210,70,55], 64:[220,50,50],
     128:[200,170,50], 256:[210,180,40], 512:[220,190,30],
     1024:[230,200,20], 2048:[230,180,34],
@@ -595,6 +652,215 @@ function drawLightsOut(p, w, h) {
       }
     }
   }
+}
+
+function drawTicTacToe(p, w, h) {
+  const board = Math.min(w, h) * 0.86;
+  const gap = board * 0.035;
+  const big = (board - gap * 2) / 3;
+  const small = big / 3;
+  const ox = (w - board) / 2;
+  const oy = (h - board) / 2;
+
+  const XC = [127, 176, 105], OC = [90, 160, 210];
+
+  // pre-baked snapshot — board[b][i]: 0 empty, 1 X, 2 O
+  const sub = [
+    [1,2,0, 0,1,0, 2,0,0],
+    [0,0,0, 0,0,0, 0,0,0],
+    [2,1,0, 0,0,0, 0,0,1],
+    [0,0,0, 1,0,0, 0,0,0],
+    [1,1,1, 2,2,0, 0,1,0], // won by X (top row)
+    [0,2,0, 0,0,0, 0,0,0],
+    [2,0,1, 0,0,0, 0,0,0],
+    [0,0,0, 0,2,0, 1,0,0],
+    [0,0,0, 0,0,0, 0,0,0],
+  ];
+  const cellWinner = [0,0,0,0,1,0,0,0,0]; // board 4 won by X
+
+  p.background(20, 18, 15);
+
+  function bigOrigin(b) {
+    const br = Math.floor(b / 3), bc = b % 3;
+    return { x: ox + bc * (big + gap), y: oy + br * (big + gap) };
+  }
+
+  function mark(cx, cy, s, m, alpha) {
+    const a = alpha ?? 255;
+    p.noFill();
+    if (m === 1) {
+      p.stroke(XC[0], XC[1], XC[2], a);
+      p.strokeWeight(Math.max(1.5, s * 0.12));
+      const k = s * 0.32;
+      p.line(cx - k, cy - k, cx + k, cy + k);
+      p.line(cx + k, cy - k, cx - k, cy + k);
+    } else {
+      p.stroke(OC[0], OC[1], OC[2], a);
+      p.strokeWeight(Math.max(1.5, s * 0.1));
+      p.circle(cx, cy, s * 0.62);
+    }
+  }
+
+  for (let b = 0; b < 9; b++) {
+    const { x, y } = bigOrigin(b);
+
+    if (b === 4) {
+      p.noStroke();
+      p.fill(XC[0], XC[1], XC[2], 26);
+      p.rect(x, y, big, big, big * 0.06);
+    }
+
+    p.stroke(58, 53, 46);
+    p.strokeWeight(1);
+    for (let g = 1; g < 3; g++) {
+      p.line(x + g * small, y, x + g * small, y + big);
+      p.line(x, y + g * small, x + big, y + g * small);
+    }
+
+    for (let i = 0; i < 9; i++) {
+      const v = sub[b][i];
+      if (!v) continue;
+      const r = Math.floor(i / 3), c = i % 3;
+      mark(x + c * small + small / 2, y + r * small + small / 2, small, v);
+    }
+
+    if (cellWinner[b]) {
+      mark(x + big / 2, y + big / 2, big * 0.92, cellWinner[b], 70);
+    }
+  }
+
+  p.stroke(120, 110, 95);
+  p.strokeWeight(Math.max(1.5, board * 0.012));
+  for (let g = 1; g < 3; g++) {
+    const offX = ox + g * big + (g - 0.5) * gap;
+    const offY = oy + g * big + (g - 0.5) * gap;
+    p.line(offX, oy - gap * 0.3, offX, oy + board + gap * 0.3);
+    p.line(ox - gap * 0.3, offY, ox + board + gap * 0.3, offY);
+  }
+}
+
+function drawFlood(p, w, h) {
+  const N = 10;
+  const SWATCH_H = 34;
+  const boardAreaH = h - SWATCH_H;
+  const cs = Math.floor(Math.min(w * 0.92, boardAreaH * 0.92) / N);
+  const bw = cs * N, bh = cs * N;
+  const ox = Math.floor((w - bw) / 2);
+  const oy = Math.floor((boardAreaH - bh) / 2);
+
+  const PALETTE = [
+    [200, 50, 63], [230, 180, 34], [127, 176, 105], [90, 160, 210],
+    [180, 110, 200], [220, 140, 60],
+  ];
+
+  // pre-baked snapshot: mostly flooded gold from top-left, a few regions left
+  const layout = [
+    [1,1,1,1,2,2,3,3,0,0],
+    [1,1,1,2,2,3,3,0,0,4],
+    [1,1,1,1,2,3,3,0,4,4],
+    [1,1,1,2,2,3,0,0,4,5],
+    [1,1,1,1,3,3,0,4,4,5],
+    [1,1,2,2,3,0,0,4,5,5],
+    [1,1,1,2,3,3,4,4,5,5],
+    [1,1,2,2,3,0,4,5,5,3],
+    [1,1,1,3,3,0,0,4,5,3],
+    [1,1,2,3,3,4,4,5,3,3],
+  ];
+
+  p.background(20, 18, 15);
+  p.noStroke();
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const col = PALETTE[layout[r][c] % PALETTE.length];
+      p.fill(col[0], col[1], col[2]);
+      p.rect(ox + c * cs, oy + r * cs, cs - 1, cs - 1, 1.5);
+    }
+  }
+  p.noFill();
+  p.stroke(243, 237, 224, 160);
+  p.strokeWeight(1.5);
+  p.rect(ox + 1, oy + 1, cs - 3, cs - 3, 1.5);
+
+  // swatch row
+  const NC = 6;
+  const sw = w / NC;
+  const swatchY = boardAreaH + 6;
+  for (let i = 0; i < NC; i++) {
+    const col = PALETTE[i];
+    p.fill(col[0], col[1], col[2]);
+    p.noStroke();
+    p.rect(i * sw + 4, swatchY, sw - 8, SWATCH_H - 8, 5);
+    if (i === 1) {
+      p.noFill();
+      p.stroke(243, 237, 224, 200);
+      p.strokeWeight(1.5);
+      p.rect(i * sw + 4, swatchY, sw - 8, SWATCH_H - 8, 5);
+    }
+  }
+}
+
+function drawSudoku(p, w, h) {
+  const N = 9, BW = 3, BH = 3;
+  const boardPx = Math.floor(Math.min(w, h) * 0.9);
+  const cs = boardPx / N;
+  const ox = Math.floor((w - boardPx) / 2);
+  const oy = Math.floor((h - boardPx) / 2);
+
+  // pre-baked partial 9x9 snapshot, 0 = empty
+  const grid = [
+    [5,3,0, 0,7,0, 0,0,0],
+    [6,0,0, 1,9,5, 0,0,0],
+    [0,9,8, 0,0,0, 0,6,0],
+    [8,0,0, 0,6,0, 0,0,3],
+    [4,0,0, 8,0,3, 0,0,1],
+    [7,0,0, 0,2,0, 0,0,6],
+    [0,6,0, 0,0,0, 2,8,0],
+    [0,0,0, 4,1,9, 0,0,5],
+    [0,0,0, 0,8,0, 0,7,9],
+  ];
+  const givenMask = [
+    [1,1,0, 0,1,0, 0,0,0],
+    [1,0,0, 1,1,1, 0,0,0],
+    [0,1,1, 0,0,0, 0,1,0],
+    [1,0,0, 0,1,0, 0,0,1],
+    [1,0,0, 1,0,1, 0,0,1],
+    [1,0,0, 0,1,0, 0,0,1],
+    [0,1,0, 0,0,0, 1,1,0],
+    [0,0,0, 1,1,1, 0,0,1],
+    [0,0,0, 0,1,0, 0,1,1],
+  ];
+
+  p.background(20, 18, 15);
+  p.noStroke();
+  // selection-style highlight band for flavor
+  p.fill(230, 180, 34, 12);
+  p.rect(ox, oy + 4 * cs, boardPx, cs);
+  p.rect(ox + 4 * cs, oy, cs, boardPx);
+
+  p.textAlign(p.CENTER, p.CENTER);
+  p.textStyle(p.BOLD);
+  p.textSize(cs * 0.5);
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const v = grid[r][c];
+      if (!v) continue;
+      const x = ox + c * cs + cs / 2, y = oy + r * cs + cs / 2;
+      p.fill(givenMask[r][c] ? p.color(243, 237, 224) : p.color(150, 190, 230));
+      p.noStroke();
+      p.text(v, x, y + 1);
+    }
+  }
+
+  p.stroke(58, 53, 46); p.strokeWeight(1);
+  for (let i = 0; i <= N; i++) {
+    p.line(ox + i * cs, oy, ox + i * cs, oy + boardPx);
+    p.line(ox, oy + i * cs, ox + boardPx, oy + i * cs);
+  }
+  p.stroke(155, 145, 130); p.strokeWeight(2.2);
+  for (let i = 0; i <= N; i += BW) p.line(ox + i * cs, oy, ox + i * cs, oy + boardPx);
+  for (let j = 0; j <= N; j += BH) p.line(ox, oy + j * cs, ox + boardPx, oy + j * cs);
+  p.noFill();
+  p.rect(ox, oy, boardPx, boardPx);
 }
 
 // ---- stars ----

@@ -343,7 +343,6 @@ const CANVAS = 440;
 function setup() {
   const cnv = createCanvas(CANVAS, CANVAS);
   cnv.parent("canvas-wrap");
-  textFont("Inconsolata, monospace");
   newGame();
 }
 

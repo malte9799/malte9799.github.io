@@ -29,7 +29,7 @@ function initGame(cfg) {
 function _presetOptionsHTML() {
   return (
     _cfg.presets.map((p) => `<option value="${p.values.join(",")}">${p.label}</option>`).join("\n") +
-    `\n<option value="custom">Custom</option>`
+    (_cfg.sliders && _cfg.sliders.length > 0 ? `\n<option value="custom">Custom</option>` : "")
   );
 }
 
@@ -140,6 +140,11 @@ function _buildShell() {
   }
 
   document.getElementById("preset-select").selectedIndex = 0;
+
+  if (!_cfg.presets || _cfg.presets.length === 0) {
+    const row = document.querySelector(".preset-row");
+    if (row) row.style.display = "none";
+  }
 }
 
 // ---- public helpers games call ----

@@ -5,9 +5,10 @@ initGame({
    title: "2048",
    tag: "merge tiles · reach 2048",
    presets: [
-    { label: "4×4 (classic)", values: [4] },
-    { label: "5×5",           values: [5] },
-    { label: "6×6",           values: [6] },
+    { label: "4×4 (classic)", values: [4, 0] },
+    { label: "5×5",           values: [5, 0] },
+    { label: "6×6",           values: [6, 0] },
+    { label: "4×4 (negative)", values: [4, 1] },
   ],
   buttons: [
     { id: "btn-new",  label: "New game", primary: true, onClick: () => newGame() },
@@ -16,7 +17,7 @@ initGame({
   sliders: [
     { id: "s-size", label: "Size", min: 3, max: 8, step: 1 },
   ],
-  onPreset: ([n]) => { SIZE = n; saveBest(); newGame(); },
+  onPreset: ([n, cancel]) => { SIZE = n; cancelMode = cancel === 1; saveBest(); newGame(); },
   onSlider: (id, v) => { if (id === "s-size") SIZE = v; },
   onClamp: () => {},
   getSliderValues: () => ({ "s-size": SIZE }),
@@ -27,6 +28,7 @@ let grid = [];
 let SIZE = 4;
 let score = 0;
 let best = 0;
+let cancelMode = false; // negative tiles spawn; equal-magnitude +/- pairs annihilate on merge
 let gameOver = false;
 let won = false;
 let wonAcked = false; // keep playing after win
@@ -57,12 +59,24 @@ const TILE_COLORS = {
   2048: [230, 180, 34],
 };
 
+// negative (cancel-mode) tiles share the board's bug-red accent, darkening
+// with magnitude like the positive ramp does
+const NEG_TILE_COLORS = {
+  2:  [90, 40, 44],
+  4:  [120, 42, 48],
+  8:  [150, 44, 52],
+  16: [180, 46, 56],
+  32: [200, 50, 60],
+};
+
 function tileColor(v) {
+  if (v < 0) return NEG_TILE_COLORS[-v] || [220, 50, 63];
   if (TILE_COLORS[v]) return TILE_COLORS[v];
   return [230, 180, 34]; // any higher value
 }
 
 function tileFg(v) {
+  if (v < 0) return [243, 220, 222];
   return v <= 4 ? [155, 145, 130] : [243, 237, 224];
 }
 
@@ -81,7 +95,8 @@ function addTile(g) {
       if (g[r][c] === 0) empty.push([r, c]);
   if (!empty.length) return;
   const [r, c] = empty[Math.floor(Math.random() * empty.length)];
-  g[r][c] = Math.random() < 0.9 ? 2 : 4;
+  const base = Math.random() < 0.9 ? 2 : 4;
+  g[r][c] = cancelMode && Math.random() < 0.15 ? -base : base;
 }
 
 function newGame() {
@@ -111,21 +126,34 @@ function updateStatus() {
   }
 }
 
-// slide a single row left, return { row, gained, moved }
+const CANCEL_BONUS = 10; // flat score award when a +/- pair annihilates
+
+// Slide a single row left. Returns { row, gained, moved, groups } where
+// groups describes how many of the filtered (non-zero) source tiles, in
+// order, were consumed to produce each output slot — a group's `value` is
+// null when an equal-magnitude +/- pair annihilated (0 output tiles).
 function slideRow(row) {
-  const r = row.filter(v => v !== 0);
+  const src = row.filter(v => v !== 0);
+  const groups = []; // { count, value } — value null = annihilated
   let gained = 0;
-  let moved = false;
-  for (let i = 0; i < r.length - 1; i++) {
-    if (r[i] === r[i + 1]) {
-      r[i] *= 2;
-      gained += r[i];
-      r.splice(i + 1, 1);
+  for (let i = 0; i < src.length; i++) {
+    const a = src[i], b = src[i + 1];
+    if (b !== undefined && a === b) {
+      gained += a * 2;
+      groups.push({ count: 2, value: a * 2 });
+      i++;
+    } else if (b !== undefined && a === -b) {
+      gained += CANCEL_BONUS;
+      groups.push({ count: 2, value: null });
+      i++;
+    } else {
+      groups.push({ count: 1, value: a });
     }
   }
+  const r = groups.filter(gr => gr.value !== null).map(gr => gr.value);
   while (r.length < SIZE) r.push(0);
-  if (r.some((v, i) => v !== row[i])) moved = true;
-  return { row: r, gained, moved };
+  const moved = r.some((v, i) => v !== row[i]);
+  return { row: r, gained, moved, groups };
 }
 
 function transpose(g) {
@@ -153,25 +181,33 @@ function move(dir) {
       // track positions
       let srcCols = [];
       orig.forEach((v, c) => { if (v !== 0) srcCols.push(c); });
-      const { row: nr, gained, moved } = slideRow(row);
+      const { row: nr, gained, moved, groups } = slideRow(row);
       next[r] = nr;
       totalGained += gained;
       if (moved) anyMoved = true;
 
-      // build animation entries for this row
+      // build animation entries for this row from the group list, which
+      // records exactly how many source tiles fed each output (or vanished)
       let srcIdx = 0;
-      for (let c = 0; c < SIZE; c++) {
-        if (nr[c] === 0) continue;
-        if (srcIdx >= srcCols.length) break;
-        // detect merge: two src tiles -> one
-        const fromC1 = srcCols[srcIdx];
-        moves.push({ fromR: r, fromC: fromC1, toR: r, toC: c, value: nr[c], merged: false });
-        srcIdx++;
-        // check if a merge happened (next src has same value)
-        if (srcIdx < srcCols.length && orig[srcCols[srcIdx]] === orig[fromC1] && nr[c] === orig[fromC1] * 2) {
-          const fromC2 = srcCols[srcIdx];
-          moves.push({ fromR: r, fromC: fromC2, toR: r, toC: c, value: nr[c], merged: true });
-          srcIdx++;
+      let outC = 0;
+      for (const gr of groups) {
+        if (gr.value === null) {
+          // annihilated pair — both tiles slide to meet at the midpoint
+          // between their source columns, then fade out (no destination cell)
+          const fromC1 = srcCols[srcIdx];
+          const fromC2 = srcCols[srcIdx + 1];
+          const midC = (fromC1 + fromC2) / 2;
+          moves.push({ fromR: r, fromC: fromC1, toR: r, toC: midC, value: orig[fromC1], merged: false, vanish: true });
+          moves.push({ fromR: r, fromC: fromC2, toR: r, toC: midC, value: orig[fromC2], merged: false, vanish: true });
+          srcIdx += gr.count;
+          continue;
+        }
+        const toC = outC++;
+        const fromC1 = srcCols[srcIdx++];
+        moves.push({ fromR: r, fromC: fromC1, toR: r, toC, value: gr.value, merged: false, vanish: false });
+        if (gr.count === 2) {
+          const fromC2 = srcCols[srcIdx++];
+          moves.push({ fromR: r, fromC: fromC2, toR: r, toC, value: gr.value, merged: true, vanish: false });
         }
       }
     }
@@ -237,8 +273,8 @@ function canContinue() {
   for (let r = 0; r < SIZE; r++)
     for (let c = 0; c < SIZE; c++) {
       if (grid[r][c] === 0) return true;
-      if (c + 1 < SIZE && grid[r][c] === grid[r][c + 1]) return true;
-      if (r + 1 < SIZE && grid[r][c] === grid[r + 1][c]) return true;
+      if (c + 1 < SIZE && (grid[r][c] === grid[r][c + 1] || grid[r][c] === -grid[r][c + 1])) return true;
+      if (r + 1 < SIZE && (grid[r][c] === grid[r + 1][c] || grid[r][c] === -grid[r + 1][c])) return true;
     }
   return false;
 }
@@ -340,7 +376,6 @@ const CANVAS = 440;
 function setup() {
   const cnv = createCanvas(CANVAS, CANVAS);
   cnv.parent("canvas-wrap");
-  textFont("Inconsolata, monospace");
   newGame();
 }
 
@@ -397,9 +432,20 @@ function draw() {
       }
     }
 
+    // draw vanishing tiles (annihilated +/- pairs), fading out as they meet
+    for (const m of anim) {
+      if (!m.vanish) continue;
+      const fx = ox + BOARD_PAD + m.fromC * (tileSize + GAP);
+      const fy = oy + BOARD_PAD + m.fromR * (tileSize + GAP);
+      const tx2 = ox + BOARD_PAD + m.toC * (tileSize + GAP);
+      const ty2 = oy + BOARD_PAD + m.toR * (tileSize + GAP);
+      const x = lerp(fx, tx2, ease);
+      const y = lerp(fy, ty2, ease);
+      drawTile(x, y, tileSize, m.value, 1 - ease);
+    }
     // draw animating tiles
     for (const m of anim) {
-      if (m.merged) continue;
+      if (m.merged || m.vanish) continue;
       const fx = ox + BOARD_PAD + m.fromC * (tileSize + GAP);
       const fy = oy + BOARD_PAD + m.fromR * (tileSize + GAP);
       const tx2 = ox + BOARD_PAD + m.toC * (tileSize + GAP);
@@ -497,13 +543,19 @@ function keyPressed() {
   if (keyCode === 78) { newGame(); return false; }
 }
 
+function _overCanvas() {
+  return mouseX >= 0 && mouseX < width && mouseY >= 0 && mouseY < height;
+}
+
 function touchStarted() {
+  if (!_overCanvas()) return;
   touchStartX = touches[0]?.x ?? mouseX;
   touchStartY = touches[0]?.y ?? mouseY;
   return false;
 }
 
 function touchEnded() {
+  if (!_overCanvas()) return;
   const dx = (touches[0]?.x ?? mouseX) - touchStartX;
   const dy = (touches[0]?.y ?? mouseY) - touchStartY;
   const dist = Math.sqrt(dx * dx + dy * dy);
