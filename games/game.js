@@ -160,6 +160,44 @@ function flashNote(msg) {
     }, 3200);
 }
 
+// Confetti celebration fired from both edges of the screen on a win.
+// `intensity` is a small integer tier (1 = easiest preset, 3+ = hardest)
+// that games pass in based on their own difficulty presets — scales the
+// particle count from a light sprinkle up to a couple of big handfuls.
+const CONFETTI_COLORS = ["#e6b422", "#7fb069", "#c8323f", "#f3ede0", "#9b9182"];
+
+function celebrate(intensity) {
+  if (typeof confetti !== "function") return;
+  const tier = Math.max(1, Math.round(intensity || 1));
+  // exponential rather than linear, so easy stays a tiny sprinkle and only
+  // hard+ ramps up to a couple of big handfuls
+  const particleCount = Math.round(4 * Math.pow(tier, 1.8) + 4);
+
+  // Fire from just outside the game canvas's left/right edges (not the
+  // window edges), so it works the same whether the canvas is small and
+  // centered or fills the screen. Falls back to the viewport edges if the
+  // canvas can't be found for some reason.
+  const canvas = document.querySelector("#canvas-wrap canvas");
+  const rect = canvas ? canvas.getBoundingClientRect() : { left: 0, right: window.innerWidth, top: 0, height: window.innerHeight };
+  const leftX = Math.max(0, (rect.left - 12) / window.innerWidth);
+  const rightX = Math.min(1, (rect.right + 12) / window.innerWidth);
+  const y = (rect.top + rect.height * 0.6) / window.innerHeight;
+
+  const base = {
+    particleCount,
+    spread: 70,
+    startVelocity: 42,
+    gravity: 0.9,
+    ticks: 220,
+    colors: CONFETTI_COLORS,
+    zIndex: 200,
+    disableForReducedMotion: true,
+  };
+
+  confetti({ ...base, angle: 60,  origin: { x: leftX,  y } });  // from just left of the canvas, arcing up-right
+  confetti({ ...base, angle: 120, origin: { x: rightX, y } });  // from just right of the canvas, arcing up-left
+}
+
 function setStatus(text, state) {
   // state: null | "solved" | "dead"
   const txt = document.getElementById("status-text");
@@ -331,7 +369,6 @@ function _openInfo() {
   backdrop.innerHTML = `
     <div class="info-modal">
       <div id="info-canvas-wrap"></div>
-      <div class="info-caption" id="info-caption"></div>
       <button id="info-close">✕</button>
     </div>
   `;
@@ -347,20 +384,14 @@ function _openInfo() {
 
   _infoP5 = new p5((p) => {
     let frame = 0;
-    let caption = "";
     p.setup = () => {
-      const cnv = p.createCanvas(320, 200);
+      const cnv = p.createCanvas(440, 280);
       cnv.parent(holder);
       p.frameRate(30);
     };
     p.draw = () => {
       frame++;
-      const result = anim(p, 320, 200, frame);
-      if (result && result.caption !== caption) {
-        caption = result.caption;
-        const el = document.getElementById("info-caption");
-        if (el) el.textContent = caption;
-      }
+      anim(p, 440, 280, frame);
     };
   });
 }

@@ -22,6 +22,7 @@ initGame({
   onSlider: (id, v) => { if (id === "s-cols") cols = v; else rows = v; },
   onClamp: clamp,
   getSliderValues: () => ({ "s-cols": cols, "s-rows": rows }),
+  info: { anim: infoAnim },
 });
 
 let cols = 10;
@@ -126,6 +127,12 @@ function newGame() {
   particles = [];
 }
 
+function celebrateNonogram() {
+  // difficulty ~ grid size (sliders: cols/rows 4-20)
+  const frac = ((cols + rows) / 2 - 4) / (20 - 4);
+  celebrate(1 + Math.round(frac * 2));
+}
+
 function toggleCell(i, j, mode) {
   if (solved) return;
   const current = board[i][j];
@@ -138,7 +145,7 @@ function toggleCell(i, j, mode) {
   }
   if (checkSolved()) {
     solved = true;
-    spawnVictoryFireworks();
+    celebrateNonogram();
   }
 }
 
@@ -161,7 +168,7 @@ function hintStep() {
 
   if (checkSolved()) {
     solved = true;
-    spawnVictoryFireworks();
+    celebrateNonogram();
   }
   flashNote("Hint applied: corrected one tile");
 }
@@ -204,20 +211,6 @@ function spawnInkDust(i, j, col) {
   }
 }
 
-function spawnVictoryFireworks() {
-  for (let k = 0; k < 60; k++) {
-    particles.push({
-      x: random(width),
-      y: height + 10,
-      vx: random(-1.2, 1.2),
-      vy: random(-4, -9),
-      life: random(180, 255),
-      size: random(2.5, 5),
-      col: [127, 176, 105] // green victory
-    });
-  }
-}
-
 function updateParticles() {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
@@ -246,6 +239,117 @@ function _rowCorrect(j) {
     if ((board[i][j] === 1) !== solution[i][j]) return false;
   }
   return true;
+}
+
+// ---- info modal animation ----
+// A scripted 5×5 mini-board: read a row's clue, paint the run it describes,
+// cross out a cell that clue rules out, then show a completed line glow.
+
+function infoAnim(p, w, h, frame) {
+  const C = 5, R = 5;
+  const CF = 0.22;
+  // fit a square board (clue margin + C×R grid) into the available space,
+  // centered, so it isn't stretched when the canvas itself isn't square
+  const side = Math.min(w, h) * 0.92;
+  const boardOx = (w - side) / 2, boardOy = (h - side) / 2;
+  const gx = boardOx + side * CF, gy = boardOy + side * CF;
+  const cw = (boardOx + side - gx) / C, ch = (boardOy + side - gy) / R;
+
+  // solution: row 2 (0-indexed) is a single run of 3 starting at col 1
+  const sol = [
+    [0,0,1,0,0],
+    [0,1,1,0,0],
+    [0,1,1,1,0],
+    [0,0,1,1,0],
+    [0,0,0,1,0],
+  ]; // sol[col][row]
+
+  function runs(fn, len) {
+    const out = []; let cur = 0;
+    for (let k = 0; k < len; k++) { if (fn(k)) cur++; else if (cur) { out.push(cur); cur = 0; } }
+    if (cur) out.push(cur);
+    return out.length ? out : [0];
+  }
+  const cluesC = []; for (let i = 0; i < C; i++) cluesC.push(runs(j => sol[i][j], R));
+  const cluesR = []; for (let j = 0; j < R; j++) cluesR.push(runs(i => sol[i][j], C));
+
+  const PHASE_LEN = 65;
+  const t = frame % (PHASE_LEN * 3);
+  const phase = Math.floor(t / PHASE_LEN);
+
+  // target row = 2, clue "3" — phase 0: highlighted clue + empty row.
+  // phase 1: the 3-run gets painted in.
+  // phase 2: the two remaining cells in that row get crossed out, row glows.
+  const targetRow = 2;
+  const board = Array.from({ length: C }, () => Array(R).fill(0));
+  if (phase >= 1) { board[1][targetRow] = 1; board[2][targetRow] = 1; board[3][targetRow] = 1; }
+  if (phase >= 2) { board[0][targetRow] = 2; board[4][targetRow] = 2; }
+
+  p.background(20, 18, 15);
+  p.noStroke();
+
+  const rowComplete = phase === 2;
+
+  // column clues
+  p.textAlign(p.CENTER, p.BOTTOM);
+  p.textStyle(p.BOLD);
+  const fs = Math.min(cw, ch) * 0.5;
+  p.textSize(fs);
+  for (let i = 0; i < C; i++) {
+    const x = gx + i * cw;
+    p.fill(155, 145, 130);
+    for (let k = 0; k < cluesC[i].length; k++) {
+      const ty = gy - 5 - (cluesC[i].length - 1 - k) * ch;
+      p.text(cluesC[i][k], x + cw / 2, ty);
+    }
+  }
+
+  // row clues — highlight target row's clue
+  p.textAlign(p.RIGHT, p.CENTER);
+  for (let j = 0; j < R; j++) {
+    const y = gy + j * ch;
+    const isTarget = j === targetRow;
+    p.fill(isTarget ? p.color(127, 176, 105) : p.color(155, 145, 130));
+    for (let k = 0; k < cluesR[j].length; k++) {
+      const tx = gx - 5 - (cluesR[j].length - 1 - k) * cw;
+      p.text(cluesR[j][k], tx, y + ch / 2);
+    }
+  }
+  p.textAlign(p.CENTER, p.CENTER);
+
+  // target row glow backdrop once solved
+  if (rowComplete) {
+    p.fill(127, 176, 105, 18); p.noStroke();
+    p.rect(boardOx, gy + targetRow * ch, gx + C * cw - boardOx, ch);
+  }
+
+  // cells
+  for (let i = 0; i < C; i++) {
+    for (let j = 0; j < R; j++) {
+      const x = gx + i * cw, y = gy + j * ch;
+      const v = board[i][j];
+      if (v === 1) {
+        p.fill(230, 225, 210, 45); p.noStroke();
+        p.rect(x - 1, y - 1, cw + 2, ch + 2, 2);
+        p.fill(243, 237, 224);
+        p.rect(x + 1, y + 1, cw - 2, ch - 2, 2);
+      } else if (v === 2) {
+        p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
+        p.stroke(80, 72, 64); p.strokeWeight(1.8);
+        const padC = cw * 0.24;
+        p.line(x + padC, y + padC, x + cw - padC, y + ch - padC);
+        p.line(x + cw - padC, y + padC, x + padC, y + ch - padC);
+        p.noStroke();
+      } else {
+        p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
+      }
+    }
+  }
+
+  // grid lines
+  p.stroke(58, 53, 46); p.strokeWeight(1);
+  for (let i = 0; i <= C; i++) p.line(gx + i * cw, gy, gx + i * cw, gy + R * ch);
+  for (let j = 0; j <= R; j++) p.line(gx, gy + j * ch, gx + C * cw, gy + j * ch);
 }
 
 // ---- p5 lifecycle ----

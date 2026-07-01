@@ -29,6 +29,7 @@ initGame({
   onPreset:       () => {},
   onSlider:       () => {},
   getSliderValues: () => ({}),
+  info: { anim: infoAnim },
 });
 
 // ── state ───────────────────────────────────────────────────────────────────
@@ -586,7 +587,8 @@ function randomFill() {
       <!-- grid ops -->
       <button id="btn-rand-fill" style="flex:none">Random</button>
       <button id="btn-clear"     style="flex:none">Clear</button>
- 
+      <button id="btn-info"      class="info-btn" style="flex:none">?</button>
+
       <!-- status right -->
       <span id="status-text" style="font-size:11px;color:var(--muted);letter-spacing:0.05em;margin-left:auto;white-space:nowrap"></span>
     </div>
@@ -600,6 +602,7 @@ function randomFill() {
   document.getElementById("btn-step").addEventListener("click", () => { if (!running) step(); });
   document.getElementById("btn-rand-fill").addEventListener("click", randomFill);
   document.getElementById("btn-clear").addEventListener("click", () => { clearGrid(); cancelPreset(); });
+  document.getElementById("btn-info").addEventListener("click", () => _openInfo());
 
   document.getElementById("sl-speed").addEventListener("input", function() {
     speed = +this.value;
@@ -657,6 +660,49 @@ function randomFill() {
 
   updateStatus();
 })();
+
+// ── info modal animation ─────────────────────────────────────────────────────
+// Two-phase demo: a blinker oscillator flipping orientation (cells with 2-3
+// neighbors survive, others die, empty cells with exactly 3 neighbors are
+// born), then a glider crawling diagonally to show patterns can travel.
+
+function infoAnim(p, w, h, frame) {
+  const cs = Math.min(w, h) / 9;
+  const ox = w / 2, oy = h / 2;
+
+  const PHASE_LEN = 70;
+  const t = frame % (PHASE_LEN * 2);
+  const phase = Math.floor(t / PHASE_LEN);
+  const sub = Math.floor((t % PHASE_LEN) / (PHASE_LEN / 2)) % 2; // 0/1 within phase
+
+  p.background(20, 18, 15);
+  p.noStroke();
+
+  function drawCells(cells, col) {
+    p.fill(col[0], col[1], col[2]);
+    for (const [x, y] of cells) {
+      const sx = ox + x * cs, sy = oy + y * cs;
+      p.rect(sx - cs/2 + 1, sy - cs/2 + 1, cs - 2, cs - 2, 2);
+    }
+  }
+
+  if (phase === 0) {
+    // blinker: horizontal <-> vertical every half-phase
+    const horiz = [[-1,0],[0,0],[1,0]];
+    const vert  = [[0,-1],[0,0],[0,1]];
+    drawCells(sub === 0 ? horiz : vert, [127, 176, 105]);
+  } else {
+    // glider crawling one step diagonally per sub-tick, across 4 sub-steps total
+    const step = Math.floor((t % PHASE_LEN) / (PHASE_LEN / 4));
+    const gliderFrames = [
+      [[0,-1],[1,0],[-1,1],[0,1],[1,1]],
+      [[-1,0],[1,0],[0,1],[1,1],[1,-1]],
+      [[0,-1],[1,0],[-1,1],[0,1],[1,1]].map(([x,y]) => [x+1,y+1]),
+      [[-1,0],[1,0],[0,1],[1,1],[1,-1]].map(([x,y]) => [x+1,y+1]),
+    ];
+    drawCells(gliderFrames[step % 4], [90, 180, 190]);
+  }
+}
 
 // ── shape search/select popup ─────────────────────────────────────────────────
 // Filters LEXICON_SHAPES by name; each result row shows a tiny canvas preview

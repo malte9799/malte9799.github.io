@@ -259,6 +259,8 @@ function move(dir) {
 
   if (!won && grid.some(r => r.some(v => v >= 2048))) {
     won = true;
+    // difficulty ~ smaller boards are harder to reach 2048 on (slider: 3-8)
+    celebrate(1 + Math.round((8 - SIZE) / (8 - 3) * 2));
   }
 
   if (!canContinue()) {
@@ -308,6 +310,50 @@ function loadBest() {
 // ---- touch swipe ----
 let touchStartX = 0, touchStartY = 0;
 
+// Scripted 3-move sequence showing the classic "corner stacking" strategy:
+// swipe right, then down twice, funneling four scattered tiles into a
+// single 16 parked in the bottom-right corner — with a fresh tile spawning
+// after each move, same as the real game. Each move's start state is the
+// previous move's end state (spawn included), so the sequence — and its
+// loop back to the beginning — never hard-cuts; every transition is a real
+// slide/merge/spawn.
+const INFO_SEQUENCE = [
+  // move 0 (initial, no animation): the starting board
+  { grid: [[2,0,0,2],[0,4,0,0],[4,0,0,0],[0,0,2,2]] },
+  // move 1: slide right — everything funnels into column 3 as 4s,
+  // then a new 2 spawns top-left
+  { dir: "right", movers: [
+      { r:0, fromC:0, toC:3, value:2, merged:true }, { r:0, fromC:3, toC:3, value:2, merged:true },
+      { r:1, fromC:1, toC:3, value:4 },
+      { r:2, fromC:0, toC:3, value:4 },
+      { r:3, fromC:2, toC:3, value:2, merged:true }, { r:3, fromC:3, toC:3, value:2, merged:true },
+    ],
+    slideGrid: [[0,0,0,4],[0,0,0,4],[0,0,0,4],[0,0,0,4]],
+    spawn: { r: 0, c: 0, value: 2 },
+    grid:  [[2,0,0,4],[0,0,0,4],[0,0,0,4],[0,0,0,4]] },
+  // move 2: slide down — a "down" swipe drops every column, not just the
+  // ones with merges: column 0's lone 2 falls all the way to the bottom
+  // row alongside the four 4s in column 3 pairing up into two 8s. Then a
+  // new 2 spawns bottom-left-of-center.
+  { dir: "down", movers: [
+      { c:0, fromR:0, toR:3, value:2 },
+      { c:3, fromR:0, toR:2, value:4, merged:true }, { c:3, fromR:1, toR:2, value:4, merged:true },
+      { c:3, fromR:2, toR:3, value:4, merged:true }, { c:3, fromR:3, toR:3, value:4, merged:true },
+    ],
+    slideGrid: [[0,0,0,0],[0,0,0,0],[0,0,0,8],[2,0,0,8]],
+    spawn: { r: 3, c: 1, value: 2 },
+    grid:  [[0,0,0,0],[0,0,0,0],[0,0,0,8],[2,2,0,8]] },
+  // move 3: slide down again — the two 8s merge into one 16. Columns 0
+  // and 1 are already at the bottom row, so this move doesn't move them
+  // further; they just stay put.
+  { dir: "down", movers: [
+      { c:3, fromR:2, toR:3, value:8, merged:true }, { c:3, fromR:3, toR:3, value:8, merged:true },
+    ],
+    slideGrid: [[0,0,0,0],[0,0,0,0],[0,0,0,0],[2,2,0,16]],
+    spawn: { r: 3, c: 2, value: 4 },
+    grid:  [[0,0,0,0],[0,0,0,0],[0,0,0,0],[2,2,4,16]] },
+];
+
 function infoAnim(p, w, h, frame) {
   const N = 4;
   const pad = 8;
@@ -317,54 +363,112 @@ function infoAnim(p, w, h, frame) {
   const bh = cs * N + gap * (N - 1);
   const ox = Math.floor((w - bw) / 2);
   const oy = Math.floor((h - bh) / 2);
+  const cellX = c => ox + c * (cs + gap) + cs / 2;
+  const cellY = r => oy + r * (cs + gap) + cs / 2;
 
-  // Short scripted demo: show a board, then slide left
-  const PHASE_LEN = 50;
-  const t = frame % (PHASE_LEN * 2);
-  const phase = Math.floor(t / PHASE_LEN);
-  const tf = (t % PHASE_LEN) / PHASE_LEN;
+  // A move plays out with tiles sliding first; the new tile then pops in
+  // — scale-up from nothing — once the slide has cleared its start cell,
+  // so the two animations never visually overlap in the same spot. Merged
+  // tiles get their own separate landing bounce once the slide finishes.
+  const SLIDE_FRAC = 0.55, MERGE_POP_FRAC = 0.25;
+  const SPAWN_DELAY = 0.42;  // fraction of the move before the spawn starts popping in
+  const SPAWN_POP_LEN = 0.3; // fraction of the move spent popping in, after the delay
+  const MOVE_LEN = 70;
 
-  const before = [
-    [0, 2, 0, 2],
-    [0, 0, 4, 4],
-    [2, 0, 2, 0],
-    [0, 0, 0, 8],
-  ];
-  const after = [
-    [4, 0, 0, 0],
-    [8, 0, 0, 0],
-    [4, 0, 0, 0],
-    [8, 0, 0, 0],
-  ];
+  const totalMoves = INFO_SEQUENCE.length - 1; // moves after the initial board
+  const cycleLen = MOVE_LEN * totalMoves;
+  const t = frame % cycleLen;
+  const moveIdx = 1 + Math.floor(t / MOVE_LEN); // which INFO_SEQUENCE entry is animating
+  const localT = (t % MOVE_LEN) / MOVE_LEN;
+
+  const prevGrid = INFO_SEQUENCE[moveIdx - 1].grid;
+  const step = INFO_SEQUENCE[moveIdx];
+
+  const slideT = p.constrain(localT / SLIDE_FRAC, 0, 1);
+  const ease = slideT < 0.5 ? 2*slideT*slideT : -1 + (4-2*slideT)*slideT;
+  const slid = localT > SLIDE_FRAC;
+  const mergePopT = slid ? p.constrain((localT - SLIDE_FRAC) / MERGE_POP_FRAC, 0, 1) : 0;
+  const mergePopScale = slid ? 1 + 0.18 * p.sin(Math.min(1, mergePopT) * Math.PI) : 1;
+  // spawn pops in shortly after the move starts, with a gentle overshoot
+  // bounce (0 -> 1.1 -> 1.0) so it reads as new without feeling oversized
+  const spawnPopT = p.constrain((localT - SPAWN_DELAY) / SPAWN_POP_LEN, 0, 1);
+  const spawnScale = spawnPopT < 0.7
+    ? p.map(spawnPopT, 0, 0.7, 0, 1.1)
+    : p.map(spawnPopT, 0.7, 1, 1.1, 1);
 
   p.background(28, 25, 22);
 
-  const g = phase === 0 ? before : after;
-  const caption = phase === 0 ? "Slide tiles with arrow keys or swipe." : "Matching tiles merge and double.";
-
+  // board backdrop + empty cell grid, same styling as the real board
+  const padBoard = pad * 0.6;
+  p.fill(38, 35, 32);
+  p.noStroke();
+  p.rect(ox - padBoard, oy - padBoard, bw + padBoard * 2, bh + padBoard * 2, (bw + padBoard * 2) * 0.03);
   for (let r = 0; r < N; r++) {
     for (let c = 0; c < N; c++) {
-      const x = ox + c * (cs + gap);
-      const y = oy + r * (cs + gap);
-      const v = g[r][c];
-      const [tr, tg, tb] = tileColor(v);
-      p.fill(tr, tg, tb);
+      p.fill(28, 25, 22);
+      p.rect(cellX(c) - cs/2, cellY(r) - cs/2, cs, cs, cs * 0.1);
+    }
+  }
+
+  function drawTile(x, y, v, scale) {
+    scale = scale ?? 1;
+    const [tr, tg, tb] = tileColor(v);
+    p.fill(tr, tg, tb);
+    p.noStroke();
+    const sz = cs * scale;
+    p.rect(x - sz/2, y - sz/2, sz, sz, sz * 0.12);
+    if (v > 0) {
+      const [fr, fg, fb] = tileFg(v);
+      p.fill(fr, fg, fb);
+      p.textAlign(p.CENTER, p.CENTER);
+      p.textStyle(p.BOLD);
+      p.textSize((v >= 1000 ? cs * 0.28 : v >= 100 ? cs * 0.34 : cs * 0.42) * scale);
       p.noStroke();
-      p.rect(x, y, cs, cs, cs * 0.12);
-      if (v > 0) {
-        const [fr, fg, fb] = tileFg(v);
-        p.fill(fr, fg, fb);
-        p.textAlign(p.CENTER, p.CENTER);
-        p.textStyle(p.BOLD);
-        const ts = v >= 1000 ? cs * 0.28 : v >= 100 ? cs * 0.34 : cs * 0.42;
-        p.textSize(ts);
-        p.noStroke();
-        p.text(v, x + cs / 2, y + cs / 2 + 1);
+      p.text(v, x, y + 1);
+    }
+  }
+
+  // tiles this move doesn't touch stay put, drawn from the pre-move grid
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const touchedRow = step.dir === "right" && step.movers.some(m => m.r === r);
+      const touchedCol = step.dir === "down" && step.movers.some(m => m.c === c);
+      if (touchedRow || touchedCol) continue;
+      const v = prevGrid[r][c];
+      if (v) drawTile(cellX(c), cellY(r), v);
+    }
+  }
+
+  if (!slid) {
+    for (const m of step.movers) {
+      const x = step.dir === "right" ? p.lerp(cellX(m.fromC), cellX(m.toC), ease) : cellX(m.c);
+      const y = step.dir === "down"  ? p.lerp(cellY(m.fromR), cellY(m.toR), ease) : cellY(m.r);
+      // a tiny squash on the leading edge of travel makes even a short,
+      // non-merging slide read as motion rather than a static tile
+      const travelScale = 1 - 0.06 * p.sin(slideT * Math.PI);
+      drawTile(x, y, m.value, travelScale);
+    }
+  } else {
+    // draw the settled result row/column from the pure-slide grid, popping
+    // merged tiles briefly larger
+    const mergedTargets = new Set(step.movers.filter(m => m.merged).map(m => (m.toR ?? m.r) + "," + (m.toC ?? m.c)));
+    for (let r = 0; r < N; r++) {
+      for (let c = 0; c < N; c++) {
+        const touchedRow = step.dir === "right" && step.movers.some(m => m.r === r);
+        const touchedCol = step.dir === "down" && step.movers.some(m => m.c === c);
+        if (!touchedRow && !touchedCol) continue;
+        const v = step.slideGrid[r][c];
+        if (!v) continue;
+        const isMergeTarget = mergedTargets.has(r + "," + c);
+        drawTile(cellX(c), cellY(r), v, isMergeTarget ? mergePopScale : 1);
       }
     }
   }
 
-  return { caption };
+  // new tile pops in near the start of the move, alongside the slide
+  if (step.spawn && spawnScale > 0) {
+    drawTile(cellX(step.spawn.c), cellY(step.spawn.r), step.spawn.value, spawnScale);
+  }
 }
 
 loadBest();

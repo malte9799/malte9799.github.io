@@ -26,6 +26,7 @@ initGame({
   },
   onClamp: () => {},
   getSliderValues: () => ({ "s-gw": gridW, "s-gh": gridH }),
+  info: { anim: infoAnim },
 });
 
 let gridW = 40;
@@ -362,6 +363,92 @@ function updateParticles() {
     p.life -= 5;
     if (p.life <= 0) {
       particles.splice(i, 1);
+    }
+  }
+}
+
+// ---- info modal animation ----
+// A scripted mini-board: steer toward food to eat and grow, then a reminder
+// that running the head into your own body ends the run.
+
+function infoAnim(p, w, h, frame) {
+  const gw = 8, gh = 6;
+  const cs = Math.min(w / gw, h / gh) * 0.9;
+  const bw = cs * gw, bh = cs * gh;
+  const ox = Math.floor((w - bw) / 2);
+  const oy = Math.floor((h - bh) / 2);
+
+  const PHASE_LEN = 80;
+  const t = frame % (PHASE_LEN * 2);
+  const phase = Math.floor(t / PHASE_LEN);
+  const localT = (t % PHASE_LEN) / PHASE_LEN;
+
+  p.background(20, 18, 15);
+  p.stroke(28, 25, 22); p.strokeWeight(1);
+  for (let x = 0; x <= gw; x++) p.line(ox + x*cs, oy, ox + x*cs, oy + gh*cs);
+  for (let y = 0; y <= gh; y++) p.line(ox, oy + y*cs, ox + gw*cs, oy + y*cs);
+  p.noStroke();
+
+  function drawFood(gx, gy) {
+    const cx = ox+gx*cs+cs/2, cy = oy+gy*cs+cs/2;
+    p.fill(230, 180, 34, 30); p.circle(cx, cy, cs * 0.9);
+    p.fill(230, 180, 34); p.circle(cx, cy, cs * 0.55);
+    p.fill(243, 237, 224); p.circle(cx, cy, cs * 0.25);
+  }
+
+  function drawSnake(body, dir) {
+    const [hr, hg, hb] = [190, 240, 150];
+    const [r, g, b] = [127, 176, 105];
+    body.forEach((seg, i) => {
+      if (i === 0) return;
+      const prev = body[i - 1];
+      const cx1 = ox+seg.x*cs+cs/2, cy1 = oy+seg.y*cs+cs/2;
+      const cx2 = ox+prev.x*cs+cs/2, cy2 = oy+prev.y*cs+cs/2;
+      const factor = i / (body.length - 1);
+      p.stroke(p.lerp(hr,r,factor), p.lerp(hg,g,factor), p.lerp(hb,b,factor), 220);
+      p.strokeWeight(cs * 0.74);
+      p.line(cx1, cy1, cx2, cy2);
+    });
+    p.noStroke();
+    body.forEach((seg, i) => {
+      const cx = ox+seg.x*cs+cs/2, cy = oy+seg.y*cs+cs/2;
+      const factor = i / (body.length - 1);
+      if (i === 0) {
+        p.fill(hr, hg, hb, 40); p.circle(cx, cy, cs * 0.95);
+        p.fill(hr, hg, hb); p.circle(cx, cy, cs * 0.46);
+        p.fill(20, 18, 15);
+        const eyeOff = cs * 0.16;
+        if (dir.x !== 0) { p.circle(cx + dir.x*eyeOff, cy - eyeOff, cs*0.08); p.circle(cx + dir.x*eyeOff, cy + eyeOff, cs*0.08); }
+        else { p.circle(cx - eyeOff, cy + dir.y*eyeOff, cs*0.08); p.circle(cx + eyeOff, cy + dir.y*eyeOff, cs*0.08); }
+      } else {
+        p.fill(p.lerp(hr,r,factor), p.lerp(hg,g,factor), p.lerp(hb,b,factor), 220);
+        p.circle(cx, cy, cs * 0.42);
+      }
+    });
+  }
+
+  if (phase === 0) {
+    // approach and eat food at (5,3), growing by one segment
+    const startX = 1;
+    const headX = p.lerp(startX, 5, localT);
+    const grown = localT > 0.75;
+    const body = [{ x: headX, y: 3 }, { x: headX - 1, y: 3 }, { x: headX - 2, y: 3 }];
+    if (grown) body.push({ x: headX - 3, y: 3 });
+    if (!grown) drawFood(5, 3);
+    drawSnake(body, { x: 1, y: 0 });
+  } else {
+    // coil demonstration: head approaches its own body and the wrap flashes red
+    const body = [
+      { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }, { x: 3, y: 4 },
+      { x: 2, y: 4 }, { x: 2, y: 3 }, { x: 2, y: 2 }, { x: 3, y: 2 },
+    ];
+    const hit = localT > 0.6;
+    const flash = hit && Math.floor(frame / 6) % 2 === 0;
+    drawSnake(body, { x: 1, y: 0 });
+    if (flash) {
+      const cx = ox + 3*cs + cs/2, cy = oy + 2*cs + cs/2;
+      p.noFill(); p.stroke(200, 50, 63, 220); p.strokeWeight(3);
+      p.circle(cx, cy, cs * 0.9);
     }
   }
 }

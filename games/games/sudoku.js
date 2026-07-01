@@ -270,8 +270,13 @@ function setCell(r, c, v) {
   history.push({ type: "value", r, c, prev: board[r][c] });
   board[r][c] = v;
   recomputeConflicts();
-  if (checkSolved()) solved = true;
+  if (!solved && checkSolved()) { solved = true; celebrateSudoku(); }
   updateStatus();
+}
+
+function celebrateSudoku() {
+  // difficulty ~ grid size (presets: 4, 6, 9)
+  celebrate(1 + Math.round((N - 4) / (9 - 4) * 2));
 }
 
 function eraseSelected() {
@@ -318,7 +323,7 @@ function giveHint() {
   board[r][c] = solution[r][c];
   selR = r; selC = c;
   recomputeConflicts();
-  if (checkSolved()) solved = true;
+  if (!solved && checkSolved()) { solved = true; celebrateSudoku(); }
   updateStatus();
   flashNote("Filled one cell for you.");
 }
@@ -367,25 +372,34 @@ function infoAnim(p, w, h, frame) {
   const ox = Math.floor((w - boardW) / 2);
   const oy = Math.floor((h - boardW) / 2);
 
-  const PHASE_LEN = 70;
-  const t = frame % (PHASE_LEN * 2);
+  const PHASE_LEN = 65;
+  const t = frame % (PHASE_LEN * 3);
   const phase = Math.floor(t / PHASE_LEN);
 
+  const targetR = 2, targetC = 3;
   const grid = [
     [1, 2, 3, 4],
     [3, 4, 1, 2],
-    [2, 1, 4, phase === 1 ? 3 : 0],
+    [2, 1, 4, phase === 2 ? 3 : 0],
     [4, 3, 2, 1],
   ];
 
   p.background(20, 18, 15);
   p.noStroke();
 
+  // phase 1+: highlight the target's row/column/box so it's visible which
+  // digits are already taken, before the answer (3) gets filled in
+  if (phase >= 1) {
+    p.fill(230, 180, 34, 12);
+    p.rect(ox, oy + targetR * cs, boardW, cs);
+    p.rect(ox + targetC * cs, oy, cs, boardW);
+  }
+
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
       const x = ox + c * cs, y = oy + r * cs;
-      const isTarget = r === 2 && c === 3;
-      if (isTarget && phase === 1) {
+      const isTarget = r === targetR && c === targetC;
+      if (isTarget && phase === 2) {
         p.fill(127, 176, 105, 45);
       } else {
         p.fill(30, 27, 23);
@@ -402,7 +416,8 @@ function infoAnim(p, w, h, frame) {
       const v = grid[r][c];
       if (!v) continue;
       const x = ox + c * cs + cs / 2, y = oy + r * cs + cs / 2;
-      p.fill(243, 237, 224);
+      const dimmed = phase >= 1 && (r === targetR || c === targetC) && !(r === targetR && c === targetC);
+      p.fill(dimmed ? p.color(230, 190, 100) : p.color(243, 237, 224));
       p.text(v, x, y + 1);
     }
   }
@@ -416,18 +431,17 @@ function infoAnim(p, w, h, frame) {
   for (let i = 0; i <= n; i += bw) p.line(ox + i * cs, oy, ox + i * cs, oy + boardW);
   for (let j = 0; j <= n; j += bh) p.line(ox, oy + j * cs, ox + boardW, oy + j * cs);
 
-  if (phase === 1) {
+  if (phase === 2) {
     p.noFill();
     p.stroke(127, 176, 105, 200);
     p.strokeWeight(2);
-    p.rect(ox + 3 * cs, oy + 2 * cs, cs, cs);
+    p.rect(ox + targetC * cs, oy + targetR * cs, cs, cs);
+  } else if (phase === 1) {
+    p.noFill();
+    p.stroke(230, 180, 34, 200);
+    p.strokeWeight(2);
+    p.rect(ox + targetC * cs, oy + targetR * cs, cs, cs);
   }
-
-  const caption = phase === 0
-    ? "Each row, column, and box must contain..."
-    : "...every digit exactly once, with no repeats.";
-
-  return { caption };
 }
 
 // ---- p5 sketch lifecycle ----

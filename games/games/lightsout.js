@@ -160,6 +160,8 @@ function pressCell(r, c) {
   if (checkSolved()) {
     gameOver = true;
     solutionSet.clear();
+    // difficulty ~ grid size (slider: 3-9)
+    celebrate(1 + Math.round((SIZE - 3) / (9 - 3) * 2));
   }
 
   updateStatus();
@@ -329,12 +331,6 @@ function infoAnim(p, w, h, frame) {
       }
     }
   }
-
-  const caption = phase === 0 
-    ? "Clicking a node..." 
-    : "...toggles itself and its four neighbors.";
-
-  return { caption };
 }
 
 // ---- p5 Sketch Lifecycle ----

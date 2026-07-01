@@ -167,6 +167,7 @@
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <script src="game.js"></script>
 </head>
 <body>
@@ -252,6 +253,12 @@ const GAMES = [
     title: "Sudoku",
     desc: "9×9 · 6×6 · 4×4",
     preview: drawSudoku,
+  },
+  {
+    id: "netwalk",
+    title: "Netwalk",
+    desc: "rotate pipes · power every node",
+    preview: drawNetwalk,
   },
 ];
 
@@ -877,6 +884,86 @@ function drawSudoku(p, w, h) {
   for (let j = 0; j <= N; j += BH) p.line(ox, oy + j * cs, ox + boardPx, oy + j * cs);
   p.noFill();
   p.rect(ox, oy, boardPx, boardPx);
+}
+
+function drawNetwalk(p, w, h) {
+  const SZ = 6;
+  const cs = Math.floor(Math.min(w, h) * 0.92 / SZ);
+  const bw = cs * SZ, bh = cs * SZ;
+  const ox = Math.floor((w - bw) / 2);
+  const oy = Math.floor((h - bh) / 2);
+
+  const Nd = 1, Ed = 2, Sd = 4, Wd = 8;
+  const DX = { 1: 0, 2: 1, 4: 0, 8: -1 };
+  const DY = { 1: -1, 2: 0, 4: 1, 8: 0 };
+  const OPP = { 1: 4, 2: 8, 4: 1, 8: 2 };
+  const ALL = [Nd, Ed, Sd, Wd];
+
+  // pre-baked 6x6 layout — a genuine full spanning tree (every cell has a
+  // pipe, same as a real board), with the source in the middle and a
+  // partial BFS-connected subset lit up for visual variety.
+  const src = { r: 2, c: 2 };
+  const layout = [
+    [Ed|Sd, Sd|Wd, Ed|Sd, Sd|Wd, Ed,    Sd|Wd],
+    [Nd,    Nd|Sd,Nd|Sd, Nd|Ed,Sd|Wd,  Nd|Sd],
+    [Ed|Sd, Nd|Sd|Wd,Nd, Sd,   Nd|Ed,  Nd|Sd|Wd],
+    [Nd|Sd, Nd,   Ed|Sd, Nd|Ed|Sd|Wd,Wd,Nd|Sd],
+    [Nd|Ed|Sd,Sd|Wd,Nd|Sd,Nd|Sd,Ed|Sd, Nd|Wd],
+    [Nd,    Nd|Ed,Nd|Wd, Nd|Ed,Nd|Ed|Wd,Wd],
+  ];
+  const connected = [
+    [0,0,1,1,1,1],
+    [0,0,1,1,1,1],
+    [0,0,1,0,1,1],
+    [0,0,0,0,0,1],
+    [0,0,0,0,1,1],
+    [0,0,0,0,1,0],
+  ];
+
+  p.background(20, 18, 15);
+  p.noStroke();
+  p.fill(28, 25, 22);
+  p.rect(ox, oy, bw, bh, 6);
+
+  for (let r = 0; r < SZ; r++) {
+    for (let c = 0; c < SZ; c++) {
+      const mask = layout[r][c];
+      const cx = ox + c * cs + cs / 2, cy = oy + r * cs + cs / 2;
+      const isConn = !!connected[r][c];
+      const stubLen = cs * 0.86 / 2;
+      const touchLen = cs / 2;
+
+      for (const d of ALL) {
+        if (!(mask & d)) continue;
+        const nr = r + DY[d], nc = c + DX[d];
+        const inB = nr >= 0 && nr < SZ && nc >= 0 && nc < SZ;
+        const isTouch = inB && !!(layout[nr][nc] & OPP[d]);
+        const armLen = isTouch ? touchLen : stubLen;
+        p.strokeCap(isTouch ? p.SQUARE : p.ROUND);
+        p.strokeWeight(cs * 0.19);
+        p.stroke(isConn ? p.color(127, 210, 230) : p.color(70, 64, 56));
+        p.line(cx, cy, cx + DX[d] * armLen, cy + DY[d] * armLen);
+      }
+      p.noStroke();
+      p.fill(isConn ? p.color(200, 235, 245) : p.color(90, 84, 74));
+      p.circle(cx, cy, cs * 0.22);
+    }
+  }
+
+  // source
+  const scx = ox + src.c * cs + cs / 2, scy = oy + src.r * cs + cs / 2;
+  p.noStroke();
+  p.fill(230, 180, 34, 35);
+  p.circle(scx, scy, cs * 0.66);
+  p.fill(230, 180, 34);
+  p.circle(scx, scy, cs * 0.4);
+
+  // endpoint ring (unconnected leaf, for contrast)
+  const lcx = ox + 4 * cs + cs / 2, lcy = oy + 0 * cs + cs / 2;
+  p.noFill();
+  p.stroke(90, 84, 74);
+  p.strokeWeight(2);
+  p.circle(lcx, lcy, cs * 0.5);
 }
 
 // ---- stars ----

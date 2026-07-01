@@ -25,6 +25,7 @@ initGame({
   onSlider: (id, v) => { if (id === "s-size") size = v; else if (id === "s-bugs") numBugs = v; else numRemove = v; },
   onClamp: clamp,
   getSliderValues: () => ({ "s-size": size, "s-bugs": numBugs, "s-remove": numRemove }),
+  info: { anim: infoAnim },
 });
 
 let size = 5;
@@ -36,6 +37,7 @@ let bugs = [];
 let removedCells = [];
 let seed = 0;
 let clicksLeft = 0;
+let wasSolved = false;
 
 const PULL = 2, PUSH = 1;
 const CANVAS = 400;
@@ -111,6 +113,7 @@ function buildGame() {
       flashNote("");
       particles = [];
       shockwaves = [];
+      wasSolved = false;
       return true;
     }
     seed++;
@@ -248,6 +251,115 @@ loadState();
 syncSliderUI();
 setButtonActive("btn-undo-bugs", canUndoBugs);
 
+// ---- info modal animation ----
+// Scripted 5×5 board matching the real puzzle shape: homes at (0,0), (2,0),
+// (3,2), (1,4), one bug already home at (4,4), and two loose bugs at (2,1)
+// and (2,3). Click 1 at (3,2) pushes both loose bugs one step along their
+// diagonal — (2,3) lands directly on its home at (1,4). Click 2 at (0,0)
+// pushes the remaining bug from (1,0) onto its home at (2,0).
+
+function infoAnim(p, w, h, frame) {
+  const N = 5;
+  const pad = 14;
+  const cs = Math.min((w - pad * 2) / N, (h - pad * 2) / N);
+  const bw = cs * N, bh = cs * N;
+  const ox = Math.floor((w - bw) / 2);
+  const oy = Math.floor((h - bh) / 2);
+
+  const homes = [{ i: 0, j: 0 }, { i: 2, j: 0 }, { i: 3, j: 2 }, { i: 1, j: 4 }];
+  const alreadyHome = { i: 4, j: 4 };
+
+  // bug positions after each click, precomputed from the real push mechanic
+  const bugsStart = [{ i: 2, j: 1 }, { i: 2, j: 3 }];
+  const bugsAfterClick1 = [{ i: 1, j: 0 }, { i: 1, j: 4 }]; // (2,3) already home
+  const bugsAfterClick2 = [{ i: 2, j: 0 }, { i: 1, j: 4 }]; // (1,0) now home too
+
+  const click1 = { i: 3, j: 2 };
+  const click2 = { i: 0, j: 0 };
+
+  const PHASE_LEN = 70;
+  const t = frame % (PHASE_LEN * 2);
+  const phase = Math.floor(t / PHASE_LEN); // 0 = first click, 1 = second click
+  const localT = (t % PHASE_LEN) / PHASE_LEN;
+  const clickFrac = 0.32, moveEnd = 0.78;
+
+  function lerpBugs(from, to) {
+    if (localT < clickFrac) return from;
+    const mt = Math.min(1, (localT - clickFrac) / (moveEnd - clickFrac));
+    const ease = mt < 0.5 ? 2 * mt * mt : -1 + (4 - 2 * mt) * mt;
+    return from.map((b, k) => ({ i: p.lerp(b.i, to[k].i, ease), j: p.lerp(b.j, to[k].j, ease) }));
+  }
+
+  const bugs = phase === 0 ? lerpBugs(bugsStart, bugsAfterClick1) : lerpBugs(bugsAfterClick1, bugsAfterClick2);
+  const newBugShown = localT >= clickFrac;
+  const click = phase === 0 ? click1 : click2;
+
+  p.background(20, 18, 15);
+  p.noStroke();
+
+  // homes (lit green once a bug has actually landed there)
+  const settledPositions = phase === 0
+    ? (localT >= moveEnd ? bugsAfterClick1 : bugsStart)
+    : (localT >= moveEnd ? bugsAfterClick2 : bugsAfterClick1);
+  const extras = [alreadyHome];
+  if (phase === 1) extras.push(click1);
+  const occupied = new Set([...settledPositions, ...extras].map(b => b.i + "," + b.j));
+
+  homes.forEach(hpos => {
+    const cx = ox + hpos.i * cs + cs / 2, cy = oy + hpos.j * cs + cs / 2;
+    const isLit = occupied.has(hpos.i + "," + hpos.j);
+    p.fill(230, 180, 34, isLit ? 55 : 40);
+    p.rect(ox + hpos.i * cs, oy + hpos.j * cs, cs, cs);
+    p.fill(230, 180, 34);
+    const r = cs * 0.16;
+    p.rect(cx - r/2, cy - r/2, r, r, 2);
+  });
+
+  // grid
+  p.stroke(58, 53, 46); p.strokeWeight(1);
+  for (let g = 0; g <= N; g++) { p.line(ox + g*cs, oy, ox + g*cs, oy + bh); p.line(ox, oy + g*cs, ox + bw, oy + g*cs); }
+  p.noStroke();
+
+  // click pulse ring, before the push happens
+  if (localT < clickFrac) {
+    const cx = ox + click.i * cs + cs/2, cy = oy + click.j * cs + cs/2;
+    const pulse = 1.0 + 0.15 * p.sin(frame * 0.3);
+    p.noFill();
+    p.stroke(243, 237, 224, 200);
+    p.strokeWeight(2);
+    p.circle(cx, cy, cs * 0.5 * pulse);
+    p.noStroke();
+  }
+
+  function drawBug(pos, isHome) {
+    const cx = ox + pos.i * cs + cs / 2, cy = oy + pos.j * cs + cs / 2;
+    const rBase = cs * 0.5;
+    if (isHome) {
+      p.noFill();
+      p.stroke(127, 176, 105, 180);
+      p.strokeWeight(2);
+      p.circle(cx, cy, rBase * 1.15);
+      p.noStroke();
+    }
+    p.fill(200, 50, 63);
+    p.circle(cx, cy, rBase);
+    p.fill(isHome ? p.color(190, 240, 150) : p.color(250, 100, 110));
+    p.circle(cx, cy, rBase * 0.3);
+  }
+
+  drawBug(alreadyHome, true);
+  bugs.forEach(b => {
+    drawBug(b, localT >= moveEnd && homes.some(hm => hm.i === Math.round(b.i) && hm.j === Math.round(b.j)));
+  });
+
+  // the bug planted by click 1 stays on the board through phase 1 too —
+  // it's not one of the original loose bugs, so it isn't in `bugs`
+  if (phase === 1) drawBug(click1, homes.some(hm => hm.i === click1.i && hm.j === click1.j));
+
+  // freshly-placed bug at the clicked cell
+  if (newBugShown) drawBug(click, homes.some(hm => hm.i === click.i && hm.j === click.j));
+}
+
 // ---- p5 lifecycle ----
 
 function setup() {
@@ -345,6 +457,12 @@ function draw() {
   // Status updates
   if (isSolved()) {
     setStatus("solved — every bug is home", "solved");
+    if (!wasSolved) {
+      wasSolved = true;
+      // difficulty ~ removals (the real driver of solve complexity here;
+      // slider range 1-10, presets are 2/3/5/7 for easy/medium/hard/harder)
+      celebrate(1 + Math.round((numRemove - 1) / (10 - 1) * 2));
+    }
   } else {
     const placed = homes.filter(h => bugs.some(b => b.i === h.i && b.j === h.j)).length;
     setStatus(placed + " / " + homes.length + " bugs home · " + clicksLeft + " left", null);

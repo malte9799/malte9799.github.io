@@ -27,6 +27,7 @@ initGame({
   onSlider: (id, v) => { if (id === "s-cols") cols = v; else if (id === "s-rows") rows = v; else numMines = v; },
   onClamp: clamp,
   getSliderValues: () => ({ "s-cols": cols, "s-rows": rows, "s-mines": numMines }),
+  info: { anim: infoAnim },
 });
 
 let cols = 12;
@@ -204,18 +205,9 @@ function checkWin() {
     for (let j = 0; j < rows; j++)
       if (!grid[i][j].mine && !grid[i][j].revealed) return;
   won = true;
-  // solved sparks
-  for (let k = 0; k < 60; k++) {
-    particles.push({
-      x: random(width),
-      y: height + 10,
-      vx: random(-1.5, 1.5),
-      vy: random(-4, -9),
-      life: random(150, 255),
-      size: random(3, 6),
-      col: [127, 176, 105] // green win sparks
-    });
-  }
+  // difficulty ~ mine density (the real driver of how hard a board is)
+  const density = numMines / (cols * rows);
+  celebrate(1 + Math.round(density / 0.28 * 2)); // 0 density -> 1, ~28% (max slider) -> 3
 }
 
 function minesLeft() {
@@ -295,6 +287,98 @@ function updateParticles() {
     if (p.life <= 0) {
       particles.splice(i, 1);
     }
+  }
+}
+
+// ---- info modal animation ----
+// A scripted 5×5 mini-board walking through the three core moves: opening a
+// flood-filled safe area, flagging the mines it reveals, then losing by
+// clicking an unflagged mine next to an already-revealed square.
+
+function infoAnim(p, w, h, frame) {
+  const C = 5, R = 5;
+  const pad = 14;
+  const cs = Math.min((w - pad * 2) / C, (h - pad * 2) / R);
+  const bw = cs * C, bh = cs * R;
+  const ox = Math.floor((w - bw) / 2);
+  const oy = Math.floor((h - bh) / 2);
+
+  const PHASE_LEN = 65;
+  const t = frame % (PHASE_LEN * 3);
+  const phase = Math.floor(t / PHASE_LEN);
+
+  // fixed board: 9 = mine, numbers = mine-adjacency count, 0 = open
+  // layout (col,row), mines at all four corners:
+  const MINE = 9;
+  const board = [
+    [MINE, 2, 1, 2, MINE],
+    [2,    2, 1, 2, 2   ],
+    [1,    1, 0, 1, 1   ],
+    [2,    2, 1, 2, 2   ],
+    [MINE, 2, 1, 2, MINE],
+  ];
+
+  // phase 0: only the flood-filled interior is revealed (the 0 and its
+  // numbered border), corners still covered
+  // phase 1: same reveal, plus the two top corners get flagged
+  // phase 2: the bottom-left mine (unflagged) gets clicked and explodes
+  const revealed = new Set();
+  for (let c = 1; c <= 3; c++) for (let r = 1; r <= 3; r++) revealed.add(c + "," + r);
+
+  const flagged = new Set();
+  if (phase >= 1) { flagged.add("0,0"); flagged.add("4,0"); }
+
+  const exploded = phase === 2 && t - PHASE_LEN * 2 > PHASE_LEN * 0.35;
+  const clickPulse = phase === 2 && !exploded;
+
+  p.background(20, 18, 15);
+  p.noStroke();
+
+  const NUM_COLORS = [null, [127,176,105],[230,180,34],[200,50,63],[150,130,200],[220,120,60],[90,180,190],[243,237,224],[155,145,130]];
+
+  for (let c = 0; c < C; c++) {
+    for (let r = 0; r < R; r++) {
+      const x = ox + c * cs, y = oy + r * cs;
+      const v = board[c][r];
+      const key = c + "," + r;
+      const isRevealed = revealed.has(key) || (exploded && c === 0 && r === 4);
+
+      if (isRevealed) {
+        if (v === MINE) {
+          p.fill(200, 50, 63, 70); p.rect(x, y, cs, cs);
+          p.fill(200, 50, 63); p.circle(x + cs/2, y + cs/2, cs * 0.5);
+          p.fill(28, 25, 22); p.circle(x + cs/2, y + cs/2, cs * 0.2);
+        } else {
+          p.fill(30, 27, 23); p.rect(x, y, cs, cs);
+          if (v > 0) {
+            const col = NUM_COLORS[v];
+            p.fill(col[0], col[1], col[2]);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textStyle(p.BOLD);
+            p.textSize(cs * 0.48);
+            p.text(v, x + cs/2, y + cs/2 + 1);
+          }
+        }
+      } else {
+        p.fill(38, 35, 32); p.rect(x, y, cs, cs);
+        p.fill(56, 51, 45, 90); p.rect(x, y, cs, cs * 0.14);
+        if (flagged.has(key)) {
+          p.fill(230, 180, 34);
+          const fr = cs * 0.16;
+          p.rect(x + cs/2 - fr/2, y + cs/2 - fr/2, fr, fr, 2);
+        }
+      }
+    }
+  }
+
+  // pulse ring on the cell about to be clicked
+  if (clickPulse) {
+    const cx = ox + 0.5 * cs, cy = oy + 4.5 * cs;
+    const pulse = 1.0 + 0.15 * p.sin(frame * 0.3);
+    p.noFill();
+    p.stroke(243, 237, 224, 200);
+    p.strokeWeight(2);
+    p.circle(cx, cy, cs * 0.55 * pulse);
   }
 }
 

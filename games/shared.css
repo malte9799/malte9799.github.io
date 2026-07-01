@@ -239,7 +239,7 @@ button.hint-confirm:hover { background: #635220; border-color: #52431a; }
   border: 1px solid var(--panel-edge);
   border-radius: 14px;
   width: 100%;
-  max-width: 360px;
+  max-width: 480px;
   padding: 22px 20px 18px;
   display: flex;
   flex-direction: column;
@@ -251,13 +251,6 @@ button.hint-confirm:hover { background: #635220; border-color: #52431a; }
   display: block;
   border-radius: 8px;
   border: 1px solid var(--panel-edge);
-}
-.info-caption {
-  font-size: 12px;
-  color: var(--ink);
-  letter-spacing: 0.05em;
-  line-height: 1.6;
-  min-height: 2.4em;
 }
 #info-close {
   flex: none;

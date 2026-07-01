@@ -189,8 +189,10 @@ function newGame() {
 }
 
 function regionFrom(g, r0, c0) {
+  const n = g.length; // derived from the passed grid, not the global SIZE,
+  // so this also works for the how-to-play demo's smaller scripted board
   const target = g[r0][c0];
-  const seen = Array.from({ length: SIZE }, () => Array(SIZE).fill(false));
+  const seen = Array.from({ length: n }, () => Array(n).fill(false));
   const stack = [[r0, c0]];
   seen[r0][c0] = true;
   const cells = [];
@@ -199,7 +201,7 @@ function regionFrom(g, r0, c0) {
     cells.push([r, c]);
     const nbrs = [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]];
     for (const [nr, nc] of nbrs) {
-      if (nr < 0 || nr >= SIZE || nc < 0 || nc >= SIZE) continue;
+      if (nr < 0 || nr >= n || nc < 0 || nc >= n) continue;
       if (seen[nr][nc]) continue;
       if (g[nr][nc] !== target) continue;
       seen[nr][nc] = true;
@@ -242,6 +244,10 @@ function finishPick() {
     gameOver = true;
     won = true;
     maybeSaveBest();
+    // difficulty ~ grid size and color count (sliders: size 6-24, colors 3-8)
+    const sizeFrac = (SIZE - 6) / (24 - 6);
+    const colorFrac = (NCOLORS - 3) / (8 - 3);
+    celebrate(1 + Math.round((sizeFrac + colorFrac) / 2 * 2));
   } else if (moves >= moveLimit) {
     gameOver = true;
     won = false;
@@ -273,60 +279,138 @@ function updateStatus() {
 }
 
 // ---- info helper animation ----
+// Drives a tiny seeded board through two real picks using the actual
+// pickColor/ripple/border-tracing logic the real game uses (regionFrom,
+// colorAt, the same ripple timing constants), instead of a separate
+// hand-drawn mock — so the demo genuinely looks and moves like the game.
+const INFO_BOARD_SEED = [
+  [0,0,1,2,1],
+  [0,0,1,1,2],
+  [0,1,2,2,1],
+  [1,1,2,0,0],
+  [2,2,1,0,0],
+];
+// Full solution for this seed (verified by simulation) — keeps picking
+// until the whole board is a single color, same as actually winning a game.
+const INFO_MOVES = [1, 2, 1, 2, 0, 1];
+const INFO_N = INFO_BOARD_SEED.length;
+const INFO_RIPPLE_STEP = 1.5; // smaller than the real game's RIPPLE_STEP so a 5x5 board doesn't feel sluggish
+
+const INFO_PAUSE_FRAMES = 35;      // idle frames held between picks
+const INFO_SOLVED_HOLD_FRAMES = 90; // idle frames held on the fully-flooded board before looping back
+
+let _infoGrid = null;
+let _infoRipple = null;
+let _infoMoveIdx = 0;
+let _infoIdleSince = 0; // frame count the animation has been idle (no ripple) since its last state change
+let _infoLastFrame = -1;
+
+function _infoResetSeq(frame) {
+  _infoGrid = INFO_BOARD_SEED.map(row => [...row]);
+  _infoRipple = null;
+  _infoMoveIdx = 0;
+  _infoIdleSince = frame;
+}
+
 function infoAnim(p, w, h, frame) {
-  const N = 5;
   const pad = 12;
-  const cs = Math.min((w - pad * 2) / N, (h - pad * 2) / N) * 0.85;
-  const bw = cs * N, bh = cs * N;
+  const cs = Math.min((w - pad * 2) / INFO_N, (h - pad * 2) / INFO_N) * 0.85;
+  const bw = cs * INFO_N, bh = cs * INFO_N;
   const ox = Math.floor((w - bw) / 2);
   const oy = Math.floor((h - bh) / 2);
 
-  const PHASE_LEN = 60;
-  const t = frame % (PHASE_LEN * 2);
-  const phase = Math.floor(t / PHASE_LEN);
+  if (!_infoGrid || frame < _infoLastFrame) _infoResetSeq(frame); // (re)init on open
+  _infoLastFrame = frame;
 
-  // base layout: 0 = red region (top-left blob), 1 = gold, others scattered
-  const base = [
-    [0,0,1,2,1],
-    [0,0,1,1,2],
-    [0,1,2,2,1],
-    [1,1,2,0,0],
-    [2,2,1,0,0],
-  ];
-  // after picking gold(1): the connected top-left red+gold blob becomes gold
-  const after = [
-    [1,1,1,2,1],
-    [1,1,1,1,2],
-    [1,1,2,2,1],
-    [1,1,2,0,0],
-    [2,2,1,0,0],
-  ];
-  const cols = [PALETTE[0], PALETTE[1], PALETTE[2]];
-
-  const layout = phase === 0 ? base : after;
-
-  p.background(20, 18, 15);
-  p.noStroke();
-  for (let r = 0; r < N; r++) {
-    for (let c = 0; c < N; c++) {
-      const col = cols[layout[r][c]];
-      p.fill(col[0], col[1], col[2]);
-      const x = ox + c * cs, y = oy + r * cs;
-      p.rect(x, y, cs - 2, cs - 2, 2);
+  // once idle for a beat, either fire the next scripted pick, or — once
+  // the sequence is done — hold on the solved (single-color) board for a
+  // longer beat before looping back to the start, instead of snapping
+  // straight into a refill.
+  const solved = _infoMoveIdx >= INFO_MOVES.length;
+  const holdFrames = solved ? INFO_SOLVED_HOLD_FRAMES : INFO_PAUSE_FRAMES;
+  if (!_infoRipple && frame - _infoIdleSince >= holdFrames) {
+    if (solved) {
+      _infoResetSeq(frame);
+    } else {
+      const col = INFO_MOVES[_infoMoveIdx];
+      _infoMoveIdx++;
+      if (col !== _infoGrid[0][0]) {
+        const region = regionFrom(_infoGrid, 0, 0);
+        const cells = region.map(([r, c]) => ({ r, c, delay: (r + c) * INFO_RIPPLE_STEP, color: col }));
+        const maxDelay = cells.reduce((m, cell) => Math.max(m, cell.delay), 0);
+        _infoRipple = { cells, startFrame: frame, maxDelay, col };
+      }
     }
   }
 
-  // highlight top-left origin cell
-  p.noFill();
+  // build ripple flip progress per cell, same math as the real draw()
+  let rippleState = null;
+  let rippleCol = null;
+  if (_infoRipple) {
+    rippleCol = _infoRipple.col;
+    rippleState = new Map();
+    const elapsed = frame - _infoRipple.startFrame;
+    let allDone = true;
+    for (const cell of _infoRipple.cells) {
+      const local = elapsed - cell.delay;
+      if (local < 0) {
+        allDone = false;
+      } else {
+        const t = Math.min(1, local / RIPPLE_FLIP_DUR);
+        if (t < 1) allDone = false;
+        rippleState.set(cell.r + "," + cell.c, t);
+      }
+    }
+    if (allDone) {
+      for (const { r, c } of _infoRipple.cells) _infoGrid[r][c] = _infoRipple.col;
+      _infoRipple = null;
+      _infoIdleSince = frame;
+    }
+  }
+
+  p.background(20, 18, 15);
+  p.noStroke();
+
+  for (let r = 0; r < INFO_N; r++) {
+    for (let c = 0; c < INFO_N; c++) {
+      const x = ox + c * cs, y = oy + r * cs;
+      const t = rippleState ? rippleState.get(r + "," + c) : undefined;
+      if (t === undefined) {
+        const col = colorAt(_infoGrid[r][c]);
+        p.fill(col[0], col[1], col[2]);
+        p.rect(x, y, cs - 1, cs - 1, 1.5);
+      } else {
+        const oldCol = colorAt(_infoGrid[r][c]);
+        const newCol = colorAt(rippleCol);
+        const shrink = t < 0.5;
+        const localT = shrink ? t / 0.5 : (t - 0.5) / 0.5;
+        const scale = shrink ? 1 - localT : localT;
+        const col = shrink ? oldCol : newCol;
+        p.fill(col[0], col[1], col[2]);
+        const sz = (cs - 1) * scale;
+        const off = (cs - 1 - sz) / 2;
+        p.rect(x + off, y + off, sz, sz, 1.5);
+      }
+    }
+  }
+
+  // border tracing the boundary of the flooded (owned) region, same logic
+  // as the real game's draw(), so it grows in step with the ripple here too
+  const owned = regionFrom(_infoGrid, 0, 0);
+  const ownedSet = new Set(owned.map(([r, c]) => r + "," + c));
+  if (rippleState) {
+    for (const [key, t] of rippleState) if (t >= 0.5) ownedSet.add(key);
+  }
   p.stroke(243, 237, 224, 200);
   p.strokeWeight(2);
-  p.rect(ox + 1, oy + 1, cs - 4, cs - 4, 2);
-
-  const caption = phase === 0
-    ? "Pick a color..."
-    : "...and the connected region from the corner joins it.";
-
-  return { caption };
+  for (const key of ownedSet) {
+    const [r, c] = key.split(",").map(Number);
+    const x = ox + c * cs, y = oy + r * cs;
+    if (r === 0 || !ownedSet.has((r - 1) + "," + c)) p.line(x, y, x + cs, y);
+    if (r === INFO_N - 1 || !ownedSet.has((r + 1) + "," + c)) p.line(x, y + cs, x + cs, y + cs);
+    if (c === 0 || !ownedSet.has(r + "," + (c - 1))) p.line(x, y, x, y + cs);
+    if (c === INFO_N - 1 || !ownedSet.has(r + "," + (c + 1))) p.line(x + cs, y, x + cs, y + cs);
+  }
 }
 
 // ---- p5 sketch lifecycle ----

@@ -487,10 +487,4 @@ function infoAnim(p, w, h, frame) {
     p.line(off1, oy, off1, oy + board);
     p.line(ox, off1, ox + board, off1);
   }
-
-  const caption = phase === 0
-    ? "Playing in a cell's bottom-right square..."
-    : "...sends your opponent to the bottom-right board next.";
-
-  return { caption };
 }
