@@ -3,13 +3,13 @@
 // Cell age color mapping (Cyan -> Green -> Gold -> Orange), birth scaling, and fading death trails.
 
 // LEXICON_SHAPES (from conway-shapes.js, generated from lexicon.txt by parse-lexicon.py)
-// is loaded via a dynamically injected <script> tag below, same trick game.html uses to
+// is loaded via a dynamically injected <script> tag below, same trick index.html uses to
 // load the per-game script, so this keeps working over file:// with no build step or fetch().
 // It arrives after this script runs, so the shape-search UI renders once onShapesLoaded fires.
 let onShapesLoaded = () => {};
 (function loadShapesScript() {
   const s = document.createElement("script");
-  s.src = "conway-shapes.js";
+  s.src = "games/conway-shapes.js";
   s.onload = () => onShapesLoaded();
   document.head.appendChild(s);
 })();
@@ -39,6 +39,13 @@ let running  = false;
 let speed    = 8;          // gens/sec  (1–30)
 let genCount = 0;
 let lastTick = 0;
+
+// manual step-key repeat (holding "." spams step() like a held button)
+const STEP_REPEAT_DELAY = 350; // ms before repeat kicks in after first press
+const STEP_REPEAT_RATE  = 60;  // ms between repeated steps once held
+let stepKeyHeld = false;
+let stepKeyNextAt = 0;
+window.addEventListener("blur", () => { stepKeyHeld = false; });
 
 // viewport
 let camX = 0, camY = 0;   // world coords at canvas centre
@@ -299,6 +306,9 @@ new p5(function(p) {
         step();
         lastTick = p.millis();
       }
+    } else if (stepKeyHeld && p.millis() >= stepKeyNextAt) {
+      step();
+      stepKeyNextAt = p.millis() + STEP_REPEAT_RATE;
     }
 
     // Tick down fading cells
@@ -461,8 +471,18 @@ new p5(function(p) {
 
   p.keyPressed = function() {
     if (p.key === " ") { toggleRun(); return false; }
-    if (p.key === "." || p.key === ">") { if (!running) step(); }
+    if (p.key === "." || p.key === ">") {
+      if (!running && !stepKeyHeld) {
+        step();
+        stepKeyHeld = true;
+        stepKeyNextAt = p.millis() + STEP_REPEAT_DELAY;
+      }
+    }
     if (p.key === "Escape") cancelPreset();
+  };
+
+  p.keyReleased = function() {
+    if (p.key === "." || p.key === ">") stepKeyHeld = false;
   };
 });
 

@@ -7,32 +7,33 @@
 <link rel="stylesheet" href="shared.css" />
 <style>
   body { background: var(--bg); }
-  #app {
+  #home {
     max-width: 960px;
+    margin: 0 auto;
     padding: 48px 24px 64px;
   }
-  h1 {
+  #home h1 {
     text-align: center;
     font-size: 28px;
     letter-spacing: 0.18em;
     margin-bottom: 6px;
   }
-  .subtitle {
+  #home .subtitle {
     text-align: center;
     font-size: 12px;
     color: var(--muted);
     letter-spacing: 0.08em;
     margin-bottom: 40px;
   }
-  .grid {
+  #home .grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
-  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
-  @media (min-width: 641px) and (max-width: 880px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { #home .grid { grid-template-columns: 1fr; } }
+  @media (min-width: 641px) and (max-width: 880px) { #home .grid { grid-template-columns: repeat(2, 1fr); } }
 
-  .card {
+  #home .card {
     position: relative;
     display: block;
     border-radius: 14px;
@@ -43,19 +44,19 @@
     transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
     background: var(--panel);
   }
-  .card:hover {
+  #home .card:hover {
     transform: translateY(-3px);
     border-color: #555048;
     box-shadow: 0 8px 28px rgba(0,0,0,0.5);
   }
-  .card canvas {
+  #home .card canvas {
     width: 100% !important;
     height: 100% !important;
     display: block;
     position: absolute;
     inset: 0;
   }
-  .card-overlay {
+  #home .card-overlay {
     position: absolute;
     inset: 0;
     display: flex;
@@ -64,10 +65,10 @@
     padding: 0;
     background: linear-gradient(to top, rgba(20,18,15,0.88) 0%, rgba(20,18,15,0.0) 55%);
   }
-  .card-text {
+  #home .card-text {
     padding: 14px 16px;
   }
-  .card-title {
+  #home .card-title {
     font-size: 17px;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -75,13 +76,13 @@
     color: var(--ink);
     line-height: 1.2;
   }
-  .card-desc {
+  #home .card-desc {
     font-size: 11px;
     color: var(--muted);
     letter-spacing: 0.07em;
     margin-top: 3px;
   }
-  .star-btn {
+  #home .star-btn {
     position: absolute;
     top: 12px;
     right: 12px;
@@ -99,83 +100,98 @@
     cursor: pointer;
     opacity: 0;
     transform: scale(0.9);
-    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
-                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
-                background-color 0.2s, 
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s,
                 border-color 0.2s,
                 color 0.2s;
     color: var(--muted);
     padding: 0;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   }
-  .card:hover .star-btn {
+  #home .card:hover .star-btn {
     opacity: 0.7;
     transform: scale(1);
   }
-  .star-btn:hover {
+  #home .star-btn:hover {
     opacity: 1 !important;
     color: var(--home);
     background: rgba(30, 27, 24, 0.75);
     border-color: rgba(230, 180, 34, 0.4);
     transform: scale(1.1) !important;
   }
-  .star-btn.starred {
+  #home .star-btn.starred {
     opacity: 1 !important;
     transform: scale(1) !important;
     color: var(--home);
     background: rgba(30, 27, 24, 0.6);
     border-color: rgba(230, 180, 34, 0.25);
   }
-  .star-btn.starred:hover {
+  #home .star-btn.starred:hover {
     background: rgba(30, 27, 24, 0.8);
     border-color: rgba(230, 180, 34, 0.5);
   }
-  .star-btn:active {
+  #home .star-btn:active {
     transform: scale(0.95) !important;
   }
-  .star-btn:focus-visible {
+  #home .star-btn:focus-visible {
     outline: 2px solid var(--home);
     outline-offset: 2px;
     opacity: 1 !important;
     transform: scale(1) !important;
   }
-  .star-btn .star-icon {
+  #home .star-btn .star-icon {
     width: 16px;
     height: 16px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2.2;
     stroke-linejoin: round;
-    transition: fill 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
-                stroke 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+    transition: fill 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                stroke 0.25s cubic-bezier(0.4, 0, 0.2, 1),
                 transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-  .star-btn.starred .star-icon {
+  #home .star-btn.starred .star-icon {
     fill: var(--home);
     stroke: var(--home);
     transform: scale(1.1);
   }
-  .star-btn:active .star-icon {
+  #home .star-btn:active .star-icon {
     transform: scale(0.85);
   }
   @media (hover: none) {
-    .star-btn {
+    #home .star-btn {
       opacity: 0.5;
       transform: scale(1);
     }
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<script src="game.js"></script>
 </head>
 <body>
-<div id="app">
+<div id="home">
   <h1>Games</h1>
   <p class="subtitle">small puzzles by malte</p>
 
   <div class="grid" id="grid"></div>
 </div>
+<div id="app" style="display:none"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
 <script>
+const _gameName = new URLSearchParams(location.search).get("game");
+
+if (_gameName) {
+  // Game view: hide the home grid, let game.js build the shell into #app,
+  // then dynamically load the selected game's script.
+  document.title = _gameName.charAt(0).toUpperCase() + _gameName.slice(1);
+  document.getElementById("home").style.display = "none";
+  document.getElementById("app").style.display = "";
+  const s = document.createElement("script");
+  s.src = "games/" + _gameName + ".js";
+  document.body.appendChild(s);
+} else {
+
 const GAMES = [
    {
      id: "minesweeper",
@@ -645,7 +661,7 @@ function drawLightsOut(p, w, h) {
         p.stroke(58, 53, 46);
         p.strokeWeight(1.5);
         p.circle(cx, cy, cellSize * 0.35);
-        
+
         p.noStroke();
         p.fill(28, 25, 22);
         p.circle(cx, cy, cellSize * 0.15);
@@ -888,7 +904,7 @@ function buildCards() {
   sorted.forEach(game => {
     const a = document.createElement("a");
     a.className = "card";
-    a.href = "game.html?game=" + game.id;
+    a.href = "index.html?game=" + game.id;
     a.dataset.id = game.id;
     a.innerHTML = `
       <div class="card-overlay">
@@ -943,6 +959,8 @@ function buildCards() {
 }
 
 buildCards();
+
+}
 </script>
 </body>
 </html>

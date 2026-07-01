@@ -31,6 +31,7 @@ let BH = 3;   // box height (rows per box)
 let solution = [];   // [r][c] full solution 1..N
 let givens = [];      // [r][c] boolean — prefilled clue cells (locked)
 let board = [];        // [r][c] current value, 0 = empty
+let notes = [];        // [r][c] Set of pencil-mark digits (hidden once cell has a value)
 let selR = -1, selC = -1;
 let solved = false;
 let history = [];       // stack of {r,c,prev}
@@ -177,6 +178,7 @@ function genPuzzle() {
 function newGame() {
   seedRng(Math.floor(Math.random() * 1e9));
   genPuzzle();
+  notes = Array.from({ length: N }, () => Array.from({ length: N }, () => new Set()));
   selR = -1; selC = -1;
   solved = false;
   history = [];
@@ -265,7 +267,7 @@ function updateStatus() {
 
 function setCell(r, c, v) {
   if (solved || givens[r][c]) return;
-  history.push({ r, c, prev: board[r][c] });
+  history.push({ type: "value", r, c, prev: board[r][c] });
   board[r][c] = v;
   recomputeConflicts();
   if (checkSolved()) solved = true;
@@ -279,9 +281,25 @@ function eraseSelected() {
   setCell(selR, selC, 0);
 }
 
+function toggleNote(r, c, v) {
+  if (solved || givens[r][c]) return;
+  if (board[r][c] !== 0) return; // notes only apply to empty cells
+  const had = notes[r][c].has(v);
+  history.push({ type: "note", r, c, v, had });
+  if (had) notes[r][c].delete(v);
+  else notes[r][c].add(v);
+}
+
 function undo() {
   if (!history.length) { flashNote("Nothing to undo!"); return; }
-  const { r, c, prev } = history.pop();
+  const entry = history.pop();
+  if (entry.type === "note") {
+    const { r, c, v, had } = entry;
+    if (had) notes[r][c].add(v);
+    else notes[r][c].delete(v);
+    return;
+  }
+  const { r, c, prev } = entry;
   board[r][c] = prev;
   solved = false;
   recomputeConflicts();
@@ -296,7 +314,7 @@ function giveHint() {
       if (board[r][c] === 0 || board[r][c] !== solution[r][c]) empties.push([r, c]);
   if (!empties.length) { flashNote("No hint available."); return; }
   const [r, c] = empties[Math.floor(Math.random() * empties.length)];
-  history.push({ r, c, prev: board[r][c] });
+  history.push({ type: "value", r, c, prev: board[r][c] });
   board[r][c] = solution[r][c];
   selR = r; selC = c;
   recomputeConflicts();
@@ -307,17 +325,24 @@ function giveHint() {
 
 // ---- input ----
 
-function typeDigit(v) {
+function typeDigit(v, isNote) {
   if (selR < 0 || solved) return;
   if (v === 0) { eraseSelected(); return; }
   if (v > N) return;
+  if (isNote) { toggleNote(selR, selC, v); return; }
   if (board[selR][selC] === v) { eraseSelected(); return; }
   setCell(selR, selC, v);
 }
 
-function keyPressed() {
-  if (key >= "1" && key <= "9") {
-    typeDigit(parseInt(key, 10));
+function keyPressed(e) {
+  // Use the physical key (event.code) rather than keyCode/key: on
+  // non-US layouts (e.g. QWERTZ) Shift+2/Shift+7 produce '"'/'/' and
+  // some browsers report a keyCode/key matching that shifted symbol
+  // instead of the digit, so relying on them misses those keys.
+  const code = e && e.code;
+  const digitMatch = code && code.match(/^(?:Digit|Numpad)([1-9])$/);
+  if (digitMatch) {
+    typeDigit(parseInt(digitMatch[1], 10), keyIsDown(SHIFT));
     return;
   }
   if (key === "0" || keyCode === BACKSPACE || keyCode === DELETE) {
@@ -489,6 +514,8 @@ function draw() {
         noStroke();
         textSize(cellSize * 0.5);
         text(v, x + cellSize / 2, y + cellSize / 2 + 1);
+      } else if (notes[r][c].size) {
+        drawNotes(x, y, notes[r][c]);
       }
     }
   }
@@ -522,6 +549,26 @@ function draw() {
   }
 }
 
+function drawNotes(x, y, noteSet) {
+  const cols = Math.ceil(Math.sqrt(N));
+  const rows = Math.ceil(N / cols);
+  const subW = cellSize / cols, subH = cellSize / rows;
+  fill(180, 175, 165);
+  noStroke();
+  textStyle(NORMAL);
+  textSize(Math.min(subW, subH) * 0.55);
+  textAlign(CENTER, CENTER);
+  for (let v = 1; v <= N; v++) {
+    if (!noteSet.has(v)) continue;
+    const i = v - 1;
+    const col = i % cols, row = Math.floor(i / cols);
+    const cx = x + col * subW + subW / 2;
+    const cy = y + row * subH + subH / 2;
+    text(v, cx, cy);
+  }
+  textStyle(BOLD);
+}
+
 function padRects() {
   const n = N;
   const padW = Math.min(width * 0.94, n * 40);
@@ -538,6 +585,7 @@ function padRects() {
 
 function drawNumberPad() {
   const rects = padRects();
+  const noteMode = keyIsDown(SHIFT);
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
   for (const r of rects) {
@@ -550,7 +598,7 @@ function drawNumberPad() {
     fill(complete ? color(58, 74, 48) : color(38, 35, 32));
     rect(r.x, r.y, r.w, r.h, 6);
     fill(complete ? color(120, 170, 100) : color(243, 237, 224));
-    textSize(r.h * 0.5);
+    textSize(r.h * (noteMode ? 0.28 : 0.5));
     text(r.v, cx, cy + 1);
   }
 }
@@ -574,7 +622,7 @@ function mousePressed() {
   const rects = padRects();
   for (const r of rects) {
     if (mouseX >= r.x && mouseX < r.x + r.w && mouseY >= r.y && mouseY < r.y + r.h) {
-      typeDigit(r.v);
+      typeDigit(r.v, keyIsDown(SHIFT));
       return;
     }
   }
