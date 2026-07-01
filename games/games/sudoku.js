@@ -183,7 +183,7 @@ function newGame() {
   solved = false;
   history = [];
   conflictCells = new Set();
-  resetHintConfirm();
+  resetHint();
   flashNote("");
   updateStatus();
 }

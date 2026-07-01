@@ -180,10 +180,15 @@ function setStatus(text, state) {
 }
 
 let _hintPending = false;
+let _hintUsed = false;
 let _hintTimer = null;
 
 function confirmHint(fn) {
   const btn = document.getElementById("btn-hint");
+  if (_hintUsed) {
+    fn();
+    return;
+  }
   if (!_hintPending) {
     _hintPending = true;
     if (btn) {
@@ -191,21 +196,28 @@ function confirmHint(fn) {
       btn.classList.add("hint-confirm");
     }
     clearTimeout(_hintTimer);
-    _hintTimer = setTimeout(() => resetHintConfirm(), 2500);
+    _hintTimer = setTimeout(() => _clearHintPending(), 2500);
   } else {
-    resetHintConfirm();
+    _clearHintPending();
+    _hintUsed = true;
     fn();
+    if (btn) btn.classList.add("hint-confirm");
   }
 }
 
-function resetHintConfirm() {
+function _clearHintPending() {
   clearTimeout(_hintTimer);
   _hintPending = false;
   const btn = document.getElementById("btn-hint");
   if (btn) {
     btn.textContent = "Hint";
-    btn.classList.remove("hint-confirm");
+    if (!_hintUsed) btn.classList.remove("hint-confirm");
   }
+}
+
+function resetHint() {
+  _hintUsed = false;
+  _clearHintPending();
 }
 
 function setButtonActive(id, active) {

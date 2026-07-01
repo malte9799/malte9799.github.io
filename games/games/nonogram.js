@@ -121,7 +121,7 @@ function newGame() {
   dragFill = null; dragAxis = null; dragOrigin = null; dragLast = null;
   panActive = false; panStart = null; panOrigin = null;
   resetView();
-  resetHintConfirm();
+  resetHint();
   flashNote("");
   particles = [];
 }

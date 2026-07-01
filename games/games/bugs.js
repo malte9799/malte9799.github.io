@@ -107,7 +107,7 @@ function buildGame() {
       clicksLeft = removed.length;
       bugs.forEach(e => { e.x = e.i; e.y = e.j; });
       saveState();
-      resetHintConfirm();
+      resetHint();
       flashNote("");
       particles = [];
       shockwaves = [];

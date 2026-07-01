@@ -87,6 +87,7 @@ function newGame() {
   hintCell = null;
   hintTimeout = 0;
   particles = [];
+  resetHint();
 
   // Shuffle intensity based on grid size
   const shuffleMoves = SIZE === 3 ? 5 : SIZE === 5 ? 10 : SIZE === 7 ? 18 : 25;

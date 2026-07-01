@@ -280,7 +280,7 @@ function newGame() {
   flagMode = false;
   particles = [];
   setButtonActive("btn-flag", false);
-  resetHintConfirm();
+  resetHint();
   flashNote("");
 }
 
