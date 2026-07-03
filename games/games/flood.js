@@ -18,11 +18,15 @@ initGame({
     { id: "s-size",   label: "Grid size", min: 6,  max: 24, step: 1 },
     { id: "s-colors", label: "Colors",    min: 3,  max: 8,  step: 1 },
   ],
-  onPreset: ([n, k]) => { SIZE = n; NCOLORS = k; saveBest(); newGame(); },
+  onPreset: ([n, k]) => { SIZE = n; NCOLORS = k; newGame(); },
   onSlider: (id, v) => { if (id === "s-size") SIZE = v; else NCOLORS = v; },
   onClamp: () => {},
   getSliderValues: () => ({ "s-size": SIZE, "s-colors": NCOLORS }),
-  info: { anim: infoAnim },
+  info: {
+    anim: infoAnim,
+    title: "How to play",
+    text: "You own the top-left corner. Picking a color (swatches, number keys, or clicking any cell) recolors your whole territory, absorbing every touching region of that color. Flood the entire board before the move counter runs out.",
+  },
 });
 
 let SIZE = 14;
@@ -71,9 +75,6 @@ function bestKey() {
 let best = null;
 function loadBest() {
   try { const v = localStorage.getItem(bestKey()); best = v ? parseInt(v) : null; } catch { best = null; }
-}
-function saveBest() {
-  loadBest();
 }
 function maybeSaveBest() {
   try {
@@ -526,20 +527,12 @@ function draw() {
 
   // game over overlay
   if (gameOver) {
-    fill(20, 18, 15, 195);
-    noStroke();
-    rect(ox - 10, oy - 10, boardW + 20, boardW + 20, 14);
-
-    fill(won ? color(127, 176, 105) : color(200, 50, 63));
-    textAlign(CENTER, CENTER);
-    textSize(22);
-    textStyle(BOLD);
-    text(won ? "BOARD FLOODED" : "OUT OF MOVES", ox + boardW / 2, oy + boardW / 2 - 14);
-
-    fill(155, 145, 130);
-    textSize(13);
-    textStyle(NORMAL);
-    text(won ? "Solved in " + moves + " moves" : "Press New board to retry", ox + boardW / 2, oy + boardW / 2 + 14);
+    drawBoardOverlay(
+      ox, oy, boardW, boardW,
+      won ? "BOARD FLOODED" : "OUT OF MOVES",
+      won ? "Solved in " + moves + " moves" : "Press New board to retry",
+      won ? [127, 176, 105] : [200, 50, 63],
+    );
   }
 }
 

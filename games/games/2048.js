@@ -21,7 +21,11 @@ initGame({
   onSlider: (id, v) => { if (id === "s-size") SIZE = v; },
   onClamp: () => {},
   getSliderValues: () => ({ "s-size": SIZE }),
-  info: { anim: infoAnim },
+  info: {
+    anim: infoAnim,
+    title: "How to play",
+    text: "Arrow keys, WASD or swipes slide every tile as far as it goes; equal tiles that collide merge into their sum, and a new tile spawns each move. Keep your biggest tile parked in a corner and build toward 2048.",
+  },
 });
 
 let grid = [];
@@ -385,7 +389,7 @@ function infoAnim(p, w, h, frame) {
   const step = INFO_SEQUENCE[moveIdx];
 
   const slideT = p.constrain(localT / SLIDE_FRAC, 0, 1);
-  const ease = slideT < 0.5 ? 2*slideT*slideT : -1 + (4-2*slideT)*slideT;
+  const ease = easeInOutQuad(slideT);
   const slid = localT > SLIDE_FRAC;
   const mergePopT = slid ? p.constrain((localT - SLIDE_FRAC) / MERGE_POP_FRAC, 0, 1) : 0;
   const mergePopScale = slid ? 1 + 0.18 * p.sin(Math.min(1, mergePopT) * Math.PI) : 1;
@@ -518,7 +522,7 @@ function draw() {
 
   // animation progress
   const t = animT < ANIM_DUR ? animT / ANIM_DUR : 1;
-  const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  const ease = easeInOutQuad(t);
 
   if (anim.length > 0 && animT < ANIM_DUR) {
     // Cells covered by an animation entry — skip drawing them statically
@@ -590,31 +594,9 @@ function draw() {
 
   // game over overlay
   if (gameOver) {
-    fill(20, 18, 15, 190);
-    rect(ox, oy, boardW, boardH, boardW * 0.03);
-    fill(200, 50, 63);
-    textAlign(CENTER, CENTER);
-    textStyle(BOLD);
-    textSize(max(20, tileSize * 0.45));
-    noStroke();
-    text("GAME OVER", ox + boardW / 2, oy + boardH / 2 - tileSize * 0.25);
-    fill(155, 145, 130);
-    textSize(max(11, tileSize * 0.22));
-    textStyle(NORMAL);
-    text("press N for new game", ox + boardW / 2, oy + boardH / 2 + tileSize * 0.25);
+    drawBoardOverlay(ox, oy, boardW, boardH, "GAME OVER", "press N for new game", [200, 50, 63]);
   } else if (won && !wonAcked) {
-    fill(20, 18, 15, 170);
-    rect(ox, oy, boardW, boardH, boardW * 0.03);
-    fill(230, 180, 34);
-    textAlign(CENTER, CENTER);
-    textStyle(BOLD);
-    textSize(max(20, tileSize * 0.45));
-    noStroke();
-    text("YOU WIN!", ox + boardW / 2, oy + boardH / 2 - tileSize * 0.25);
-    fill(155, 145, 130);
-    textSize(max(11, tileSize * 0.22));
-    textStyle(NORMAL);
-    text("press any key to keep playing", ox + boardW / 2, oy + boardH / 2 + tileSize * 0.25);
+    drawBoardOverlay(ox, oy, boardW, boardH, "YOU WIN!", "press any key to keep playing", [230, 180, 34]);
   }
 }
 

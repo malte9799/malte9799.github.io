@@ -27,7 +27,11 @@ initGame({
   onSlider: (id, v) => { if (id === "s-cols") cols = v; else if (id === "s-rows") rows = v; else numMines = v; },
   onClamp: clamp,
   getSliderValues: () => ({ "s-cols": cols, "s-rows": rows, "s-mines": numMines }),
-  info: { anim: infoAnim },
+  info: {
+    anim: infoAnim,
+    title: "How to play",
+    text: "Numbers count the mines in the 8 cells around them. Open a safe area, flag the mines it pins down (right-click or Flag mode), and don't click a mine. Clicking a satisfied number opens its remaining neighbors.",
+  },
 });
 
 let cols = 12;
@@ -53,12 +57,6 @@ let won = false;
 let flagMode = false;
 
 const CANVAS = 400;
-
-// Particle system
-let particles = [];
-
-// Track click coordinates for the explosion origin
-let explosionOrigin = null;
 
 function makeEmptyGrid() {
   grid = [];
@@ -118,50 +116,20 @@ function floodReveal(i, j) {
   }
 }
 
+function cellCenter(i, j) {
+  return { cx: (i + 0.5) * (width / cols), cy: (j + 0.5) * (height / rows) };
+}
+
 function triggerExplosion(i, j) {
-  const cw = width / cols;
-  const ch = height / rows;
-  const cx = i * cw + cw / 2;
-  const cy = j * ch + ch / 2;
-  
-  // Big bomb explosion: 60 particles
-  const count = 75;
-  for (let k = 0; k < count; k++) {
-    const angle = random(TWO_PI);
-    const speed = random(1.5, 7.5);
-    particles.push({
-      x: cx,
-      y: cy,
-      vx: cos(angle) * speed,
-      vy: sin(angle) * speed,
-      life: random(180, 255),
-      size: random(3, 8),
-      col: random() < 0.65 ? [200, 50, 63] : [230, 180, 34] // red or gold
-    });
-  }
+  const { cx, cy } = cellCenter(i, j);
+  // Big bomb explosion, mostly red with some gold
+  spawnBurst(cx, cy, { count: 49, speed: [1.5, 7.5], life: [180, 255], size: [3, 8], col: [200, 50, 63], drag: 0.96 });
+  spawnBurst(cx, cy, { count: 26, speed: [1.5, 7.5], life: [180, 255], size: [3, 8], col: [230, 180, 34], drag: 0.96 });
 }
 
 function spawnFlagDust(i, j) {
-  const cw = width / cols;
-  const ch = height / rows;
-  const cx = i * cw + cw / 2;
-  const cy = j * ch + ch / 2;
-  
-  // Flag placement sparks: 10 small gold particles
-  const count = 12;
-  for (let k = 0; k < count; k++) {
-    const angle = random(TWO_PI);
-    const speed = random(1, 3);
-    particles.push({
-      x: cx,
-      y: cy,
-      vx: cos(angle) * speed,
-      vy: sin(angle) * speed,
-      life: random(100, 180),
-      size: random(1.5, 3.5),
-      col: [230, 180, 34]
-    });
-  }
+  const { cx, cy } = cellCenter(i, j);
+  spawnBurst(cx, cy, { count: 12, speed: [1, 3] });
 }
 
 function revealCell(i, j) {
@@ -227,22 +195,11 @@ function hintStep() {
       if (!grid[i][j].mine && !grid[i][j].revealed && !grid[i][j].flagged) safe.push([i, j]);
   if (!safe.length) { flashNote("no safe cells to reveal"); return; }
   const [hi, hj] = safe[floor(random() * safe.length)];
-  
+
   // Highlight the hint cell by spawning green particles around it
-  const cw = width / cols, ch = height / rows;
-  const cx = hi * cw + cw / 2, cy = hj * ch + ch / 2;
-  for (let k = 0; k < 8; k++) {
-    particles.push({
-      x: cx + random(-8, 8),
-      y: cy + random(-8, 8),
-      vx: random(-0.5, 0.5),
-      vy: random(-0.5, 0.5),
-      life: 180,
-      size: random(2, 4),
-      col: [127, 176, 105]
-    });
-  }
-  
+  const { cx, cy } = cellCenter(hi, hj);
+  spawnBurst(cx, cy, { count: 8, speed: [0.1, 0.7], life: [180, 180], size: [2, 4], col: [127, 176, 105] });
+
   revealCell(hi, hj);
   flashNote("revealed a safe cell");
 }
@@ -252,17 +209,19 @@ function clamp() {
 }
 
 function saveState() {
-  localStorage.setItem("minesweeper_state", JSON.stringify({ cols, rows, numMines }));
+  saveJSON("minesweeper_state", { cols, rows, numMines });
 }
 
 function loadState() {
-  try {
-    const d = JSON.parse(localStorage.getItem("minesweeper_state") || "{}");
-    if (typeof d.cols === "number") cols = d.cols;
-    if (typeof d.rows === "number") rows = d.rows;
-    if (typeof d.numMines === "number") numMines = d.numMines;
-  } catch {}
+  const d = loadJSON("minesweeper_state");
+  if (typeof d.cols === "number") cols = d.cols;
+  if (typeof d.rows === "number") rows = d.rows;
+  if (typeof d.numMines === "number") numMines = d.numMines;
 }
+
+loadState();
+clamp();
+syncSliderUI();
 
 function newGame() {
   makeEmptyGrid();
@@ -270,24 +229,10 @@ function newGame() {
   dead = false;
   won = false;
   flagMode = false;
-  particles = [];
+  clearParticles();
   setButtonActive("btn-flag", false);
   resetHint();
   flashNote("");
-}
-
-function updateParticles() {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vx *= 0.96;
-    p.vy *= 0.96;
-    p.life -= 6;
-    if (p.life <= 0) {
-      particles.splice(i, 1);
-    }
-  }
 }
 
 // ---- info modal animation ----
@@ -476,13 +421,7 @@ function draw() {
   for (let g = 0; g <= cols; g++) line(g * cw, 0, g * cw, height);
   for (let g = 0; g <= rows; g++) line(0, g * ch, width, g * ch);
 
-  // Draw particles
-  updateParticles();
-  for (const p of particles) {
-    fill(p.col[0], p.col[1], p.col[2], p.life);
-    noStroke();
-    circle(p.x, p.y, p.size * (p.life / 255));
-  }
+  drawParticles();
 
   // Game over state
   if (won) setStatus("solved — field swept clean", "solved");

@@ -26,7 +26,14 @@ initGame({
   },
   onClamp: () => {},
   getSliderValues: () => ({ "s-gw": gridW, "s-gh": gridH }),
-  info: { anim: infoAnim },
+  info: {
+    anim: infoAnim,
+    title: "How to play",
+    text: [
+      "Steer with the arrow keys or WASD, eat the glowing food to grow, and don't run into your own body. Space gives a short boost that burns tail length.",
+      "2 Player: P1 arrows + Space boost, P2 WASD + Shift boost — outlive your opponent.",
+    ],
+  },
 });
 
 let gridW = 40;
@@ -56,9 +63,6 @@ const BG     = [20,  18,  15];
 const GRID_C = [28,  25,  22];
 
 const MIN_LEN = 3;
-
-// Particle system
-let particles = [];
 
 function makeSnake(startX, startY, dirX, color, headColor) {
   return {
@@ -108,7 +112,7 @@ function newGame() {
   gameOver = false;
   started = false;
   s1Boost = s2Boost = false;
-  particles = [];
+  clearParticles();
   setStatus(twoPlayer ? "P1 vs P2 · any key to start" : "any key to start", null);
   clearInterval(tickTimer);
   tickTimer = setInterval(mainTick, 40);
@@ -174,78 +178,53 @@ function advanceSnake(s, boost) {
   }
 }
 
-function spawnDeathSparks(s) {
-  const head = s.body[0];
-  const count = 30;
-  const cs = Math.max(4, Math.floor(Math.min(width / gridW, (height - 60) / gridH)));
+// Board placement below the UI overlay — one source of truth shared by the
+// draw loop and every screen-space effect (sparks, food positions).
+function boardLayout() {
   const uiH = document.getElementById("ui-overlay")?.offsetHeight ?? 60;
   const availH = height - uiH;
-  const offX = Math.floor((width - cs * gridW) / 2);
-  const offY = uiH + Math.floor((availH - cs * gridH) / 2);
+  const cs = Math.max(4, Math.floor(Math.min(width / gridW, availH / gridH)));
+  return {
+    cs,
+    offX: Math.floor((width - cs * gridW) / 2),
+    offY: uiH + Math.floor((availH - cs * gridH) / 2),
+  };
+}
 
+function spawnDeathSparks(s) {
+  const { cs, offX, offY } = boardLayout();
   s.body.forEach(seg => {
     const cx = offX + seg.x * cs + cs / 2;
     const cy = offY + seg.y * cs + cs / 2;
-    for (let k = 0; k < 3; k++) {
-      particles.push({
-        x: cx,
-        y: cy,
-        vx: random(-3, 3),
-        vy: random(-3, 3),
-        life: random(100, 200),
-        size: random(2, 5),
-        col: s.color
-      });
-    }
+    spawnBurst(cx, cy, { count: 3, speed: [0.5, 4.2], life: [100, 200], size: [2, 5], col: s.color });
   });
 }
 
 function spawnBoostSparks(s) {
   const tail = s.body[s.body.length - 1];
-  const cs = Math.max(4, Math.floor(Math.min(width / gridW, (height - 60) / gridH)));
-  const uiH = document.getElementById("ui-overlay")?.offsetHeight ?? 60;
-  const availH = height - uiH;
-  const offX = Math.floor((width - cs * gridW) / 2);
-  const offY = uiH + Math.floor((availH - cs * gridH) / 2);
-  
+  const { cs, offX, offY } = boardLayout();
   const cx = offX + tail.x * cs + cs / 2;
   const cy = offY + tail.y * cs + cs / 2;
-  
+
   for (let k = 0; k < 6; k++) {
-    particles.push({
+    addParticle({
       x: cx,
       y: cy,
       vx: -s.dir.x * random(1.5, 4.5) + random(-0.5, 0.5),
       vy: -s.dir.y * random(1.5, 4.5) + random(-0.5, 0.5),
       life: random(80, 140),
       size: random(1.5, 3.5),
-      col: [243, 237, 224] // white rocket spark
+      col: [243, 237, 224], // white rocket spark
     });
   }
 }
 
 function spawnEatSparks(x, y, col) {
-  for (let k = 0; k < 12; k++) {
-    const angle = random(TWO_PI);
-    const speed = random(1, 3);
-    particles.push({
-      x,
-      y,
-      vx: cos(angle) * speed,
-      vy: sin(angle) * speed,
-      life: random(100, 160),
-      size: random(2, 4),
-      col
-    });
-  }
+  spawnBurst(x, y, { count: 12, speed: [1, 3], life: [100, 160], size: [2, 4], col });
 }
 
 function eatFood() {
-  const cs = Math.max(4, Math.floor(Math.min(width / gridW, (height - 60) / gridH)));
-  const uiH = document.getElementById("ui-overlay")?.offsetHeight ?? 60;
-  const availH = height - uiH;
-  const offX = Math.floor((width - cs * gridW) / 2);
-  const offY = uiH + Math.floor((availH - cs * gridH) / 2);
+  const { cs, offX, offY } = boardLayout();
 
   food = food.filter(f => {
     const cx = offX + f.x * cs + cs / 2;
@@ -338,34 +317,20 @@ function toggleLoop() {
 }
 
 function saveState() {
-  localStorage.setItem("snake_state", JSON.stringify({ gridW, gridH, twoPlayer, edgeLoop }));
+  saveJSON("snake_state", { gridW, gridH, twoPlayer, edgeLoop });
 }
 function loadState() {
-  try {
-    const d = JSON.parse(localStorage.getItem("snake_state") || "{}");
-    if (typeof d.gridW === "number") gridW = d.gridW;
-    if (typeof d.gridH === "number") gridH = d.gridH;
-    if (typeof d.twoPlayer === "boolean") twoPlayer = d.twoPlayer;
-    if (typeof d.edgeLoop === "boolean") edgeLoop = d.edgeLoop;
-  } catch {}
+  const d = loadJSON("snake_state");
+  if (typeof d.gridW === "number") gridW = d.gridW;
+  if (typeof d.gridH === "number") gridH = d.gridH;
+  if (typeof d.twoPlayer === "boolean") twoPlayer = d.twoPlayer;
+  if (typeof d.edgeLoop === "boolean") edgeLoop = d.edgeLoop;
 }
 
 loadState();
 syncSliderUI();
 setButtonActive("btn-2p", twoPlayer);
 setButtonActive("btn-loop", edgeLoop);
-
-function updateParticles() {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life -= 5;
-    if (p.life <= 0) {
-      particles.splice(i, 1);
-    }
-  }
-}
 
 // ---- info modal animation ----
 // A scripted mini-board: steer toward food to eat and grow, then a reminder
@@ -467,11 +432,7 @@ function windowResized() {
 }
 
 function draw() {
-  const uiH = document.getElementById("ui-overlay")?.offsetHeight ?? 60;
-  const availH = height - uiH;
-  const cs = Math.max(4, Math.floor(Math.min(width / gridW, availH / gridH)));
-  const offX = Math.floor((width - cs * gridW) / 2);
-  const offY = uiH + Math.floor((availH - cs * gridH) / 2);
+  const { cs, offX, offY } = boardLayout();
 
   background(BG[0], BG[1], BG[2]);
 
@@ -495,14 +456,14 @@ function draw() {
 
     // Heat trail sparks
     if (random() < 0.08) {
-      particles.push({
+      addParticle({
         x: cx + random(-4, 4),
         y: cy,
         vx: random(-0.2, 0.2),
         vy: random(-0.4, -1.2),
         life: 120,
         size: random(1, 2.5),
-        col: FOOD_C
+        col: FOOD_C,
       });
     }
 
@@ -523,13 +484,7 @@ function draw() {
   drawSnakeBody(s1, offX, offY, cs);
   if (twoPlayer) drawSnakeBody(s2, offX, offY, cs);
 
-  // Update & Draw particles
-  updateParticles();
-  for (const p of particles) {
-    fill(p.col[0], p.col[1], p.col[2], p.life);
-    noStroke();
-    circle(p.x, p.y, p.size * (p.life / 255));
-  }
+  drawParticles();
 }
 
 function drawSnakeBody(s, offX, offY, cs) {

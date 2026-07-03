@@ -21,7 +21,11 @@ initGame({
   onSlider: (id, v) => { if (id === "s-size") SIZE = v; },
   onClamp: () => {},
   getSliderValues: () => ({ "s-size": SIZE }),
-  info: { anim: infoAnim },
+  info: {
+    anim: infoAnim,
+    title: "How to play",
+    text: "Clicking a node toggles it and its four direct neighbors. Wires glow between two lit nodes. Turn every light off in as few moves as you can — every board is generated from legal moves, so it's always solvable.",
+  },
 });
 
 let SIZE = 5;
@@ -34,9 +38,6 @@ let prevSolutionSet = null;
 let prevMoves = 0;
 let hintCell = null;
 let hintTimeout = 0;
-
-// Particle sparks array for toggle feedback
-let particles = [];
 
 // Layout offsets
 let cellSize = 0;
@@ -86,7 +87,7 @@ function newGame() {
   prevMoves = 0;
   hintCell = null;
   hintTimeout = 0;
-  particles = [];
+  clearParticles();
   resetHint();
 
   // Shuffle intensity based on grid size
@@ -151,7 +152,7 @@ function pressCell(r, c) {
   // Spawn visual particle sparks
   const cx = ox + c * cellSize + cellSize / 2;
   const cy = oy + r * cellSize + cellSize / 2;
-  spawnSparks(cx, cy);
+  spawnBurst(cx, cy, { count: 12, speed: [1.5, 4.5], life: [255, 255], size: [2, 6], drag: 0.95, decay: 8 });
 
   // Clear active hint
   hintCell = null;
@@ -192,144 +193,122 @@ function getHint() {
   flashNote("Look for the pulsing green outline.");
 }
 
-// Particle system helper
-function spawnSparks(x, y) {
-  const count = 12;
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = Math.random() * 3 + 1.5;
-    particles.push({
-      x: x,
-      y: y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 255,
-      size: Math.random() * 4 + 2
-    });
-  }
-}
+// ---- info modal animation ----
+// A scripted 3×3 board solved in two real moves. Each move: a pulse ring on
+// the target node, then the click — an expanding shockwave while the node and
+// its four neighbors flip with a scale pop and the wires re-light. After the
+// second click every light is out and the board rests briefly before looping.
 
-function updateParticles() {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.vx *= 0.95;
-    p.vy *= 0.95;
-    p.life -= 8;
-    if (p.life <= 0) {
-      particles.splice(i, 1);
-    }
-  }
-}
-
-// Info helper animation (showing adjacent nodes toggling)
 function infoAnim(p, w, h, frame) {
   const N = 3;
   const pad = 12;
   const cs = Math.min((w - pad * 2) / N, (h - pad * 2) / N) * 0.85;
   const bw = cs * N;
-  const bh = cs * N;
   const ox = Math.floor((w - bw) / 2);
-  const oy = Math.floor((h - bh) / 2);
+  const oy = Math.floor((h - bw) / 2);
 
-  const PHASE_LEN = 60;
-  const t = frame % (PHASE_LEN * 2);
-  const phase = Math.floor(t / PHASE_LEN);
+  const PHASE_LEN = 80;
+  const CLICK_FRAC = 0.38;  // point in the phase when the click lands
+  const POP_FRAMES = 14;    // node flip pop duration
+
+  // start board = pressing (1,1) then (2,2) on an empty board, so clicking
+  // those two cells in order genuinely clears it ([row][col], true = lit)
+  const start = [
+    [false, true,  false],
+    [true,  true,  false],
+    [false, false, true ],
+  ];
+  const clicks = [{ r: 1, c: 1 }, { r: 2, c: 2 }];
+
+  const t = frame % (PHASE_LEN * (clicks.length + 0.6)); // extra 0.6 phase = all-off hold
+  const phase = Math.min(clicks.length - 1, Math.floor(t / PHASE_LEN));
+  const localT = Math.min(1, (t - phase * PHASE_LEN) / PHASE_LEN);
+  const click = clicks[phase];
+  const clicked = localT >= CLICK_FRAC || t >= PHASE_LEN * clicks.length;
+  const sinceClick = (localT - CLICK_FRAC) * PHASE_LEN;
+
+  const affected = (r, c, cl) => Math.abs(r - cl.r) + Math.abs(c - cl.c) <= 1;
+  const state = (r, c) => {
+    let v = start[r][c];
+    for (let k = 0; k < clicks.length; k++) {
+      const done = k < phase || (k === phase && clicked);
+      if (done && affected(r, c, clicks[k])) v = !v;
+    }
+    return v;
+  };
 
   p.background(20, 18, 15);
 
-  // Connection wire states in demo:
-  // Phase 0: UP and LEFT are ON, others are OFF.
-  // Phase 1: Center clicked, toggling UP -> OFF, LEFT -> OFF, others (CENTER, RIGHT, DOWN) -> ON.
-  const getState = (cr, cc) => {
-    let valSelf = false;
-    let valUp = true;
-    let valDown = false;
-    let valLeft = true;
-    let valRight = false;
-    if (phase === 1) {
-      valSelf = true;
-      valUp = false;
-      valDown = true;
-      valLeft = false;
-      valRight = true;
-    }
-    if (cr === 1 && cc === 1) return valSelf;
-    if (cr === 0 && cc === 1) return valUp;
-    if (cr === 2 && cc === 1) return valDown;
-    if (cr === 1 && cc === 0) return valLeft;
-    if (cr === 1 && cc === 2) return valRight;
-    return false;
-  };
-
-  // Draw wire paths
+  // wires
   p.strokeWeight(2.5);
   for (let r = 0; r < N; r++) {
     for (let c = 0; c < N; c++) {
       const cx = ox + c * cs + cs / 2;
       const cy = oy + r * cs + cs / 2;
-
       if (c < N - 1) {
-        const ncx = cx + cs;
-        if (getState(r, c) && getState(r, c + 1)) {
-          p.stroke(230, 180, 34, 180);
-        } else {
-          p.stroke(58, 53, 46);
-        }
-        p.line(cx, cy, ncx, cy);
+        p.stroke(...(state(r, c) && state(r, c + 1) ? [230, 180, 34, 180] : [58, 53, 46]));
+        p.line(cx, cy, cx + cs, cy);
       }
       if (r < N - 1) {
-        const ncy = cy + cs;
-        if (getState(r, c) && getState(r + 1, c)) {
-          p.stroke(230, 180, 34, 180);
-        } else {
-          p.stroke(58, 53, 46);
-        }
-        p.line(cx, cy, cx, ncy);
+        p.stroke(...(state(r, c) && state(r + 1, c) ? [230, 180, 34, 180] : [58, 53, 46]));
+        p.line(cx, cy, cx, cy + cs);
       }
     }
   }
 
-  // Draw nodes
+  // nodes, with a scale pop on the cells the current click just flipped
   for (let r = 0; r < N; r++) {
     for (let c = 0; c < N; c++) {
       const cx = ox + c * cs + cs / 2;
       const cy = oy + r * cs + cs / 2;
-      const val = getState(r, c);
-
-      if (val) {
+      let scale = 1;
+      if (clicked && t < PHASE_LEN * clicks.length && affected(r, c, click) && sinceClick < POP_FRAMES) {
+        scale = 1 + 0.35 * p.sin((sinceClick / POP_FRAMES) * p.PI);
+      }
+      if (state(r, c)) {
         p.noStroke();
         p.fill(230, 180, 34, 25);
-        p.circle(cx, cy, cs * 0.7);
+        p.circle(cx, cy, cs * 0.7 * scale);
         p.fill(230, 180, 34, 60);
-        p.circle(cx, cy, cs * 0.5);
+        p.circle(cx, cy, cs * 0.5 * scale);
         p.fill(243, 237, 224);
-        p.circle(cx, cy, cs * 0.3);
+        p.circle(cx, cy, cs * 0.3 * scale);
       } else {
         p.fill(38, 35, 32);
         p.stroke(58, 53, 46);
         p.strokeWeight(1.5);
-        p.circle(cx, cy, cs * 0.35);
+        p.circle(cx, cy, cs * 0.35 * scale);
         p.noStroke();
         p.fill(28, 25, 22);
-        p.circle(cx, cy, cs * 0.15);
-      }
-
-      // Display click/hover cursor overlay at center
-      if (r === 1 && c === 1) {
-        p.noFill();
-        if (phase === 0) {
-          p.stroke(155, 145, 130, 150);
-          p.strokeWeight(1.5);
-          p.circle(cx, cy, cs * 0.5);
-        } else {
-          p.stroke(230, 180, 34, 200);
-          p.strokeWeight(2);
-          p.circle(cx, cy, cs * 0.55);
-        }
+        p.circle(cx, cy, cs * 0.15 * scale);
       }
     }
+  }
+
+  if (t < PHASE_LEN * clicks.length) {
+    const ccx = ox + click.c * cs + cs / 2;
+    const ccy = oy + click.r * cs + cs / 2;
+    if (!clicked) {
+      // pulse ring building up to the click
+      const pulse = 1.0 + 0.15 * p.sin(frame * 0.3);
+      p.noFill();
+      p.stroke(243, 237, 224, 200);
+      p.strokeWeight(2);
+      p.circle(ccx, ccy, cs * 0.5 * pulse);
+    } else if (sinceClick < PHASE_LEN * 0.4) {
+      // expanding shockwave ring after the click
+      const st = sinceClick / (PHASE_LEN * 0.4);
+      p.noFill();
+      p.stroke(127, 176, 105, 200 * (1 - st));
+      p.strokeWeight(2);
+      p.circle(ccx, ccy, cs * (0.4 + st * 2.4));
+    }
+  } else {
+    // solved hold: soft green glow ring around the dark board
+    p.noFill();
+    p.stroke(127, 176, 105, 90 + 50 * p.sin(frame * 0.15));
+    p.strokeWeight(2);
+    p.rect(ox - 8, oy - 8, bw + 16, bw + 16, 10);
   }
 }
 
@@ -446,30 +425,11 @@ function draw() {
     if (hintTimeout <= 0) hintCell = null;
   }
 
-  // Draw particle system
-  updateParticles();
-  for (const p of particles) {
-    fill(230, 180, 34, p.life);
-    noStroke();
-    circle(p.x, p.y, p.size * (p.life / 255));
-  }
+  drawParticles();
 
   // Game over solved overlay
   if (gameOver) {
-    fill(20, 18, 15, 195);
-    noStroke();
-    rect(ox - 10, oy - 10, boardW + 20, boardW + 20, 14);
-
-    fill(127, 176, 105);
-    textAlign(CENTER, CENTER);
-    textSize(24);
-    textStyle(BOLD);
-    text("CIRCUIT ALIGNED", ox + boardW / 2, oy + boardW / 2 - 16);
-
-    fill(155, 145, 130);
-    textSize(14);
-    textStyle(NORMAL);
-    text("Solved in " + totalMoves + " moves", ox + boardW / 2, oy + boardW / 2 + 16);
+    drawBoardOverlay(ox, oy, boardW, boardW, "CIRCUIT ALIGNED", "Solved in " + totalMoves + " moves", [127, 176, 105]);
   }
 }
 

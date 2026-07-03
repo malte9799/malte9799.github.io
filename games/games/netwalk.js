@@ -21,7 +21,11 @@ initGame({
   onSlider: (id, v) => { if (id === "s-size") SIZE = v; },
   onClamp: () => {},
   getSliderValues: () => ({ "s-size": SIZE }),
-  info: { anim: infoAnim },
+  info: {
+    anim: infoAnim,
+    title: "How to play",
+    text: "Left-click rotates a pipe clockwise, right-click counter-clockwise. Power flows out from the gold source through pipes that line up — light every endpoint ring to bring the network online.",
+  },
 });
 
 // Directions as bitmask: N=1, E=2, S=4, W=8
@@ -152,13 +156,7 @@ function countBits(m) {
   return n;
 }
 
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+const shuffle = shuffleArray; // from game.js
 
 function newGame() {
   makeGame();
@@ -591,20 +589,7 @@ function draw() {
 
   // solved overlay
   if (gameOver) {
-    fill(20, 18, 15, 195);
-    noStroke();
-    rect(ox - 10, oy - 10, boardW + 20, boardW + 20, 14);
-
-    fill(127, 176, 105);
-    textAlign(CENTER, CENTER);
-    textSize(24);
-    textStyle(BOLD);
-    text("NETWORK ONLINE", ox + boardW / 2, oy + boardW / 2 - 16);
-
-    fill(155, 145, 130);
-    textSize(14);
-    textStyle(NORMAL);
-    text("Every node is powered", ox + boardW / 2, oy + boardW / 2 + 16);
+    drawBoardOverlay(ox, oy, boardW, boardW, "NETWORK ONLINE", "Every node is powered", [127, 176, 105]);
   }
 }
 

@@ -1,5 +1,5 @@
 // Bug Nudge — push every bug home.
-// Cute wiggling legs, pulsing home fields, expanding click shockwaves, and slide trails.
+// Breathing bugs, pulsing home fields, expanding click shockwaves, and slide trails.
 
 initGame({
   title: "Bug Nudge",
@@ -25,7 +25,11 @@ initGame({
   onSlider: (id, v) => { if (id === "s-size") size = v; else if (id === "s-bugs") numBugs = v; else numRemove = v; },
   onClamp: clamp,
   getSliderValues: () => ({ "s-size": size, "s-bugs": numBugs, "s-remove": numRemove }),
-  info: { anim: infoAnim },
+  info: {
+    anim: infoAnim,
+    title: "How to play",
+    text: "Click an empty cell to place a bug there — every bug on the ring around it gets pushed one step away. Land a bug on every gold home square using the limited number of placements.",
+  },
 });
 
 let size = 5;
@@ -42,8 +46,7 @@ let wasSolved = false;
 const PULL = 2, PUSH = 1;
 const CANVAS = 400;
 
-// Particle system & Shockwaves
-let particles = [];
+// Shockwaves (expanding click rings — the spark particles use the shared system)
 let shockwaves = [];
 
 function shift(list, cx, cy, dist, dir) {
@@ -111,7 +114,7 @@ function buildGame() {
       saveState();
       resetHint();
       flashNote("");
-      particles = [];
+      clearParticles();
       shockwaves = [];
       wasSolved = false;
       return true;
@@ -174,17 +177,15 @@ function hintStep() {
 }
 
 function saveState() {
-  localStorage.setItem("bugs_state", JSON.stringify({ size, numBugs, numRemove, seed }));
+  saveJSON("bugs_state", { size, numBugs, numRemove, seed });
 }
 
 function loadState() {
-  try {
-    const d = JSON.parse(localStorage.getItem("bugs_state") || "{}");
-    if (typeof d.size === "number") size = d.size;
-    if (typeof d.numBugs === "number") numBugs = d.numBugs;
-    if (typeof d.numRemove === "number") numRemove = d.numRemove;
-    if (typeof d.seed === "number") seed = d.seed;
-  } catch {}
+  const d = loadJSON("bugs_state");
+  if (typeof d.size === "number") size = d.size;
+  if (typeof d.numBugs === "number") numBugs = d.numBugs;
+  if (typeof d.numRemove === "number") numRemove = d.numRemove;
+  if (typeof d.seed === "number") seed = d.seed;
 }
 
 function clamp() {
@@ -192,47 +193,25 @@ function clamp() {
   numRemove = Math.min(numRemove, numBugs);
 }
 
-// Particle system helpers
+// Particle helpers (on top of the shared system in game.js)
 function spawnSlideSparks(gx, gy) {
   const cs = cell();
   const cx = gx * cs + cs / 2;
   const cy = gy * cs + cs / 2;
-  for (let k = 0; k < 4; k++) {
-    particles.push({
-      x: cx + random(-4, 4),
-      y: cy + random(-4, 4),
-      vx: random(-0.8, 0.8),
-      vy: random(-0.8, 0.8),
-      life: 150,
-      size: random(1.5, 3),
-      col: [200, 50, 63] // bug red trail
-    });
-  }
+  spawnBurst(cx, cy, { count: 4, speed: [0.1, 0.8], life: [150, 150], size: [1.5, 3], col: [200, 50, 63] });
 }
 
 function spawnHomeSparks(cx, cy) {
   if (random() < 0.1) {
-    particles.push({
+    addParticle({
       x: cx + random(-8, 8),
       y: cy + random(-8, 8),
       vx: random(-0.3, 0.3),
       vy: random(-0.5, -1.8), // float upwards
       life: 180,
       size: random(1, 2.5),
-      col: [230, 180, 34] // gold sparks
+      col: [230, 180, 34], // gold sparks
     });
-  }
-}
-
-function updateParticles() {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life -= 6;
-    if (p.life <= 0) {
-      particles.splice(i, 1);
-    }
   }
 }
 
@@ -286,7 +265,7 @@ function infoAnim(p, w, h, frame) {
   function lerpBugs(from, to) {
     if (localT < clickFrac) return from;
     const mt = Math.min(1, (localT - clickFrac) / (moveEnd - clickFrac));
-    const ease = mt < 0.5 ? 2 * mt * mt : -1 + (4 - 2 * mt) * mt;
+    const ease = easeInOutQuad(mt);
     return from.map((b, k) => ({ i: p.lerp(b.i, to[k].i, ease), j: p.lerp(b.j, to[k].j, ease) }));
   }
 
@@ -418,10 +397,6 @@ function draw() {
       circle(cx, cy, rBase * 1.15);
     }
 
-    // Draw Legs
-    stroke(130, 32, 40);
-    strokeWeight(Math.max(1.5, cs * 0.04));
-
     // Bug main body
     noStroke();
     fill(200, 50, 63);
@@ -446,13 +421,7 @@ function draw() {
     circle(s.x, s.y, s.radius * 2);
   }
 
-  // Draw particles
-  updateParticles();
-  for (const p of particles) {
-    fill(p.col[0], p.col[1], p.col[2], p.life);
-    noStroke();
-    circle(p.x, p.y, p.size * (p.life / 255));
-  }
+  drawParticles();
 
   // Status updates
   if (isSolved()) {

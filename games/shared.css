@@ -245,6 +245,21 @@ button.hint-confirm:hover { background: #635220; border-color: #52431a; }
   flex-direction: column;
   gap: 14px;
 }
+.info-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.info-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+}
 .info-modal canvas {
   width: 100% !important;
   height: auto !important;

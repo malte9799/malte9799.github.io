@@ -29,7 +29,14 @@ initGame({
   onPreset:       () => {},
   onSlider:       () => {},
   getSliderValues: () => ({}),
-  info: { anim: infoAnim },
+  info: {
+    anim: infoAnim,
+    title: "How it works",
+    text: [
+      "Every generation, a live cell survives with 2-3 live neighbors and an empty cell with exactly 3 comes alive — everything else dies. That's the whole rulebook; gliders, guns and oscillators all emerge from it.",
+      "Draw with the left mouse button, pan with the right, zoom with the wheel. Insert famous patterns from the Lexicon search box.",
+    ],
+  },
 });
 
 // ── state ───────────────────────────────────────────────────────────────────

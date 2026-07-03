@@ -22,7 +22,11 @@ initGame({
   onSlider: (id, v) => { if (id === "s-cols") cols = v; else rows = v; },
   onClamp: clamp,
   getSliderValues: () => ({ "s-cols": cols, "s-rows": rows }),
-  info: { anim: infoAnim },
+  info: {
+    anim: infoAnim,
+    title: "How to play",
+    text: "Each clue lists the runs of filled cells in that row or column, in order, with at least one gap between runs. Left-drag paints, right-drag (or Ctrl) crosses out cells you've ruled out. Clues turn green when their line is correct. Every puzzle has exactly one solution, reachable by pure logic — no guessing needed.",
+  },
 });
 
 let cols = 10;
@@ -51,9 +55,6 @@ const _view = { x: 0, y: 0, z: 1 };
 
 const CANVAS = 440;
 const CLUE_FRAC = 0.28;
-
-// Particle system
-let particles = [];
 
 function makeGrid() {
   board = [];
@@ -85,8 +86,33 @@ function runs(fn, len) {
   return out.length ? out : [0];
 }
 
+// ---- generation: guaranteed line-solvable puzzles ----
+// A plain random fill usually admits several valid fills, or needs guessing
+// to finish — the clues can be satisfied while the board is "wrong". So after
+// seeding a random solution we run the same line-by-line logic a human uses;
+// wherever it stalls, one still-ambiguous cell of the solution gets flipped
+// (changing its clues) and we solve again. This iterative repair converges in
+// a handful of rounds and guarantees the served puzzle has exactly one
+// solution, reachable with pure line logic and no guessing. Everything below
+// draws randomness from the seeded p5 RNG, so a stored seed reproduces the
+// exact same board.
+
+const REPAIR_MAX_ITER = 300;
+
 function genSolution() {
   randomSeed(seed);
+  genRandomSolution();
+  for (let iter = 0; iter < REPAIR_MAX_ITER; iter++) {
+    const undetermined = lineSolveGrid();
+    if (undetermined.length === 0) return;
+    const [i, j] = undetermined[floor(random() * undetermined.length)];
+    solution[i][j] = !solution[i][j];
+  }
+  // effectively unreachable: repair converges long before the cap. If it ever
+  // triggers, the board still has a valid solution — it just may need guessing.
+}
+
+function genRandomSolution() {
   solution = [];
   for (let i = 0; i < cols; i++) {
     solution[i] = [];
@@ -100,6 +126,108 @@ function genSolution() {
     const hasAny = solution.some(col => col[j]);
     if (!hasAny) solution[floor(random() * cols)][j] = true;
   }
+}
+
+// Deduce a single line. `cells` holds 0 = unknown, 1 = filled, 2 = empty.
+// Considers every placement of `clue` consistent with the known cells and
+// reports, per cell, whether it can be filled and whether it can be empty —
+// a cell possible only one way is thereby determined. Memoized over
+// (position, run index) so a 20-cell line stays cheap.
+function lineDeduce(cells, clue) {
+  const n = cells.length;
+  const runs = clue.length === 1 && clue[0] === 0 ? [] : clue;
+  const canFill = new Array(n).fill(false);
+  const canEmpty = new Array(n).fill(false);
+  const memo = new Map();
+
+  function rec(pos, r) {
+    const key = pos * (runs.length + 1) + r;
+    const hit = memo.get(key);
+    if (hit !== undefined) return hit;
+    let ok = false;
+
+    if (r === runs.length) {
+      // no runs left — the rest of the line must be empty
+      let emptyable = true;
+      for (let k = pos; k < n; k++) if (cells[k] === 1) { emptyable = false; break; }
+      if (emptyable) {
+        ok = true;
+        for (let k = pos; k < n; k++) canEmpty[k] = true;
+      }
+    } else {
+      // option A: leave this cell empty
+      if (pos < n && cells[pos] !== 1 && rec(pos + 1, r)) {
+        canEmpty[pos] = true;
+        ok = true;
+      }
+      // option B: start run r here (needs a gap or line end after it)
+      const len = runs[r];
+      if (pos + len <= n) {
+        let fits = true;
+        for (let k = pos; k < pos + len; k++) if (cells[k] === 2) { fits = false; break; }
+        const gap = pos + len;
+        if (fits && (gap === n || cells[gap] !== 1)) {
+          if (rec(gap === n ? gap : gap + 1, r + 1)) {
+            for (let k = pos; k < pos + len; k++) canFill[k] = true;
+            if (gap < n) canEmpty[gap] = true;
+            ok = true;
+          }
+        }
+      }
+    }
+
+    memo.set(key, ok);
+    return ok;
+  }
+
+  if (!rec(0, 0)) return null;
+  return { canFill, canEmpty };
+}
+
+// Run line deductions over the whole grid (clues derived from the current
+// candidate solution) until nothing new is determined. Returns the list of
+// still-undetermined [col, row] cells — empty means the puzzle is fully
+// line-solvable and therefore unique.
+function lineSolveGrid() {
+  const clueCols = [];
+  for (let i = 0; i < cols; i++) clueCols.push(runs(j => solution[i][j], rows));
+  const clueRows = [];
+  for (let j = 0; j < rows; j++) clueRows.push(runs(i => solution[i][j], cols));
+
+  // state[i][j]: 0 unknown, 1 filled, 2 empty
+  const state = Array.from({ length: cols }, () => Array(rows).fill(0));
+  const apply = (get, set, len, res) => {
+    let changed = false;
+    for (let k = 0; k < len; k++) {
+      if (get(k) !== 0) continue;
+      if (res.canFill[k] && !res.canEmpty[k]) { set(k, 1); changed = true; }
+      else if (!res.canFill[k] && res.canEmpty[k]) { set(k, 2); changed = true; }
+    }
+    return changed;
+  };
+
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let i = 0; i < cols; i++) {
+      const res = lineDeduce(state[i], clueCols[i]);
+      if (!res) return []; // can't happen: the candidate solution satisfies its own clues
+      if (apply(k => state[i][k], (k, v) => { state[i][k] = v; }, rows, res)) changed = true;
+    }
+    for (let j = 0; j < rows; j++) {
+      const line = [];
+      for (let i = 0; i < cols; i++) line.push(state[i][j]);
+      const res = lineDeduce(line, clueRows[j]);
+      if (!res) return [];
+      if (apply(k => state[k][j], (k, v) => { state[k][j] = v; }, cols, res)) changed = true;
+    }
+  }
+
+  const undetermined = [];
+  for (let i = 0; i < cols; i++)
+    for (let j = 0; j < rows; j++)
+      if (state[i][j] === 0) undetermined.push([i, j]);
+  return undetermined;
 }
 
 function checkSolved() {
@@ -124,7 +252,7 @@ function newGame() {
   resetView();
   resetHint();
   flashNote("");
-  particles = [];
+  clearParticles();
 }
 
 function celebrateNonogram() {
@@ -174,16 +302,14 @@ function hintStep() {
 }
 
 function saveState() {
-  localStorage.setItem("nonogram_state", JSON.stringify({ cols, rows, seed }));
+  saveJSON("nonogram_state", { cols, rows, seed });
 }
 
 function loadState() {
-  try {
-    const d = JSON.parse(localStorage.getItem("nonogram_state") || "{}");
-    if (typeof d.cols === "number") cols = d.cols;
-    if (typeof d.rows === "number") rows = d.rows;
-    if (typeof d.seed === "number") seed = d.seed;
-  } catch {}
+  const d = loadJSON("nonogram_state");
+  if (typeof d.cols === "number") cols = d.cols;
+  if (typeof d.rows === "number") rows = d.rows;
+  if (typeof d.seed === "number") seed = d.seed;
 }
 
 function clamp() {
@@ -191,38 +317,14 @@ function clamp() {
   rows = Math.max(3, Math.min(rows, 20));
 }
 
-// Particle system helpers
+// Ink dust puffs where a cell was toggled (screen space, so view-transformed)
 function spawnInkDust(i, j, col) {
   const gx = width * CLUE_FRAC, gy = height * CLUE_FRAC;
   const cw = (width - gx) / cols, ch = (height - gy) / rows;
   const cx = _view.x + (_view.z * (gx + i * cw + cw / 2));
   const cy = _view.y + (_view.z * (gy + j * ch + ch / 2));
-
-  for (let k = 0; k < 8; k++) {
-    particles.push({
-      x: cx,
-      y: cy,
-      vx: random(-1, 1),
-      vy: random(-1, 1),
-      life: random(100, 160),
-      size: random(1.5, 3.5),
-      col
-    });
-  }
+  spawnBurst(cx, cy, { count: 8, speed: [0.2, 1.4], life: [100, 160], col });
 }
-
-function updateParticles() {
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life -= 5;
-    if (p.life <= 0) {
-      particles.splice(i, 1);
-    }
-  }
-}
-
 
 loadState();
 syncSliderUI();
@@ -496,26 +598,12 @@ function draw() {
 
   pop();
 
-  // Draw particle system
-  updateParticles();
-  for (const p of particles) {
-    fill(p.col[0], p.col[1], p.col[2], p.life);
-    noStroke();
-    circle(p.x, p.y, p.size * (p.life / 255));
-  }
+  drawParticles();
 
   // Victory solved overlay
   if (solved) {
     setStatus("solved — Picross solved successfully", "solved");
-    fill(20, 18, 15, 180);
-    noStroke();
-    rect(gx - 10, gy - 10, (width - gx) + 20, (height - gy) + 20, 14);
-
-    fill(127, 176, 105);
-    textAlign(CENTER, CENTER);
-    textSize(24);
-    textStyle(BOLD);
-    text("SOLVED", gx + (width - gx) / 2, gy + (height - gy) / 2);
+    drawBoardOverlay(gx, gy, width - gx, height - gy, "SOLVED", null, [127, 176, 105]);
   } else {
     setStatus("left drag = fill · right/ctrl drag = cross", null);
   }

@@ -12,7 +12,17 @@
 //   onSlider:  (id, value) => void,           // called on every slider input
 //   onClamp:   () => void,                    // clamp slider values after change
 //   getSliderValues: () => ({ [id]: value }), // return current values for each slider
+//   info: {                                   // "?" button opens a how-to-play modal
+//     anim:  (p, w, h, frame) => void,        // looping p5 demo animation
+//     title: string,                          // optional heading above the demo
+//     text:  string | [string, ...],          // optional explainer line(s) below it
+//   },
 // }
+//
+// Besides the shell, this file provides the helpers games share:
+//   flashNote, setStatus, celebrate, confirmHint/resetHint, setButtonActive,
+//   syncSliderUI, saveJSON/loadJSON, shuffleArray, easeInOutQuad,
+//   addParticle/spawnBurst/drawParticles/clearParticles, drawBoardOverlay.
 
 let _cfg = null;
 let _noteTimer = null;
@@ -263,6 +273,107 @@ function setButtonActive(id, active) {
   if (b) b.classList.toggle("active", active);
 }
 
+// ---- shared misc helpers ----
+
+function saveJSON(key, obj) {
+  try { localStorage.setItem(key, JSON.stringify(obj)); } catch {}
+}
+
+function loadJSON(key) {
+  try { return JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch { return {}; }
+}
+
+// Fisher–Yates; pass a custom rnd (e.g. a seeded generator) when determinism matters.
+function shuffleArray(arr, rnd = Math.random) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function easeInOutQuad(t) {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+}
+
+// ---- shared particle system (global-mode p5 games) ----
+// Games push particles via spawnBurst()/addParticle() and call drawParticles()
+// once per draw(); it updates and renders in one pass. Particles live in
+// screen space. `life` counts down from ~255 and doubles as the alpha.
+
+let _particles = [];
+
+function addParticle(pt) {
+  _particles.push({ vx: 0, vy: 0, life: 180, size: 3, col: [230, 180, 34], drag: 1, decay: 6, ...pt });
+}
+
+function spawnBurst(x, y, opts = {}) {
+  const {
+    count = 12,
+    speed = [1, 3],
+    life = [100, 180],
+    size = [1.5, 3.5],
+    col = [230, 180, 34],
+    drag = 1,
+    decay = 6,
+  } = opts;
+  const rnd = (lo, hi) => lo + Math.random() * (hi - lo);
+  for (let k = 0; k < count; k++) {
+    const angle = Math.random() * Math.PI * 2;
+    const v = rnd(speed[0], speed[1]);
+    addParticle({
+      x, y,
+      vx: Math.cos(angle) * v,
+      vy: Math.sin(angle) * v,
+      life: rnd(life[0], life[1]),
+      size: rnd(size[0], size[1]),
+      col, drag, decay,
+    });
+  }
+}
+
+function drawParticles() {
+  for (let i = _particles.length - 1; i >= 0; i--) {
+    const pt = _particles[i];
+    pt.x += pt.vx;
+    pt.y += pt.vy;
+    pt.vx *= pt.drag;
+    pt.vy *= pt.drag;
+    pt.life -= pt.decay;
+    if (pt.life <= 0) _particles.splice(i, 1);
+  }
+  noStroke();
+  for (const pt of _particles) {
+    fill(pt.col[0], pt.col[1], pt.col[2], pt.life);
+    circle(pt.x, pt.y, pt.size * (pt.life / 255));
+  }
+}
+
+function clearParticles() {
+  _particles = [];
+}
+
+// ---- shared end-of-game board overlay (global-mode p5 games) ----
+// Dims the board rect and prints a big title with an optional subtitle.
+// `col` is the title color as [r, g, b].
+function drawBoardOverlay(x, y, w, h, title, subtitle, col) {
+  fill(20, 18, 15, 195);
+  noStroke();
+  rect(x - 10, y - 10, w + 20, h + 20, 14);
+  fill(col[0], col[1], col[2]);
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(24);
+  noStroke();
+  text(title, x + w / 2, y + h / 2 - (subtitle ? 16 : 0));
+  if (subtitle) {
+    fill(155, 145, 130);
+    textSize(13);
+    textStyle(NORMAL);
+    text(subtitle, x + w / 2, y + h / 2 + 16);
+  }
+}
+
 function syncSliderUI() {
   if (!_cfg) return;
   const vals = _cfg.getSliderValues();
@@ -362,13 +473,18 @@ let _infoP5 = null;
 function _openInfo() {
   if (document.getElementById("info-backdrop")) return;
   const anim = _cfg.info.anim;
+  const title = _cfg.info.title;
+  const text = _cfg.info.text;
+  const lines = text ? (Array.isArray(text) ? text : [text]) : [];
 
   const backdrop = document.createElement("div");
   backdrop.id = "info-backdrop";
   backdrop.className = "info-backdrop";
   backdrop.innerHTML = `
     <div class="info-modal">
+      ${title ? `<h2 class="info-title">${title}</h2>` : ""}
       <div id="info-canvas-wrap"></div>
+      ${lines.map((l) => `<p class="info-text">${l}</p>`).join("")}
       <button id="info-close">✕</button>
     </div>
   `;

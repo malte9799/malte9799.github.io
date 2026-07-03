@@ -21,7 +21,11 @@ initGame({
   onSlider: () => {},
   onClamp: () => {},
   getSliderValues: () => ({}),
-  info: { anim: infoAnim },
+  info: {
+    anim: infoAnim,
+    title: "How to play",
+    text: "Every row, column and box must contain each digit exactly once. Click a cell (or arrow-key around) and type a digit; Shift+digit pencils in a note. Each puzzle has exactly one solution.",
+  },
 });
 
 let N = 9;    // grid size
@@ -49,13 +53,7 @@ function rnd() {
   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+const shuffle = (arr) => shuffleArray(arr, rnd); // seeded, via game.js helper
 
 // ---- generation ----
 
@@ -189,15 +187,13 @@ function newGame() {
 }
 
 function saveState() {
-  try { localStorage.setItem("sudoku_size", JSON.stringify({ N, BW, BH })); } catch {}
+  saveJSON("sudoku_size", { N, BW, BH });
 }
 function loadState() {
-  try {
-    const d = JSON.parse(localStorage.getItem("sudoku_size") || "{}");
-    if (typeof d.N === "number") N = d.N;
-    if (typeof d.BW === "number") BW = d.BW;
-    if (typeof d.BH === "number") BH = d.BH;
-  } catch {}
+  const d = loadJSON("sudoku_size");
+  if (typeof d.N === "number") N = d.N;
+  if (typeof d.BW === "number") BW = d.BW;
+  if (typeof d.BH === "number") BH = d.BH;
 }
 
 function saveShowErrors() {
@@ -363,6 +359,10 @@ function keyPressed(e) {
 }
 
 // ---- info modal animation ----
+// One animated deduction on a 4×4 board: the empty cell gets selected
+// (pulsing ring), its row and column highlights sweep in while the digits
+// they contain dim — visibly ruling out 1, 2 and 4 — and the remaining
+// answer 3 pops into the cell with a bounce and a green flash.
 
 function infoAnim(p, w, h, frame) {
   const n = 4, bw = 2, bh = 2;
@@ -372,25 +372,31 @@ function infoAnim(p, w, h, frame) {
   const ox = Math.floor((w - boardW) / 2);
   const oy = Math.floor((h - boardW) / 2);
 
-  const PHASE_LEN = 65;
-  const t = frame % (PHASE_LEN * 3);
-  const phase = Math.floor(t / PHASE_LEN);
+  const CYCLE = 220;
+  const SELECT_END = 55;   // pulsing selection only
+  const SCAN_END = 120;    // row/col highlight + dimming sweep in
+  const FILL_AT = 140;     // digit pops in
+  const POP_FRAMES = 16;
 
+  const t = frame % CYCLE;
   const targetR = 2, targetC = 3;
   const grid = [
     [1, 2, 3, 4],
     [3, 4, 1, 2],
-    [2, 1, 4, phase === 2 ? 3 : 0],
+    [2, 1, 4, 0], // (2,3) is the empty target cell — answer 3
     [4, 3, 2, 1],
   ];
+
+  const scanT = t <= SELECT_END ? 0 : Math.min(1, (t - SELECT_END) / (SCAN_END - SELECT_END));
+  const filled = t >= FILL_AT;
+  const sinceFill = t - FILL_AT;
 
   p.background(20, 18, 15);
   p.noStroke();
 
-  // phase 1+: highlight the target's row/column/box so it's visible which
-  // digits are already taken, before the answer (3) gets filled in
-  if (phase >= 1) {
-    p.fill(230, 180, 34, 12);
+  // row/column highlight fades in during the scan
+  if (scanT > 0) {
+    p.fill(230, 180, 34, 12 * scanT);
     p.rect(ox, oy + targetR * cs, boardW, cs);
     p.rect(ox + targetC * cs, oy, cs, boardW);
   }
@@ -398,9 +404,10 @@ function infoAnim(p, w, h, frame) {
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
       const x = ox + c * cs, y = oy + r * cs;
-      const isTarget = r === targetR && c === targetC;
-      if (isTarget && phase === 2) {
-        p.fill(127, 176, 105, 45);
+      if (r === targetR && c === targetC && filled) {
+        // green flash that settles into a soft tint
+        const flash = Math.max(45, 110 - sinceFill * 2);
+        p.fill(127, 176, 105, flash);
       } else {
         p.fill(30, 27, 23);
       }
@@ -410,16 +417,27 @@ function infoAnim(p, w, h, frame) {
 
   p.textAlign(p.CENTER, p.CENTER);
   p.textStyle(p.BOLD);
-  p.textSize(cs * 0.5);
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
       const v = grid[r][c];
       if (!v) continue;
       const x = ox + c * cs + cs / 2, y = oy + r * cs + cs / 2;
-      const dimmed = phase >= 1 && (r === targetR || c === targetC) && !(r === targetR && c === targetC);
-      p.fill(dimmed ? p.color(230, 190, 100) : p.color(243, 237, 224));
+      // digits in the target's row/col shift toward "taken" gold as the scan sweeps
+      const inLine = (r === targetR || c === targetC);
+      const dim = inLine ? scanT : 0;
+      p.fill(p.lerpColor(p.color(243, 237, 224), p.color(230, 190, 100), dim));
+      p.textSize(cs * 0.5);
       p.text(v, x, y + 1);
     }
+  }
+
+  // the answer pops in with an overshoot bounce
+  if (filled) {
+    const popT = Math.min(1, sinceFill / POP_FRAMES);
+    const scale = popT < 0.7 ? p.map(popT, 0, 0.7, 0.2, 1.15) : p.map(popT, 0.7, 1, 1.15, 1);
+    p.fill(150, 190, 230);
+    p.textSize(cs * 0.5 * scale);
+    p.text(3, ox + targetC * cs + cs / 2, oy + targetR * cs + cs / 2 + 1);
   }
 
   p.stroke(58, 53, 46); p.strokeWeight(1);
@@ -431,14 +449,16 @@ function infoAnim(p, w, h, frame) {
   for (let i = 0; i <= n; i += bw) p.line(ox + i * cs, oy, ox + i * cs, oy + boardW);
   for (let j = 0; j <= n; j += bh) p.line(ox, oy + j * cs, ox + boardW, oy + j * cs);
 
-  if (phase === 2) {
-    p.noFill();
-    p.stroke(127, 176, 105, 200);
-    p.strokeWeight(2);
-    p.rect(ox + targetC * cs, oy + targetR * cs, cs, cs);
-  } else if (phase === 1) {
-    p.noFill();
+  // selection ring: pulses while empty, turns green once solved
+  p.noFill();
+  if (!filled) {
+    const pulse = t < SELECT_END ? 1.0 + 0.06 * p.sin(frame * 0.25) : 1.0;
     p.stroke(230, 180, 34, 200);
+    p.strokeWeight(2);
+    const grow = (pulse - 1) * cs;
+    p.rect(ox + targetC * cs - grow / 2, oy + targetR * cs - grow / 2, cs + grow, cs + grow);
+  } else {
+    p.stroke(127, 176, 105, 200);
     p.strokeWeight(2);
     p.rect(ox + targetC * cs, oy + targetR * cs, cs, cs);
   }
@@ -552,14 +572,7 @@ function draw() {
   drawNumberPad();
 
   if (solved) {
-    fill(20, 18, 15, 195);
-    noStroke();
-    rect(ox - 10, oy - 10, boardPx + 20, boardPx + 20, 10);
-    fill(127, 176, 105);
-    textAlign(CENTER, CENTER);
-    textSize(24);
-    textStyle(BOLD);
-    text("SOLVED", ox + boardPx / 2, oy + boardPx / 2);
+    drawBoardOverlay(ox, oy, boardPx, boardPx, "SOLVED", null, [127, 176, 105]);
   }
 }
 

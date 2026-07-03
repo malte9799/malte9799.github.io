@@ -1,0 +1,780 @@
+// Game manifest — the single registry the home grid is built from.
+//
+// Adding a new game:
+//   1. create games/<id>.js (call initGame({...}) — see game.js for the config shape)
+//   2. add one entry here: { id, title, desc, preview }
+// The preview receives (p, w, h) on a 600×360 p5 canvas and draws one static,
+// representative snapshot of the game (no animation — p.noLoop() is set).
+
+const GAMES = [
+  {
+    id: "minesweeper",
+    title: "Minesweeper",
+    desc: "clear every safe cell",
+    preview: drawMinesweeper,
+  },
+  {
+    id: "bugs",
+    title: "Bug Nudge",
+    desc: "push every bug home",
+    preview: drawBugs,
+  },
+  {
+    id: "snake",
+    title: "Snake",
+    desc: "eat · grow · survive",
+    preview: drawSnake,
+  },
+  {
+    id: "nonogram",
+    title: "Nonogram",
+    desc: "match the clues",
+    preview: drawNonogram,
+  },
+  {
+    id: "conway",
+    title: "Conway's Life",
+    desc: "it's a game right?",
+    preview: drawConway,
+  },
+  {
+    id: "2048",
+    title: "2048",
+    desc: "merge tiles · reach 2048",
+    preview: draw2048,
+  },
+  {
+    id: "lightsout",
+    title: "Circuit Align",
+    desc: "toggle all lights off",
+    preview: drawLightsOut,
+  },
+  {
+    id: "tictactoe",
+    title: "Tic Tac Toe",
+    desc: "Tic² Tac² Toe²",
+    preview: drawTicTacToe,
+  },
+  {
+    id: "flood",
+    title: "Flood It",
+    desc: "flood the board",
+    preview: drawFlood,
+  },
+  {
+    id: "sudoku",
+    title: "Sudoku",
+    desc: "9×9 · 6×6 · 4×4",
+    preview: drawSudoku,
+  },
+  {
+    id: "netwalk",
+    title: "Netwalk",
+    desc: "rotate pipes · power every node",
+    preview: drawNetwalk,
+  },
+];
+
+// ---- preview renderers ----
+// Each receives (p, w, h) and draws a static representative snapshot.
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function drawMinesweeper(p, w, h) {
+  const cols = 10, rows = 6;
+  const cw = w / cols, ch = h / rows;
+  p.background(20, 18, 15);
+  // pre-baked layout: 0=covered, 1=revealed-empty, 2-8=number, 9=mine, 10=flagged
+  const layout = [
+    [1,1,1,1,0,0,0,0,0,0],
+    [1,2,2,2,2,0,10,0,0,0],
+    [1,2,9,3,3,2,0,0,0,0],
+    [1,2,3,9,2,1,1,1,0,0],
+    [1,1,2,2,2,1,0,1,0,0],
+    [1,1,1,1,1,1,0,0,0,0],
+  ];
+  const NUM_COLORS = [null,[127,176,105],[230,180,34],[200,50,63],[150,130,200],[220,120,60],[90,180,190],[243,237,224],[155,145,130]];
+  p.textAlign(p.CENTER, p.CENTER);
+  p.textStyle(p.BOLD);
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      const v = layout[j]?.[i] ?? 0;
+      const x = i * cw, y = j * ch;
+      if (v === 0) {
+        p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
+        p.fill(56, 51, 45, 90); p.rect(x, y, cw, ch * 0.14);
+      } else if (v === 10) {
+        p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
+        p.fill(230, 180, 34);
+        const r = Math.min(cw, ch) * 0.18;
+        p.rect(x + cw/2 - r/2, y + ch/2 - r/2, r, r, 2);
+      } else if (v === 9) {
+        p.fill(200, 50, 63, 60); p.noStroke(); p.rect(x, y, cw, ch);
+        p.fill(200, 50, 63); p.circle(x + cw/2, y + ch/2, Math.min(cw, ch) * 0.5);
+      } else {
+        p.fill(30, 27, 23); p.noStroke(); p.rect(x, y, cw, ch);
+        if (v > 1) {
+          const col = NUM_COLORS[v - 1];
+          p.fill(col[0], col[1], col[2]);
+          p.textSize(Math.min(cw, ch) * 0.5);
+          p.text(v - 1, x + cw/2, y + ch/2 + 1);
+        }
+      }
+    }
+  }
+  p.stroke(58, 53, 46); p.strokeWeight(1);
+  for (let g = 0; g <= cols; g++) p.line(g * cw, 0, g * cw, h);
+  for (let g = 0; g <= rows; g++) p.line(0, g * ch, w, g * ch);
+}
+
+function drawBugs(p, w, h) {
+  const size = 6;
+  const cs = w / size;
+  p.background(20, 18, 15);
+
+  const homes = [{i:1,j:1},{i:4,j:1},{i:1,j:4},{i:3,j:3},{i:5,j:2}];
+  const bugs  = [{i:1,j:1},{i:4,j:1},{i:2,j:3},{i:3,j:3},{i:5,j:2}];
+
+  p.noStroke();
+  homes.forEach(e => {
+    p.fill(230, 180, 34, 40); p.rect(e.i * cs, e.j * cs, cs, cs);
+    p.fill(230, 180, 34);
+    const r = cs * 0.16;
+    p.rect(e.i * cs + cs/2 - r/2, e.j * cs + cs/2 - r/2, r, r, 2);
+  });
+  p.stroke(58, 53, 46); p.strokeWeight(1);
+  for (let g = 0; g <= w + 0.5; g += cs) { p.line(g, 0, g, h); p.line(0, g, w, g); }
+  p.noStroke();
+  bugs.forEach(b => {
+    const isHome = homes.some(e => e.i === b.i && e.j === b.j);
+    const cx = b.i * cs + cs/2, cy = b.j * cs + cs/2;
+    const rBase = cs * 0.52;
+    if (isHome) {
+      p.noFill();
+      p.stroke(127, 176, 105, 180);
+      p.strokeWeight(2);
+      p.circle(cx, cy, rBase * 1.15);
+      p.noStroke();
+    }
+    p.fill(200, 50, 63);
+    p.circle(cx, cy, rBase);
+    p.fill(isHome ? p.color(190, 240, 150) : p.color(250, 100, 110));
+    p.circle(cx, cy, rBase * 0.3);
+  });
+}
+
+function drawSnake(p, w, h) {
+  const gw = 20, gh = 12;
+  const cs = Math.floor(Math.min(w / gw, h / gh));
+  const ox = Math.floor((w - cs * gw) / 2), oy = Math.floor((h - cs * gh) / 2);
+  p.background(20, 18, 15);
+  p.stroke(28, 25, 22); p.strokeWeight(1);
+  for (let x = 0; x <= gw; x++) p.line(ox + x*cs, oy, ox + x*cs, oy + gh*cs);
+  for (let y = 0; y <= gh; y++) p.line(ox, oy + y*cs, ox + gw*cs, oy + y*cs);
+  p.noStroke();
+  // food — outer glow, core, bright center
+  [[8,6],[14,3],[5,9]].forEach(([x,y]) => {
+    const cx = ox+x*cs+cs/2, cy = oy+y*cs+cs/2;
+    p.fill(230, 180, 34, 30); p.circle(cx, cy, cs * 0.9);
+    p.fill(230, 180, 34); p.circle(cx, cy, cs * 0.55);
+    p.fill(243, 237, 224); p.circle(cx, cy, cs * 0.25);
+  });
+
+  function drawSnakeBody(body, dir, color, headColor) {
+    const [r, g, b] = color, [hr, hg, hb] = headColor;
+    // connecting tube
+    body.forEach((seg, i) => {
+      if (i === 0) return;
+      const prev = body[i - 1];
+      const cx1 = ox+seg.x*cs+cs/2, cy1 = oy+seg.y*cs+cs/2;
+      const cx2 = ox+prev.x*cs+cs/2, cy2 = oy+prev.y*cs+cs/2;
+      const factor = i / (body.length - 1);
+      p.stroke(lerp(hr, r, factor), lerp(hg, g, factor), lerp(hb, b, factor), 220);
+      p.strokeWeight(cs * 0.74);
+      p.line(cx1, cy1, cx2, cy2);
+    });
+    p.noStroke();
+    // segment nodes
+    body.forEach((seg, i) => {
+      const cx = ox+seg.x*cs+cs/2, cy = oy+seg.y*cs+cs/2;
+      const factor = i / (body.length - 1);
+      if (i === 0) {
+        p.fill(hr, hg, hb, 40); p.circle(cx, cy, cs * 0.95);
+        p.fill(hr, hg, hb); p.circle(cx, cy, cs * 0.46);
+        p.fill(20, 18, 15);
+        const eyeOff = cs * 0.16;
+        if (dir.x !== 0) {
+          p.circle(cx + dir.x*eyeOff, cy - eyeOff, cs * 0.08);
+          p.circle(cx + dir.x*eyeOff, cy + eyeOff, cs * 0.08);
+        } else {
+          p.circle(cx - eyeOff, cy + dir.y*eyeOff, cs * 0.08);
+          p.circle(cx + eyeOff, cy + dir.y*eyeOff, cs * 0.08);
+        }
+      } else {
+        p.fill(lerp(hr, r, factor), lerp(hg, g, factor), lerp(hb, b, factor), 220);
+        p.circle(cx, cy, cs * 0.42);
+      }
+    });
+  }
+
+  // P1 snake (green) - long, upper area, right then curves down
+  const s1 = [{x:8,y:6},{x:7,y:6},{x:7,y:5},{x:7,y:4},{x:6,y:4},{x:5,y:4},{x:4,y:4},{x:3,y:4},{x:2,y:4}];
+  drawSnakeBody(s1, {x:1,y:0}, [127,176,105], [190,240,150]);
+  // P2 snake (blue) - long, lower area, left then curves up
+  const s2 = [{x:11,y:6},{x:12,y:6},{x:13,y:6},{x:13,y:7},{x:13,y:8},{x:14,y:8},{x:15,y:8},{x:16,y:8},{x:17,y:8}];
+  drawSnakeBody(s2, {x:1,y:0}, [90,160,210], [150,210,255]);
+}
+
+function drawNonogram(p, w, h) {
+  const C = 10, R = 8;
+  const CFRAC = 0.26;
+  const gx = Math.floor(w * CFRAC), gy = Math.floor(h * CFRAC);
+  const cw = Math.floor((w - gx) / C), ch = Math.floor((h - gy) / R);
+
+  // Pre-baked 10×8 snapshot — sol[col][row]
+  const sol = [
+    [0,0,1,1,1,1,0,0],
+    [0,1,1,0,0,1,1,0],
+    [1,1,0,0,0,0,1,1],
+    [1,0,0,1,1,0,0,1],
+    [1,0,1,1,1,1,0,1],
+    [1,0,0,1,1,0,0,1],
+    [1,1,0,0,0,0,1,1],
+    [0,1,1,0,0,1,1,0],
+    [0,0,1,1,1,1,0,0],
+    [0,0,0,1,1,0,0,0],
+  ];
+
+  // partially filled board — same as sol but a few cells wrong/missing
+  const filled = [
+    [0,0,1,1,1,1,0,0],
+    [0,1,1,0,0,1,1,0],
+    [1,1,0,0,0,0,1,1],
+    [1,0,0,1,1,0,0,1],
+    [1,0,1,1,0,1,0,1],  // col4 row4 missing
+    [1,0,0,2,1,0,0,1],  // col5 row3 crossed (wrong)
+    [1,1,0,0,0,0,1,1],
+    [0,1,1,0,0,1,1,0],
+    [0,0,1,1,1,1,0,0],
+    [0,0,0,0,1,0,0,0],  // col9 row3 missing
+  ];
+
+  function runs(fn, len) {
+    const out = []; let cur = 0;
+    for (let k = 0; k < len; k++) { if (fn(k)) cur++; else if (cur) { out.push(cur); cur = 0; } }
+    if (cur) out.push(cur);
+    return out.length ? out : [0];
+  }
+
+  p.background(20, 18, 15);
+  p.textAlign(p.CENTER, p.BOTTOM);
+  p.textStyle(p.BOLD);
+  const fs = Math.min(cw, ch) * 0.58;
+  p.textSize(fs);
+
+  // col clues — bottom-aligned
+  for (let i = 0; i < C; i++) {
+    const x = gx + i * cw;
+    const clue = runs(j => sol[i][j], R);
+    p.fill(155, 145, 130); p.noStroke();
+    for (let k = 0; k < clue.length; k++) {
+      const ty = gy - 4 - (clue.length - 1 - k) * ch;
+      p.text(clue[k], x + cw / 2, ty);
+    }
+  }
+
+  // row clues — right-aligned
+  p.textAlign(p.RIGHT, p.CENTER);
+  for (let j = 0; j < R; j++) {
+    const y = gy + j * ch;
+    const clue = runs(i => sol[i][j], C);
+    p.fill(155, 145, 130); p.noStroke();
+    for (let k = 0; k < clue.length; k++) {
+      const tx = gx - 4 - (clue.length - 1 - k) * cw;
+      p.text(clue[k], tx, y + ch / 2);
+    }
+  }
+
+  // cells
+  for (let i = 0; i < C; i++) {
+    for (let j = 0; j < R; j++) {
+      const x = gx + i * cw, y = gy + j * ch;
+      const v = filled[i][j];
+      if (v === 1) {
+        p.fill(243, 237, 224); p.noStroke(); p.rect(x, y, cw, ch);
+      } else if (v === 2) {
+        p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
+        p.stroke(80, 72, 64); p.strokeWeight(1.5);
+        const pad = cw * 0.22;
+        p.line(x + pad, y + pad, x + cw - pad, y + ch - pad);
+        p.line(x + cw - pad, y + pad, x + pad, y + ch - pad);
+      } else {
+        p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
+      }
+    }
+  }
+
+  p.stroke(58, 53, 46); p.strokeWeight(1);
+  for (let i = 0; i <= C; i++) p.line(gx + i * cw, gy, gx + i * cw, gy + R * ch);
+  for (let j = 0; j <= R; j++) p.line(gx, gy + j * ch, gx + C * cw, gy + j * ch);
+}
+
+function drawConway(p, w, h) {
+  const cs = 14;
+  const offX = Math.floor(w / 2), offY = Math.floor(h / 2);
+  p.background(20, 18, 15);
+
+  // Gosper glider gun snapshot (partial)
+  const cells = new Set([
+    // glider gun left block
+    ...[[-18,-3],[-18,-2],[-17,-3],[-17,-2]].map(([x,y])=>x+","+y),
+    // left part
+    ...[ [-8,-3],[-8,-2],[-8,-1],[-7,-4],[-7,0],[-6,-5],[-6,1],[-5,-5],[-5,1],[-4,-4],[-4,0],[-3,-3],[-3,-2],[-3,-1],[-2,-2] ].map(([x,y])=>x+","+y),
+    // right part
+    ...[ [1,-4],[1,-3],[1,-2],[2,-5],[2,-1],[3,-6],[3,0],[4,-6],[4,0],[5,-5],[5,-1],[6,-4],[6,-3],[6,-2],[7,-3] ].map(([x,y])=>x+","+y),
+    // right block
+    ...[[ 11,-5],[11,-4],[12,-5],[12,-4]].map(([x,y])=>x+","+y),
+    // gliders (a few)
+    ...[[ -14,6],[-13,7],[-15,8],[-14,8],[-13,8]].map(([x,y])=>x+","+y),
+    ...[[ -5,10],[-4,11],[-6,12],[-5,12],[-4,12]].map(([x,y])=>x+","+y),
+    ...[[  4,4],[5,5],[3,6],[4,6],[5,6]].map(([x,y])=>x+","+y),
+  ]);
+
+  p.noStroke();
+  // grid
+  p.stroke(30, 27, 24); p.strokeWeight(1);
+  for (let x = -Math.ceil(w/2/cs)-1; x <= Math.ceil(w/2/cs)+1; x++) p.line(offX+x*cs,0,offX+x*cs,h);
+  for (let y = -Math.ceil(h/2/cs)-1; y <= Math.ceil(h/2/cs)+1; y++) p.line(0,offY+y*cs,w,offY+y*cs);
+  // cells — age-colored: newborn cyan, young green, mature gold, old orange
+  // (deterministic age per cell from its coordinates, just for visual variety)
+  p.noStroke();
+  for (const k of cells) {
+    const [cx, cy] = k.split(",").map(Number);
+    const ageRoll = Math.abs((cx * 31 + cy * 17) % 20);
+    let col;
+    if (ageRoll < 3) col = [90, 180, 190];
+    else if (ageRoll < 10) col = [127, 176, 105];
+    else if (ageRoll < 16) col = [230, 180, 34];
+    else col = [220, 120, 60];
+    p.fill(col[0], col[1], col[2]);
+    const sx = offX + cx * cs, sy = offY + cy * cs;
+    p.rect(sx + 1, sy + 1, cs - 2, cs - 2, 2);
+  }
+}
+
+function draw2048(p, w, h) {
+  const N = 4;
+  const PAD = 10;
+  const GAP = 5;
+  const cs = Math.floor((Math.min(w, h) * 0.82 - PAD * 2 - GAP * (N - 1)) / N);
+  const bw = cs * N + GAP * (N - 1) + PAD * 2;
+  const bh = bw;
+  const ox = Math.floor((w - bw) / 2);
+  const oy = Math.floor((h - bh) / 2);
+
+  const snapshot = [
+    [2,    32,  64,  128],
+    [4,    0,   8,   256],
+    [0,    16,  2,   512],
+    [2,    4,   8,   1024],
+  ];
+
+  const COLORS = {
+    0: [38,35,32], 2:[58,54,48], 4:[72,66,56], 8:[180,110,48],
+    16:[200,90,40], 32:[210,70,55], 64:[220,50,50],
+    128:[200,170,50], 256:[210,180,40], 512:[220,190,30],
+    1024:[230,200,20], 2048:[230,180,34],
+  };
+
+  p.background(20, 18, 15);
+  p.fill(38, 35, 32); p.noStroke();
+  p.rect(ox, oy, bw, bh, bw * 0.06);
+
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const v = snapshot[r][c];
+      const x = ox + PAD + c * (cs + GAP);
+      const y = oy + PAD + r * (cs + GAP);
+      const col = COLORS[v] || [230, 180, 34];
+      p.fill(col[0], col[1], col[2]); p.noStroke();
+      p.rect(x, y, cs, cs, cs * 0.1);
+      if (v > 0) {
+        p.fill(v <= 4 ? p.color(155,145,130) : p.color(243,237,224));
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textStyle(p.BOLD);
+        const ts = v >= 1000 ? cs * 0.28 : v >= 100 ? cs * 0.34 : cs * 0.42;
+        p.textSize(ts);
+        p.noStroke();
+        p.text(v, x + cs / 2, y + cs / 2 + 1);
+      }
+    }
+  }
+}
+
+function drawLightsOut(p, w, h) {
+  const size = 5;
+  const cellSize = Math.floor(Math.min(w * 0.9, h * 0.9) / size);
+  const boardW = cellSize * size;
+  const ox = Math.floor((w - boardW) / 2);
+  const oy = Math.floor((h - boardW) / 2);
+
+  p.background(20, 18, 15);
+
+  const state = [
+    [true,  false, false, true,  false],
+    [false, true,  false, true,  true ],
+    [false, false, false, false, false],
+    [true,  true,  false, true,  false],
+    [false, true,  false, false, true ]
+  ];
+
+  // Wires (connections)
+  p.strokeWeight(2.5);
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const cx = ox + c * cellSize + cellSize / 2;
+      const cy = oy + r * cellSize + cellSize / 2;
+
+      // Draw wire to right neighbor
+      if (c < size - 1) {
+        const ncx = cx + cellSize;
+        if (state[r][c] && state[r][c + 1]) {
+          p.stroke(230, 180, 34, 180);
+        } else {
+          p.stroke(58, 53, 46);
+        }
+        p.line(cx, cy, ncx, cy);
+      }
+
+      // Draw wire to bottom neighbor
+      if (r < size - 1) {
+        const ncy = cy + cellSize;
+        if (state[r][c] && state[r + 1][c]) {
+          p.stroke(230, 180, 34, 180);
+        } else {
+          p.stroke(58, 53, 46);
+        }
+        p.line(cx, cy, cx, ncy);
+      }
+    }
+  }
+
+  // Nodes
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      const cx = ox + c * cellSize + cellSize / 2;
+      const cy = oy + r * cellSize + cellSize / 2;
+      const val = state[r][c];
+
+      if (val) {
+        p.noStroke();
+        p.fill(230, 180, 34, 25);
+        p.circle(cx, cy, cellSize * 0.7);
+        p.fill(230, 180, 34, 60);
+        p.circle(cx, cy, cellSize * 0.5);
+        p.fill(243, 237, 224);
+        p.circle(cx, cy, cellSize * 0.3);
+      } else {
+        p.fill(38, 35, 32);
+        p.stroke(58, 53, 46);
+        p.strokeWeight(1.5);
+        p.circle(cx, cy, cellSize * 0.35);
+
+        p.noStroke();
+        p.fill(28, 25, 22);
+        p.circle(cx, cy, cellSize * 0.15);
+      }
+    }
+  }
+}
+
+function drawTicTacToe(p, w, h) {
+  const board = Math.min(w, h) * 0.86;
+  const gap = board * 0.035;
+  const big = (board - gap * 2) / 3;
+  const small = big / 3;
+  const ox = (w - board) / 2;
+  const oy = (h - board) / 2;
+
+  const XC = [127, 176, 105], OC = [90, 160, 210];
+
+  // pre-baked snapshot — board[b][i]: 0 empty, 1 X, 2 O
+  const sub = [
+    [1,2,0, 0,1,0, 2,0,0],
+    [0,0,0, 0,0,0, 0,0,0],
+    [2,1,0, 0,0,0, 0,0,1],
+    [0,0,0, 1,0,0, 0,0,0],
+    [1,1,1, 2,2,0, 0,1,0], // won by X (top row)
+    [0,2,0, 0,0,0, 0,0,0],
+    [2,0,1, 0,0,0, 0,0,0],
+    [0,0,0, 0,2,0, 1,0,0],
+    [0,0,0, 0,0,0, 0,0,0],
+  ];
+  const cellWinner = [0,0,0,0,1,0,0,0,0]; // board 4 won by X
+
+  p.background(20, 18, 15);
+
+  function bigOrigin(b) {
+    const br = Math.floor(b / 3), bc = b % 3;
+    return { x: ox + bc * (big + gap), y: oy + br * (big + gap) };
+  }
+
+  function mark(cx, cy, s, m, alpha) {
+    const a = alpha ?? 255;
+    p.noFill();
+    if (m === 1) {
+      p.stroke(XC[0], XC[1], XC[2], a);
+      p.strokeWeight(Math.max(1.5, s * 0.12));
+      const k = s * 0.32;
+      p.line(cx - k, cy - k, cx + k, cy + k);
+      p.line(cx + k, cy - k, cx - k, cy + k);
+    } else {
+      p.stroke(OC[0], OC[1], OC[2], a);
+      p.strokeWeight(Math.max(1.5, s * 0.1));
+      p.circle(cx, cy, s * 0.62);
+    }
+  }
+
+  for (let b = 0; b < 9; b++) {
+    const { x, y } = bigOrigin(b);
+
+    if (b === 4) {
+      p.noStroke();
+      p.fill(XC[0], XC[1], XC[2], 26);
+      p.rect(x, y, big, big, big * 0.06);
+    }
+
+    p.stroke(58, 53, 46);
+    p.strokeWeight(1);
+    for (let g = 1; g < 3; g++) {
+      p.line(x + g * small, y, x + g * small, y + big);
+      p.line(x, y + g * small, x + big, y + g * small);
+    }
+
+    for (let i = 0; i < 9; i++) {
+      const v = sub[b][i];
+      if (!v) continue;
+      const r = Math.floor(i / 3), c = i % 3;
+      mark(x + c * small + small / 2, y + r * small + small / 2, small, v);
+    }
+
+    if (cellWinner[b]) {
+      mark(x + big / 2, y + big / 2, big * 0.92, cellWinner[b], 70);
+    }
+  }
+
+  p.stroke(120, 110, 95);
+  p.strokeWeight(Math.max(1.5, board * 0.012));
+  for (let g = 1; g < 3; g++) {
+    const offX = ox + g * big + (g - 0.5) * gap;
+    const offY = oy + g * big + (g - 0.5) * gap;
+    p.line(offX, oy - gap * 0.3, offX, oy + board + gap * 0.3);
+    p.line(ox - gap * 0.3, offY, ox + board + gap * 0.3, offY);
+  }
+}
+
+function drawFlood(p, w, h) {
+  const N = 10;
+  const SWATCH_H = 34;
+  const boardAreaH = h - SWATCH_H;
+  const cs = Math.floor(Math.min(w * 0.92, boardAreaH * 0.92) / N);
+  const bw = cs * N, bh = cs * N;
+  const ox = Math.floor((w - bw) / 2);
+  const oy = Math.floor((boardAreaH - bh) / 2);
+
+  const PALETTE = [
+    [200, 50, 63], [230, 180, 34], [127, 176, 105], [90, 160, 210],
+    [180, 110, 200], [220, 140, 60],
+  ];
+
+  // pre-baked snapshot: mostly flooded gold from top-left, a few regions left
+  const layout = [
+    [1,1,1,1,2,2,3,3,0,0],
+    [1,1,1,2,2,3,3,0,0,4],
+    [1,1,1,1,2,3,3,0,4,4],
+    [1,1,1,2,2,3,0,0,4,5],
+    [1,1,1,1,3,3,0,4,4,5],
+    [1,1,2,2,3,0,0,4,5,5],
+    [1,1,1,2,3,3,4,4,5,5],
+    [1,1,2,2,3,0,4,5,5,3],
+    [1,1,1,3,3,0,0,4,5,3],
+    [1,1,2,3,3,4,4,5,3,3],
+  ];
+
+  p.background(20, 18, 15);
+  p.noStroke();
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const col = PALETTE[layout[r][c] % PALETTE.length];
+      p.fill(col[0], col[1], col[2]);
+      p.rect(ox + c * cs, oy + r * cs, cs - 1, cs - 1, 1.5);
+    }
+  }
+  p.noFill();
+  p.stroke(243, 237, 224, 160);
+  p.strokeWeight(1.5);
+  p.rect(ox + 1, oy + 1, cs - 3, cs - 3, 1.5);
+
+  // swatch row
+  const NC = 6;
+  const sw = w / NC;
+  const swatchY = boardAreaH + 6;
+  for (let i = 0; i < NC; i++) {
+    const col = PALETTE[i];
+    p.fill(col[0], col[1], col[2]);
+    p.noStroke();
+    p.rect(i * sw + 4, swatchY, sw - 8, SWATCH_H - 8, 5);
+    if (i === 1) {
+      p.noFill();
+      p.stroke(243, 237, 224, 200);
+      p.strokeWeight(1.5);
+      p.rect(i * sw + 4, swatchY, sw - 8, SWATCH_H - 8, 5);
+    }
+  }
+}
+
+function drawSudoku(p, w, h) {
+  const N = 9, BW = 3, BH = 3;
+  const boardPx = Math.floor(Math.min(w, h) * 0.9);
+  const cs = boardPx / N;
+  const ox = Math.floor((w - boardPx) / 2);
+  const oy = Math.floor((h - boardPx) / 2);
+
+  // pre-baked partial 9x9 snapshot, 0 = empty
+  const grid = [
+    [5,3,0, 0,7,0, 0,0,0],
+    [6,0,0, 1,9,5, 0,0,0],
+    [0,9,8, 0,0,0, 0,6,0],
+    [8,0,0, 0,6,0, 0,0,3],
+    [4,0,0, 8,0,3, 0,0,1],
+    [7,0,0, 0,2,0, 0,0,6],
+    [0,6,0, 0,0,0, 2,8,0],
+    [0,0,0, 4,1,9, 0,0,5],
+    [0,0,0, 0,8,0, 0,7,9],
+  ];
+  const givenMask = [
+    [1,1,0, 0,1,0, 0,0,0],
+    [1,0,0, 1,1,1, 0,0,0],
+    [0,1,1, 0,0,0, 0,1,0],
+    [1,0,0, 0,1,0, 0,0,1],
+    [1,0,0, 1,0,1, 0,0,1],
+    [1,0,0, 0,1,0, 0,0,1],
+    [0,1,0, 0,0,0, 1,1,0],
+    [0,0,0, 1,1,1, 0,0,1],
+    [0,0,0, 0,1,0, 0,1,1],
+  ];
+
+  p.background(20, 18, 15);
+  p.noStroke();
+  // selection-style highlight band for flavor
+  p.fill(230, 180, 34, 12);
+  p.rect(ox, oy + 4 * cs, boardPx, cs);
+  p.rect(ox + 4 * cs, oy, cs, boardPx);
+
+  p.textAlign(p.CENTER, p.CENTER);
+  p.textStyle(p.BOLD);
+  p.textSize(cs * 0.5);
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const v = grid[r][c];
+      if (!v) continue;
+      const x = ox + c * cs + cs / 2, y = oy + r * cs + cs / 2;
+      p.fill(givenMask[r][c] ? p.color(243, 237, 224) : p.color(150, 190, 230));
+      p.noStroke();
+      p.text(v, x, y + 1);
+    }
+  }
+
+  p.stroke(58, 53, 46); p.strokeWeight(1);
+  for (let i = 0; i <= N; i++) {
+    p.line(ox + i * cs, oy, ox + i * cs, oy + boardPx);
+    p.line(ox, oy + i * cs, ox + boardPx, oy + i * cs);
+  }
+  p.stroke(155, 145, 130); p.strokeWeight(2.2);
+  for (let i = 0; i <= N; i += BW) p.line(ox + i * cs, oy, ox + i * cs, oy + boardPx);
+  for (let j = 0; j <= N; j += BH) p.line(ox, oy + j * cs, ox + boardPx, oy + j * cs);
+  p.noFill();
+  p.rect(ox, oy, boardPx, boardPx);
+}
+
+function drawNetwalk(p, w, h) {
+  const SZ = 6;
+  const cs = Math.floor(Math.min(w, h) * 0.92 / SZ);
+  const bw = cs * SZ, bh = cs * SZ;
+  const ox = Math.floor((w - bw) / 2);
+  const oy = Math.floor((h - bh) / 2);
+
+  const Nd = 1, Ed = 2, Sd = 4, Wd = 8;
+  const DX = { 1: 0, 2: 1, 4: 0, 8: -1 };
+  const DY = { 1: -1, 2: 0, 4: 1, 8: 0 };
+  const OPP = { 1: 4, 2: 8, 4: 1, 8: 2 };
+  const ALL = [Nd, Ed, Sd, Wd];
+
+  // pre-baked 6x6 layout — a genuine full spanning tree (every cell has a
+  // pipe, same as a real board), with the source in the middle and a
+  // partial BFS-connected subset lit up for visual variety.
+  const src = { r: 2, c: 2 };
+  const layout = [
+    [Ed|Sd, Sd|Wd, Ed|Sd, Sd|Wd, Ed,    Sd|Wd],
+    [Nd,    Nd|Sd,Nd|Sd, Nd|Ed,Sd|Wd,  Nd|Sd],
+    [Ed|Sd, Nd|Sd|Wd,Nd, Sd,   Nd|Ed,  Nd|Sd|Wd],
+    [Nd|Sd, Nd,   Ed|Sd, Nd|Ed|Sd|Wd,Wd,Nd|Sd],
+    [Nd|Ed|Sd,Sd|Wd,Nd|Sd,Nd|Sd,Ed|Sd, Nd|Wd],
+    [Nd,    Nd|Ed,Nd|Wd, Nd|Ed,Nd|Ed|Wd,Wd],
+  ];
+  const connected = [
+    [0,0,1,1,1,1],
+    [0,0,1,1,1,1],
+    [0,0,1,0,1,1],
+    [0,0,0,0,0,1],
+    [0,0,0,0,1,1],
+    [0,0,0,0,1,0],
+  ];
+
+  p.background(20, 18, 15);
+  p.noStroke();
+  p.fill(28, 25, 22);
+  p.rect(ox, oy, bw, bh, 6);
+
+  for (let r = 0; r < SZ; r++) {
+    for (let c = 0; c < SZ; c++) {
+      const mask = layout[r][c];
+      const cx = ox + c * cs + cs / 2, cy = oy + r * cs + cs / 2;
+      const isConn = !!connected[r][c];
+      const stubLen = cs * 0.86 / 2;
+      const touchLen = cs / 2;
+
+      for (const d of ALL) {
+        if (!(mask & d)) continue;
+        const nr = r + DY[d], nc = c + DX[d];
+        const inB = nr >= 0 && nr < SZ && nc >= 0 && nc < SZ;
+        const isTouch = inB && !!(layout[nr][nc] & OPP[d]);
+        const armLen = isTouch ? touchLen : stubLen;
+        p.strokeCap(isTouch ? p.SQUARE : p.ROUND);
+        p.strokeWeight(cs * 0.19);
+        p.stroke(isConn ? p.color(127, 210, 230) : p.color(70, 64, 56));
+        p.line(cx, cy, cx + DX[d] * armLen, cy + DY[d] * armLen);
+      }
+      p.noStroke();
+      p.fill(isConn ? p.color(200, 235, 245) : p.color(90, 84, 74));
+      p.circle(cx, cy, cs * 0.22);
+    }
+  }
+
+  // source
+  const scx = ox + src.c * cs + cs / 2, scy = oy + src.r * cs + cs / 2;
+  p.noStroke();
+  p.fill(230, 180, 34, 35);
+  p.circle(scx, scy, cs * 0.66);
+  p.fill(230, 180, 34);
+  p.circle(scx, scy, cs * 0.4);
+
+  // endpoint ring (unconnected leaf, for contrast)
+  const lcx = ox + 4 * cs + cs / 2, lcy = oy + 0 * cs + cs / 2;
+  p.noFill();
+  p.stroke(90, 84, 74);
+  p.strokeWeight(2);
+  p.circle(lcx, lcy, cs * 0.5);
+}
