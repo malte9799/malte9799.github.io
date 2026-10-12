@@ -173,7 +173,7 @@ function drawMyGame(p, w, h) {
 ## Conventions
 
 - **Designs.** The player picks a design (Midnight, Classic, Studio, Paper,
-  Artcraft — fine line art —, Brutal) with the "Design" button; mechanics
+  Brutal, Pop) with the "Design" button; mechanics
   never change, only looks. So never hardcode colours in canvas code —
   spread `PAL`, e.g. `fill(...PAL.sun, 80)` or `p.stroke(...PAL.line)`.
   PAL is updated in place on a switch, so caching `const C = PAL.mint` is
