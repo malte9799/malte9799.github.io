@@ -1,46 +1,22 @@
-/* "Midnight" theme — keep in sync with PAL in game.js */
-:root {
-  --bg: #0f101e;
-  --board: #0c0d1a;
-  --panel: #1c1f36;
-  --panel-2: #262a48;
-  --panel-edge: #2c3052;
-  --grid-line: #2c3052;
-  --ink: #eef0ff;
-  --muted: #8e94be;
-  --dim: #565c84;
-  --sun: #ffcc70;
-  --mint: #74e2b2;
-  --rose: #ff6e8c;
-  --sky: #6cb6ff;
-  --lilac: #b098ff;
-  /* legacy aliases */
-  --home: var(--sun);
-  --bug: var(--rose);
-  --accent: var(--mint);
-  --font: "Outfit", ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  color-scheme: dark;
-}
+/* Layout + components. All colours, radii, shadows and fonts come from the
+   theme variables in themes.css, so every design shares this one stylesheet. */
 * { box-sizing: border-box; }
 html, body {
   margin: 0;
   min-height: 100%;
   color: var(--ink);
   font-family: var(--font);
+  letter-spacing: var(--ui-tracking);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 html { background: var(--bg); }
 body {
-  background:
-    radial-gradient(900px 520px at 12% -8%, rgba(176, 152, 255, 0.13), transparent 70%),
-    radial-gradient(800px 600px at 105% 108%, rgba(96, 222, 222, 0.08), transparent 70%),
-    var(--bg);
+  background: var(--page-bg);
   background-attachment: fixed;
   min-height: 100vh;
 }
-::selection { background: rgba(176, 152, 255, 0.35); }
+::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
 #app {
   max-width: 480px;
   margin: 0 auto;
@@ -55,9 +31,11 @@ header {
   margin-bottom: 16px;
 }
 h1 {
-  font-size: 26px;
-  letter-spacing: -0.01em;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: var(--title-size);
+  letter-spacing: var(--title-tracking);
+  text-transform: var(--title-transform);
+  font-weight: var(--title-weight);
   margin: 0;
   line-height: 1.1;
 }
@@ -68,17 +46,16 @@ h1 {
 }
 #canvas-wrap {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 18px;
+  border: var(--border-w) solid var(--hairline);
+  border-radius: var(--r-lg);
   overflow: hidden;
   background: var(--board);
   line-height: 0;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 24px 60px -24px rgba(0, 0, 0, 0.7),
-    0 0 0 6px rgba(176, 152, 255, 0.04);
+  box-shadow: var(--wrap-shadow);
   touch-action: manipulation;
 }
+/* fullscreen games (Snake, Conway): the canvas is the whole screen */
+#canvas-wrap.fs { border: 0; border-radius: 0; box-shadow: none; }
 canvas {
   width: 100% !important;
   height: auto !important;
@@ -102,9 +79,9 @@ canvas {
   transition: background 0.2s, box-shadow 0.2s;
 }
 .status.solved { color: var(--mint); }
-.status.solved .dot { background: var(--mint); box-shadow: 0 0 0 4px rgba(116, 226, 178, 0.18); }
+.status.solved .dot { background: var(--mint); box-shadow: 0 0 0 4px color-mix(in srgb, var(--mint) 20%, transparent); }
 .status.dead { color: var(--rose); }
-.status.dead .dot { background: var(--rose); box-shadow: 0 0 0 4px rgba(255, 110, 140, 0.18); }
+.status.dead .dot { background: var(--rose); box-shadow: 0 0 0 4px color-mix(in srgb, var(--rose) 20%, transparent); }
 .row {
   display: flex;
   flex-wrap: wrap;
@@ -115,39 +92,40 @@ canvas {
 button {
   flex: 1;
   appearance: none;
-  border: 1px solid var(--panel-edge);
+  border: var(--border-w) solid var(--panel-edge);
   background: var(--panel);
   color: var(--ink);
   font: inherit;
   font-size: 14px;
   font-weight: 500;
   padding: 10px 8px;
-  border-radius: 12px;
+  border-radius: var(--r-sm);
+  box-shadow: var(--btn-shadow);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, transform 0.08s, box-shadow 0.15s, color 0.15s;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
-button:hover { background: var(--panel-2); border-color: #3b4070; }
-button:active { transform: translateY(1px) scale(0.98); }
-button:focus-visible { outline: 2px solid var(--lilac); outline-offset: 2px; }
+button:hover { background: var(--panel-2); border-color: var(--edge-hover); }
+button:active { transform: var(--btn-press); box-shadow: var(--btn-shadow-press); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.primary {
-  background: linear-gradient(180deg, #c0acff, #9a80fb);
-  color: #17112f;
-  border-color: transparent;
+  background: var(--primary-bg);
+  color: var(--primary-fg);
+  border-color: var(--primary-border);
   font-weight: 700;
-  box-shadow: 0 6px 18px -6px rgba(154, 128, 251, 0.6), 0 1px 0 rgba(255, 255, 255, 0.35) inset;
+  box-shadow: var(--primary-shadow);
 }
-button.primary:hover { background: linear-gradient(180deg, #cbbaff, #a68ffc); border-color: transparent; }
+button.primary:hover { background: var(--primary-hover); border-color: var(--primary-border); }
 button.active,
 button.hint-confirm {
-  background: rgba(255, 204, 112, 0.14);
-  color: var(--sun);
-  border-color: rgba(255, 204, 112, 0.45);
+  background: color-mix(in srgb, var(--toggle) 15%, var(--panel));
+  color: var(--toggle-fg);
+  border-color: color-mix(in srgb, var(--toggle) 50%, transparent);
   font-weight: 700;
 }
 button.active:hover,
-button.hint-confirm:hover { background: rgba(255, 204, 112, 0.2); border-color: rgba(255, 204, 112, 0.6); }
+button.hint-confirm:hover { background: color-mix(in srgb, var(--toggle) 22%, var(--panel)); border-color: color-mix(in srgb, var(--toggle) 65%, transparent); }
 .preset-row {
   display: flex;
   align-items: center;
@@ -163,24 +141,41 @@ button.hint-confirm:hover { background: rgba(255, 204, 112, 0.2); border-color: 
   flex: 1;
   min-width: 0;
   appearance: none;
-  border: 1px solid var(--panel-edge);
-  background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238e94be' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+  border: var(--border-w) solid var(--panel-edge);
+  background: var(--panel);
+  box-shadow: var(--btn-shadow);
   color: var(--ink);
   font: inherit;
   font-size: 14px;
   font-weight: 500;
   padding: 10px 36px 10px 14px;
-  border-radius: 12px;
+  border-radius: var(--r-sm);
   cursor: pointer;
   transition: border-color 0.15s, background-color 0.15s;
 }
-.preset-row select:hover { border-color: #3b4070; background-color: var(--panel-2); }
-.preset-row select:focus-visible { outline: 2px solid var(--lilac); outline-offset: 2px; }
+.preset-row { position: relative; }
+.preset-row::after {
+  /* dropdown chevron, drawn in the theme's muted colour */
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -6px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.preset-row select:hover { border-color: var(--edge-hover); background-color: var(--panel-2); }
+.preset-row select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .preset-row select option { background: var(--panel); color: var(--ink); }
 .controls {
   background: var(--panel);
-  border: 1px solid var(--panel-edge);
-  border-radius: 16px;
+  border: var(--border-w) solid var(--panel-edge);
+  border-radius: var(--r-md);
+  box-shadow: var(--btn-shadow);
   padding: 12px 16px 16px;
 }
 .ctl {
@@ -197,7 +192,7 @@ button.hint-confirm:hover { background: rgba(255, 204, 112, 0.2); border-color: 
 }
 .ctl input[type="range"] {
   width: 100%;
-  accent-color: var(--lilac);
+  accent-color: var(--accent);
 }
 .ctl .val {
   font-size: 14px;
@@ -229,7 +224,7 @@ button.hint-confirm:hover { background: rgba(255, 204, 112, 0.2); border-color: 
   transition: color 0.15s;
 }
 .back-link:hover { color: var(--ink); }
-.back-link:focus-visible { outline: 2px solid var(--lilac); outline-offset: -2px; border-radius: 12px; }
+.back-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--r-sm); }
 
 /* Normal layout has no top bar, so pin the back-link fixed top-left there.
    The fullscreen overlay bars (Snake/Conway, Conway's custom bar) instead
@@ -256,7 +251,7 @@ button.hint-confirm:hover { background: rgba(255, 204, 112, 0.2); border-color: 
 .info-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(8, 9, 20, 0.72);
+  background: var(--backdrop);
   z-index: 100;
   display: flex;
   align-items: center;
@@ -268,9 +263,9 @@ button.hint-confirm:hover { background: rgba(255, 204, 112, 0.2); border-color: 
 }
 .info-modal {
   position: relative;
-  background: linear-gradient(180deg, #22264a, var(--panel));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
+  background: var(--modal-bg);
+  border: var(--border-w) solid var(--hairline);
+  border-radius: var(--r-xl);
   width: 100%;
   max-width: 480px;
   max-height: calc(100vh - 40px);
@@ -279,16 +274,18 @@ button.hint-confirm:hover { background: rgba(255, 204, 112, 0.2); border-color: 
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+  box-shadow: var(--modal-shadow);
   animation: info-pop 0.28s var(--ease);
 }
 @keyframes info-fade { from { opacity: 0; } }
 @keyframes info-pop { from { opacity: 0; transform: translateY(10px) scale(0.97); } }
 .info-title {
   margin: 0 44px 0 2px;
+  font-family: var(--font-display);
   font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  font-weight: var(--title-weight);
+  letter-spacing: var(--title-tracking);
+  text-transform: var(--title-transform);
   color: var(--ink);
 }
 .info-text {
@@ -301,8 +298,8 @@ button.hint-confirm:hover { background: rgba(255, 204, 112, 0.2); border-color: 
   width: 100% !important;
   height: auto !important;
   display: block;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--r-md);
+  border: var(--border-w) solid var(--hairline);
 }
 #info-close {
   position: absolute;

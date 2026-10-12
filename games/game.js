@@ -23,31 +23,11 @@
 //   flashNote, setStatus, celebrate, confirmHint/resetHint, setButtonActive,
 //   syncSliderUI, saveSettings/loadSettings, shuffleArray, easeInOutQuad,
 //   addParticle/spawnBurst/drawParticles/clearParticles, drawBoardOverlay,
-//   and PAL — the theme palette as [r, g, b] triplets for canvas code.
+//   and (from themes.js) PAL — the active design's palette as [r, g, b].
 
 // ---- theme ----
-// "Midnight": deep blue-violet night with soft pastel accents. Mirrors the CSS
-// variables in shared.css; canvas code spreads these, e.g. fill(...PAL.sun, 80).
-const PAL = {
-  bg:      [15, 16, 30],    // page
-  board:   [12, 13, 26],    // canvas background
-  well:    [18, 20, 37],    // sunken cells / empty slots
-  panel:   [28, 31, 54],    // raised cells / tiles
-  panelHi: [40, 44, 74],    // hovered / lifted tiles
-  line:    [44, 48, 82],    // grid lines
-  lineHi:  [78, 84, 128],   // emphasised grid lines (box borders)
-  ink:     [238, 240, 255], // primary text
-  muted:   [142, 148, 190], // secondary text
-  dim:     [86, 92, 132],   // disabled / idle pieces
-  sun:     [255, 204, 112], // main highlight (targets, food, power)
-  mint:    [116, 226, 178], // success / player one
-  rose:    [255, 110, 140], // danger / mines / bugs
-  sky:     [108, 182, 255], // info / player two
-  lilac:   [176, 152, 255], // brand accent
-  peach:   [255, 156, 112],
-  aqua:    [96, 222, 222],
-};
-const FONT = "Outfit";
+// PAL (canvas colours), FONT and the design picker come from themes.js,
+// which index.html loads before this file.
 
 let _cfg = null;
 let _noteTimer = null;
@@ -110,10 +90,10 @@ function _buildShell() {
             left: 0;
             right: 0;
             z-index: 10;
-            background: rgba(15, 16, 30, 0.82);
+            background: var(--bar-bg);
             backdrop-filter: blur(14px) saturate(140%);
             -webkit-backdrop-filter: blur(14px) saturate(140%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            border-bottom: var(--border-w) solid var(--hairline);
             padding: 10px 18px 12px;
             display: flex;
             flex-direction: column;
@@ -140,7 +120,7 @@ function _buildShell() {
             pointer-events: auto;
           }
        </style>
-       <div id="canvas-wrap" style="width:100vw;height:100vh;position:fixed;inset:0;z-index:0"></div>
+       <div id="canvas-wrap" class="fs" style="width:100vw;height:100vh;position:fixed;inset:0;z-index:0"></div>
 <div id="ui-overlay" style="position:fixed">
            <div style="display:flex;flex-direction:column;gap:4px">
              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -151,7 +131,7 @@ function _buildShell() {
                <div class="row tight" style="margin:0;flex-wrap:wrap">${_buttonsHTML()}</div>
                <span id="status-text" style="font-size:14px;font-weight:500;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums"></span>
              </div>
-             <h2 style="font-size:15px;color:var(--ink);margin:0;font-weight:800;letter-spacing:-0.01em">${_cfg.title}</h2>
+             <h2 style="font-size:15px;color:var(--ink);margin:0;font-family:var(--font-display);font-weight:var(--title-weight);letter-spacing:var(--title-tracking);text-transform:var(--title-transform)">${_cfg.title}</h2>
            </div>
            <div class="hint-note" id="note" style="margin:0"></div>
            <div class="controls fs-floating" id="controls" style="display:none">${_slidersHTML("Apply &amp; start")}</div>
@@ -177,6 +157,12 @@ function _buildShell() {
 
   document.getElementById("preset-select").selectedIndex = 0;
 
+  // design picker: pinned top-right, or inside the slim bar in fullscreen games
+  if (_cfg.fullscreen) {
+    const row = app.querySelector("#ui-overlay .row.tight");
+    if (row) mountThemePicker(row);
+  } else mountThemePicker(app);
+
   if (!_cfg.presets || _cfg.presets.length === 0) {
     const row = document.querySelector(".preset-row");
     if (row) row.style.display = "none";
@@ -200,7 +186,8 @@ function flashNote(msg) {
 // `intensity` is a small integer tier (1 = easiest preset, 3+ = hardest)
 // that games pass in based on their own difficulty presets — scales the
 // particle count from a light sprinkle up to a couple of big handfuls.
-const CONFETTI_COLORS = ["#ffcc70", "#74e2b2", "#ff6e8c", "#6cb6ff", "#b098ff", "#eef0ff"];
+// confetti in the active design's accent colours
+const _hex = (c) => "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
 
 function celebrate(intensity) {
   if (typeof confetti !== "function") return;
@@ -225,7 +212,7 @@ function celebrate(intensity) {
     startVelocity: 42,
     gravity: 0.9,
     ticks: 220,
-    colors: CONFETTI_COLORS,
+    colors: [PAL.sun, PAL.mint, PAL.rose, PAL.sky, PAL.lilac, PAL.ink].map(_hex),
     zIndex: 200,
     disableForReducedMotion: true,
   };
@@ -507,16 +494,6 @@ function _wireShell() {
       .getElementById("btn-info")
       .addEventListener("click", () => _openInfo());
   }
-}
-
-// ---- canvas font ----
-// Every p5 sketch (the game, the info demo, home previews) draws its text in
-// the theme font. 'pre' runs before each draw(), so it also applies once the
-// web font finishes loading.
-if (typeof p5 !== "undefined") {
-  p5.prototype.registerMethod("pre", function () {
-    if (this._renderer && this._renderer.drawingContext) this.textFont(FONT);
-  });
 }
 
 // ---- info modal ----

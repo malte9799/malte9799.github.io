@@ -8,7 +8,7 @@
 <title>Games</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" />
+<link rel="stylesheet" href="themes.css" />
 <link rel="stylesheet" href="shared.css" />
 <style>
   #home {
@@ -17,6 +17,7 @@
     padding: 64px 24px 80px;
   }
   #home .hero { display: block; text-align: center; margin-bottom: 44px; }
+  #home h1 { font-family: var(--font-display); font-weight: var(--title-weight); letter-spacing: var(--title-tracking); text-transform: var(--title-transform); }
   #home .hero .site-link { display: inline-flex; }
   #home .site-link {
     display: inline-flex; align-items: center; gap: 6px;
@@ -25,12 +26,10 @@
   }
   #home .site-link:hover { color: var(--ink); }
   #home h1 {
-    font-size: clamp(44px, 8vw, 72px);
-    font-weight: 800;
-    letter-spacing: -0.035em;
-    line-height: 1;
+    font-size: var(--hero-size);
+    line-height: 1.05;
     margin: 0 0 12px;
-    background: linear-gradient(100deg, #ffd99a 0%, #ffb0c2 35%, #c8b6ff 65%, #9fe8ff 100%);
+    background: var(--hero-fill);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -52,21 +51,21 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    border-radius: 20px;
+    border-radius: var(--r-xl);
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    background: linear-gradient(180deg, rgba(40, 44, 78, 0.55), rgba(28, 31, 54, 0.55));
+    border: var(--border-w) solid var(--hairline);
+    background: var(--card-bg);
     text-decoration: none;
     color: inherit;
     transition: transform 0.25s var(--ease), border-color 0.2s, box-shadow 0.25s var(--ease);
-    box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.8);
+    box-shadow: var(--card-shadow);
   }
   #home .card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(176, 152, 255, 0.35);
-    box-shadow: 0 22px 50px -20px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(176, 152, 255, 0.12), 0 10px 40px -10px rgba(176, 152, 255, 0.25);
+    transform: var(--card-hover-lift);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--hairline));
+    box-shadow: var(--card-hover-shadow);
   }
-  #home .card:focus-visible { outline: 2px solid var(--lilac); outline-offset: 3px; }
+  #home .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   #home .card .preview {
     position: relative;
     aspect-ratio: 5 / 3;
@@ -84,12 +83,13 @@
   #home .card:hover canvas { transform: scale(1.035); }
   #home .card-text {
     padding: 14px 18px 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: var(--border-w) solid var(--hairline);
   }
   #home .card-title {
+    font-family: var(--font-display);
     font-size: 18px;
     font-weight: 700;
-    letter-spacing: -0.01em;
+    letter-spacing: var(--title-tracking);
     color: var(--ink);
     line-height: 1.25;
   }
@@ -107,10 +107,10 @@
     height: 34px;
     flex: none;
     border-radius: 50%;
-    background: rgba(15, 16, 30, 0.55);
+    background: var(--chip-bg);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--hairline);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -125,15 +125,15 @@
   #home .star-btn:hover {
     opacity: 1 !important;
     color: var(--sun);
-    background: rgba(15, 16, 30, 0.8);
-    border-color: rgba(255, 204, 112, 0.45);
+    background: var(--chip-bg);
+    border-color: color-mix(in srgb, var(--sun) 45%, transparent);
     transform: scale(1.08) !important;
   }
   #home .star-btn.starred {
     opacity: 1 !important;
     transform: scale(1) !important;
     color: var(--sun);
-    border-color: rgba(255, 204, 112, 0.3);
+    border-color: color-mix(in srgb, var(--sun) 30%, transparent);
   }
   #home .star-btn:active { transform: scale(0.95) !important; }
   #home .star-btn:focus-visible {
@@ -159,6 +159,7 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="themes.js"></script>
 <script src="game.js"></script>
 </head>
 <body>

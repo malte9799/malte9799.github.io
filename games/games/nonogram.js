@@ -403,7 +403,7 @@ function _rowCorrect(j) {
 // A filled cell's colour: soft ink while playing, a diagonal sun→rose→lilac
 // gradient once the picture is solved.
 function inkColor(p, i, j, total, done) {
-  if (!done) return p.color(226, 222, 255);
+  if (!done) return p.color(...PAL.fillInk);
   const t = total > 0 ? (i + j) / total : 0;
   const a = p.color(...PAL.sun), b = p.color(...PAL.rose), c = p.color(...PAL.lilac);
   return t < 0.5 ? p.lerpColor(a, b, t * 2) : p.lerpColor(b, c, (t - 0.5) * 2);

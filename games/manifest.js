@@ -72,9 +72,9 @@ function drawMinesweeper(p, w, h) {
       } else if (v === 10) {
         tile(p, x, y, s, [...PAL.rose, 90]);
         const cx = x + s / 2, cy = y + s / 2, d = s * 0.44;
-        p.stroke(150, 156, 205); p.strokeWeight(3); p.strokeCap(p.ROUND);
+        p.stroke(...PAL.mineHi); p.strokeWeight(3); p.strokeCap(p.ROUND);
         for (let a = 0; a < 4; a++) { const an = a * Math.PI / 4; p.line(cx - Math.cos(an) * d * 0.78, cy - Math.sin(an) * d * 0.78, cx + Math.cos(an) * d * 0.78, cy + Math.sin(an) * d * 0.78); }
-        p.noStroke(); p.fill(96, 102, 156); p.circle(cx, cy, d);
+        p.noStroke(); p.fill(...PAL.mine); p.circle(cx, cy, d);
         p.fill(255, 255, 255, 190); p.circle(cx - d * 0.17, cy - d * 0.17, d * 0.26);
       } else {
         tile(p, x, y, s, PAL.well);
@@ -163,8 +163,8 @@ function drawSnake(p, w, h) {
     p.circle(hx + dir[0] * e - dir[1] * e, hy + dir[1] * e - dir[0] * e, cs * 0.1);
     p.circle(hx + dir[0] * e + dir[1] * e, hy + dir[1] * e + dir[0] * e, cs * 0.1);
   }
-  snake([[8, 5], [7, 5], [6, 5], [6, 4], [6, 3], [5, 3], [4, 3], [3, 3], [2, 3]], PAL.mint, [196, 255, 226], [1, 0]);
-  snake([[12, 6], [13, 6], [14, 6], [14, 7], [14, 8], [15, 8], [16, 8], [17, 8]], PAL.sky, [190, 224, 255], [-1, 0]);
+  snake([[8, 5], [7, 5], [6, 5], [6, 4], [6, 3], [5, 3], [4, 3], [3, 3], [2, 3]], PAL.mint, PAL.mintHi, [1, 0]);
+  snake([[12, 6], [13, 6], [14, 6], [14, 7], [14, 8], [15, 8], [16, 8], [17, 8]], PAL.sky, PAL.skyHi, [-1, 0]);
 }
 
 function drawNonogram(p, w, h) {
@@ -256,9 +256,9 @@ function draw2048(p, w, h) {
     [4, 128, 256, 512],
     [8, 1024, 2048, 0],
   ];
-  const COL = { 2: [44, 48, 84], 4: [60, 65, 110], 8: [92, 140, 240], 16: [72, 190, 232], 32: [96, 214, 172], 64: [168, 226, 112],
-    128: [255, 214, 104], 256: [255, 168, 98], 512: [255, 116, 132], 1024: [234, 122, 222], 2048: [176, 140, 255] };
-  const lightFg = (v) => v <= 8 || v >= 512;
+  const COL = {};
+  PAL.tiles.forEach((c, k) => { COL[2 << k] = c; });
+  const lightFg = (v) => { const [r, g, b] = COL[v]; return (0.299 * r + 0.587 * g + 0.114 * b) / 255 <= 0.6; };
   p.noStroke(); p.fill(...PAL.well); p.rect(ox, oy, bw, bw, 16);
   p.textAlign(p.CENTER, p.CENTER); p.textStyle(p.BOLD);
   for (let r = 0; r < N; r++)
@@ -268,7 +268,7 @@ function draw2048(p, w, h) {
       if (v >= 128) { p.fill(...COL[v], 50); p.rect(x - 4, y - 4, cs + 8, cs + 8, cs * 0.2); }
       tile(p, x, y, cs, COL[v], cs * 0.14);
       p.fill(255, 255, 255, 16); p.rect(x, y, cs, cs * 0.5, cs * 0.14, cs * 0.14, 0, 0);
-      p.fill(...(lightFg(v) ? PAL.ink : [24, 22, 48]));
+      p.fill(...(lightFg(v) ? PAL.onDark : PAL.onLight));
       p.textSize(cs * (v >= 1000 ? 0.3 : v >= 100 ? 0.36 : 0.44));
       p.text(v, x + cs / 2, y + cs / 2 + 1);
     }
@@ -305,7 +305,7 @@ function drawLightsOut(p, w, h) {
         p.fill(...PAL.sun, 22); p.circle(x, y, cs * 0.78);
         p.fill(...PAL.sun, 55); p.circle(x, y, cs * 0.54);
         p.fill(...PAL.sun); p.circle(x, y, cs * 0.36);
-        p.fill(255, 248, 228); p.circle(x - cs * 0.04, y - cs * 0.04, cs * 0.2);
+        p.fill(...PAL.sunHi); p.circle(x - cs * 0.04, y - cs * 0.04, cs * 0.2);
       } else {
         p.fill(...PAL.panel); p.stroke(...PAL.line); p.strokeWeight(2.2); p.circle(x, y, cs * 0.36);
         p.noStroke(); p.fill(...PAL.well); p.circle(x, y, cs * 0.14);
@@ -363,7 +363,7 @@ function drawFlood(p, w, h) {
   const N = 10, cs = 26, SW = 44;
   const bw = cs * N;
   const ox = (w - bw) / 2, oy = (h - bw - SW) / 2;
-  const PALETTE = [[255, 99, 120], [255, 208, 92], [104, 218, 140], [92, 162, 255], [176, 132, 255], [76, 218, 232]];
+  const PALETTE = PAL.flood;
   const L = [
     [1,1,1,1,2,2,3,3,0,0],
     [1,1,1,2,2,3,3,0,0,4],
@@ -483,7 +483,7 @@ function drawNetwalk(p, w, h) {
         p.stroke(...(on ? PAL.aqua : PAL.dim)); p.strokeWeight(cs * 0.19);
         p.line(cx, cy, cx + DX[d] * len, cy + DY[d] * len);
       }
-      p.noStroke(); p.fill(...(on ? [206, 250, 250] : PAL.dim)); p.circle(cx, cy, cs * 0.22);
+      p.noStroke(); p.fill(...(on ? PAL.aquaHi : PAL.dim)); p.circle(cx, cy, cs * 0.22);
     }
   const sx = ox + src.c * cs + cs / 2, sy = oy + src.r * cs + cs / 2;
   p.fill(...PAL.sun, 40); p.circle(sx, sy, cs * 0.66);

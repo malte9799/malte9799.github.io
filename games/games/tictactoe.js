@@ -39,7 +39,7 @@ const LINES = [
 
 const X = 1, O = 2;
 const MARK_COLOR = { [X]: PAL.mint, [O]: PAL.sky };
-const MARK_GLOW   = { [X]: [180, 248, 214], [O]: [176, 214, 255] };
+const MARK_GLOW   = { [X]: PAL.mintHi, [O]: PAL.skyHi };
 
 let superMode = false;
 let vsCpu = true;      // O is played by the computer

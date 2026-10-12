@@ -251,7 +251,7 @@ function infoAnim(p, w, h, frame) {
         p.fill(...PAL.sun, 22); p.circle(cx, cy, d * 0.78);
         p.fill(...PAL.sun, 55); p.circle(cx, cy, d * 0.54);
         p.fill(...PAL.sun); p.circle(cx, cy, d * 0.36);
-        p.fill(255, 248, 228); p.circle(cx - d * 0.04, cy - d * 0.04, d * 0.2);
+        p.fill(...PAL.sunHi); p.circle(cx - d * 0.04, cy - d * 0.04, d * 0.2);
       } else {
         p.fill(...PAL.panel);
         p.stroke(...PAL.line);
@@ -358,7 +358,7 @@ function draw() {
         fill(...PAL.sun, 22); circle(cx, cy, d * 0.78);
         fill(...PAL.sun, 55); circle(cx, cy, d * 0.54);
         fill(...PAL.sun); circle(cx, cy, d * 0.36);
-        fill(255, 248, 228); circle(cx - d * 0.04, cy - d * 0.04, d * 0.2);
+        fill(...PAL.sunHi); circle(cx - d * 0.04, cy - d * 0.04, d * 0.2);
       } else {
         fill(...PAL.panel);
         stroke(affected(r, c) ? PAL.lineHi : PAL.line);

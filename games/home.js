@@ -12,7 +12,11 @@ function buildHome() {
     try { localStorage.setItem("game_stars", JSON.stringify([...set])); } catch {}
   }
 
+  let sketches = [];
+
   function buildCards() {
+    sketches.forEach((sk) => sk.remove());
+    sketches = [];
     grid.innerHTML = "";
     const sorted = [...GAMES].sort((a, b) => {
       const as = stars.has(a.id) ? 0 : 1;
@@ -60,24 +64,21 @@ function buildHome() {
 
       // inject p5 canvas as preview
       const holder = a.querySelector(".preview");
-      new p5(function(p) {
+      sketches.push(new p5(function(p) {
         p.setup = function() {
           const cnv = p.createCanvas(600, 360);
           cnv.parent(holder);
           p.noLoop();
-          p.textFont(FONT);
+          themeSketch(p);
           game.preview(p, 600, 360);
         };
-      });
+      }));
     });
   }
 
-  // previews are drawn once, so wait for the canvas font before drawing them
-  const fontReady = document.fonts
-    ? Promise.race([
-        Promise.all([document.fonts.load(`700 16px ${FONT}`), document.fonts.load(`400 16px ${FONT}`)]),
-        new Promise((r) => setTimeout(r, 1500)),
-      ]).catch(() => {})
-    : Promise.resolve();
-  fontReady.then(buildCards);
+  // previews are drawn once, so wait for the canvas font before drawing them,
+  // and redraw them whenever the design changes
+  themeFontReady().then(buildCards);
+  window.addEventListener("themechange", () => themeFontReady().then(buildCards));
+  mountThemePicker(document.getElementById("home"));
 }

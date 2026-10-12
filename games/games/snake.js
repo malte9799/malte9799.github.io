@@ -60,9 +60,9 @@ let s1BoostTick = 0;
 let s2BoostTick = 0;
 
 const C1     = PAL.mint;
-const C1HEAD = [196, 255, 226];
+const C1HEAD = PAL.mintHi;
 const C2     = PAL.sky;
-const C2HEAD = [190, 224, 255];
+const C2HEAD = PAL.skyHi;
 const FOOD_C = PAL.sun;
 const BG     = PAL.board;
 const GRID_C = PAL.well;

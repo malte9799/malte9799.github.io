@@ -58,42 +58,21 @@ let animUndo = false; // true = playing undo (tiles move from to→from)
 const ANIM_DUR = 8; // frames
 const POP_DUR = 9;  // frames for the spawn / merge pop after the slide
 
-// tile ramp: cool slate → blue → green → warm sun → rose → violet at 2048
-const TILE_COLORS = {
-  0:    PAL.panel,
-  2:    [44, 48, 84],
-  4:    [60, 65, 110],
-  8:    [92, 140, 240],
-  16:   [72, 190, 232],
-  32:   [96, 214, 172],
-  64:   [168, 226, 112],
-  128:  [255, 214, 104],
-  256:  [255, 168, 98],
-  512:  [255, 116, 132],
-  1024: [234, 122, 222],
-  2048: [176, 140, 255],
-};
-const DARK_FG = [24, 22, 48];
-
-// negative (cancel-mode) tiles: a berry ramp, deepening with magnitude
-const NEG_TILE_COLORS = {
-  2:  [84, 38, 70],
-  4:  [110, 42, 84],
-  8:  [140, 46, 98],
-  16: [170, 50, 110],
-  32: [196, 56, 120],
-};
-
+// tile colours come from the active design: PAL.tiles is the ramp for
+// 2 … 2048, PAL.tilesNeg the −2 … −32 tiles of negative mode
 function tileColor(v) {
-  if (v < 0) return NEG_TILE_COLORS[-v] || [214, 60, 130];
-  if (TILE_COLORS[v]) return TILE_COLORS[v];
-  return [240, 238, 255]; // beyond 2048
+  if (v === 0) return PAL.panel;
+  const k = Math.log2(Math.abs(v)) - 1;
+  if (v < 0) return PAL.tilesNeg[Math.min(k, PAL.tilesNeg.length - 1)];
+  if (k < PAL.tiles.length) return PAL.tiles[k];
+  return PAL.ink; // beyond 2048
 }
 
+// dark text on bright tiles, light text on dark ones — works for light and
+// dark designs alike
 function tileFg(v) {
-  if (v < 0) return [255, 214, 234];
-  if (v <= 8 || v === 512 || v === 1024 || v === 2048) return PAL.ink;
-  return DARK_FG;
+  const [r, g, b] = tileColor(v);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? PAL.onLight : PAL.onDark;
 }
 
 function makeGrid(n) {

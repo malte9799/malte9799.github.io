@@ -12,11 +12,13 @@ The `<id>` is what appears in the URL: `index.html?game=<id>`.
 ```
 index.html      router: ?game=<id> loads games/<id>.js into the shell,
                 no param loads manifest.js + home.js (the card grid)
+themes.js       designs: canvas palettes (PAL), fonts, render effects, picker
+themes.css      designs: the page styling per theme (html[data-theme=…])
 game.js         shared shell (header, presets, buttons, sliders, info modal)
                 + shared helpers every game uses — loaded on every page
 manifest.js     GAMES registry + one static preview renderer per game
 home.js         builds the home cards from GAMES (stars, sorting, p5 previews)
-shared.css      theme + all shell styling
+shared.css      all shell styling, reading only theme variables
 games/<id>.js   one game: initGame(config) + p5 global-mode setup()/draw()
 ```
 
@@ -170,16 +172,24 @@ function drawMyGame(p, w, h) {
 
 ## Conventions
 
-- **Theme** ("Midnight": deep blue-violet with pastel accents, font Outfit).
-  Never hardcode theme colours in canvas code — spread `PAL` from game.js,
-  e.g. `fill(...PAL.sun, 80)` or `p.stroke(...PAL.line)`. The same values are
-  CSS variables in `shared.css`; keep the two in sync if you change one.
+- **Designs.** The player picks a design (Midnight, Classic, Studio, Paper,
+  Terminal, Pixel, Blueprint, Brutal) with the "Design" button; mechanics
+  never change, only looks. So never hardcode colours in canvas code —
+  spread `PAL`, e.g. `fill(...PAL.sun, 80)` or `p.stroke(...PAL.line)`.
+  PAL is updated in place on a switch, so caching `const C = PAL.mint` is
+  fine, but don't copy the numbers out. Don't call `textFont()` either:
+  every sketch draws in the design's font automatically, and `rect()` corner
+  radii / `textSize()` are scaled per design (square corners in Pixel,
+  bigger text in Terminal, a half-resolution canvas in Pixel).
+  To add a design: one entry in `THEMES` (themes.js) + one
+  `html[data-theme=…]` block in themes.css with the same variables.
   `board` canvas bg · `well` sunken cells · `panel`/`panelHi` raised tiles ·
   `line`/`lineHi` grid lines · `ink`/`muted`/`dim` text · `sun` highlight
   (targets, food, power) · `mint` success / player 1 · `rose` danger ·
   `sky` player 2 / info · `lilac` brand accent (selection, hover) ·
-  `peach`, `aqua` extras. A colour-matching game may define its own
-  palette when it needs more clearly distinct hues (see flood.js).
+  `peach`, `aqua` extras, plus `*Hi` light cores (`sunHi`, `mintHi`, …),
+  `fillInk`, `mine`/`mineHi`, `onLight`/`onDark` text on coloured tiles,
+  and per-game sets `tiles`/`tilesNeg` (2048) and `flood` (8 distinct hues).
 - **Puzzles must be solvable — and clue puzzles unique.** Pick the generation
   strategy by game class:
   - *Any-goal-state* (Lights Out, Netwalk, Bug Nudge): scramble a solved state

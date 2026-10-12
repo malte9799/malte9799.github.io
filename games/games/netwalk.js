@@ -398,7 +398,7 @@ function infoAnim(p, w, h, frame) {
       p.line(cx, cy, ex, ey);
     }
     p.noStroke();
-    p.fill(glow ? p.color(206, 250, 250) : p.color(...PAL.dim));
+    p.fill(glow ? p.color(...PAL.aquaHi) : p.color(...PAL.dim));
     p.circle(cx, cy, cs * 0.22);
   }
 
@@ -437,7 +437,7 @@ function setup() {
 const EMPTY_COL = PAL.dim;
 const FILL_COL = PAL.aqua;
 const EMPTY_HUB_COL = PAL.dim;
-const FILL_HUB_COL = [206, 250, 250];
+const FILL_HUB_COL = PAL.aquaHi;
 
 // Draws a pipe piece. `mask` = open arms (bitmask). `touchMask` = arms whose
 // neighbor's pipe meets ours flush at the cell edge (drawn square-tipped so
@@ -582,7 +582,7 @@ function draw() {
       const cy = oy + r * cellSize + cellSize / 2;
       const glowAmt = fillLevel.get(r + "," + c) ?? 0;
       noFill();
-      stroke(lerpColor(color(...PAL.dim), color(206, 250, 250), glowAmt));
+      stroke(lerpColor(color(...PAL.dim), color(...PAL.aquaHi), glowAmt));
       strokeWeight(2);
       circle(cx, cy, cellSize * 0.5);
     }

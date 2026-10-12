@@ -666,6 +666,8 @@ function randomFill() {
     if (e.key === "c" || e.key === "C") { clearGrid(); cancelPreset(); }
   });
 
+  mountThemePicker(document.getElementById("gol-bar"));
+
   if (shapesReady) buildShapeSearch();
 
   updateStatus();

@@ -53,18 +53,9 @@ let ripple = null; // { cells: [{r,c,delay,color}], startFrame, maxDelay }
 const RIPPLE_STEP = 3; // frames of delay per unit of (r+c) distance
 const RIPPLE_FLIP_DUR = 10; // frames for a single cell's flip-scale animation
 
-// Its own palette rather than PAL: in a color-matching game every hue must
-// be clearly distinct, so these are spread around the wheel.
-const PALETTE = [
-  [255, 99, 120],  // red
-  [255, 208, 92],  // yellow
-  [104, 218, 140], // green
-  [92, 162, 255],  // blue
-  [176, 132, 255], // violet
-  [255, 150, 72],  // orange
-  [76, 218, 232],  // cyan
-  [255, 140, 212], // pink
-];
+// Each design defines PAL.flood: 8 hues spread around the wheel, since in a
+// colour-matching game every colour must be clearly distinct.
+const PALETTE = PAL.flood;
 
 function colorAt(v) {
   return PALETTE[v % PALETTE.length];

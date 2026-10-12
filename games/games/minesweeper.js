@@ -357,7 +357,7 @@ function drawOpenTile(p, x, y, size, count, blast) {
 
 function drawMine(p, cx, cy, size, k) {
   const d = size * 0.44 * k;
-  p.stroke(150, 156, 205);
+  p.stroke(...PAL.mineHi);
   p.strokeWeight(Math.max(1.2, size * 0.07));
   p.strokeCap(p.ROUND);
   for (let a = 0; a < 4; a++) {
@@ -365,7 +365,7 @@ function drawMine(p, cx, cy, size, k) {
     p.line(cx - Math.cos(ang) * d * 0.78, cy - Math.sin(ang) * d * 0.78, cx + Math.cos(ang) * d * 0.78, cy + Math.sin(ang) * d * 0.78);
   }
   p.noStroke();
-  p.fill(96, 102, 156);
+  p.fill(...PAL.mine);
   p.circle(cx, cy, d);
   p.fill(255, 255, 255, 190);
   p.circle(cx - d * 0.17, cy - d * 0.17, d * 0.26);
