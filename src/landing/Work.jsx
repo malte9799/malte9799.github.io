@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from 'motion/react';
 import BrowserFrame from '../components/BrowserFrame';
+import { CarouselDots, resolveSlides, useCarousel } from '../components/Carousel';
 import { ArrowUpRight } from '../components/Icons';
 import { FEATURED } from '../data/projects';
 import { localize, useLang, useT } from '../i18n';
@@ -19,6 +20,9 @@ function Showcase({ project: raw, index }) {
   const lang = useLang();
   const t = useT();
   const project = localize(raw, lang);
+  const slides = resolveSlides(raw, lang);
+  const carousel = useCarousel(slides.length);
+  const slide = slides[carousel.index];
   const ref = useRef(null);
   const reduced = useReducedMotion();
   const [a, b] = project.accent;
@@ -66,14 +70,26 @@ function Showcase({ project: raw, index }) {
 
       <div ref={ref} className="showcase-stage">
         <motion.div className="showcase-glow" style={{ opacity: glow }} aria-hidden="true" />
-        <motion.a
-          href={project.url}
-          className="showcase-device"
-          style={{ rotateX, scale, y }}
-          aria-label={t.work.open(project.name)}
-        >
-          <BrowserFrame url={project.urlLabel} src={project.image} alt={project.imageAlt} />
-        </motion.a>
+        <div ref={carousel.ref} className="carousel" {...carousel.bind}>
+          <motion.a
+            href={slide.url}
+            className="showcase-device"
+            style={{ rotateX, scale, y }}
+            aria-label={slides.length > 1 ? `${t.work.open(project.name)}: ${slide.label}` : t.work.open(project.name)}
+          >
+            <BrowserFrame url={slide.urlLabel} slides={slides} index={carousel.index} />
+          </motion.a>
+          {slides.length > 1 && (
+            <CarouselDots
+              slides={slides}
+              index={carousel.index}
+              onSelect={carousel.select}
+              onDone={carousel.next}
+              playing={carousel.playing}
+              label={t.work.screenshots}
+            />
+          )}
+        </div>
         <ul className="showcase-tags" aria-label={t.builtWith}>
           {project.tags.map(tag => (
             <li key={tag} className="chip">

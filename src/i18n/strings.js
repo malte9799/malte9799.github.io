@@ -21,12 +21,13 @@ export const STRINGS = {
     },
     statement: {
       label: 'About',
-      text: 'I build tools that feel like native apps: a full image editor, a Factorio blueprint optimiser and a shelf of puzzle games. Every one of them runs in a browser tab. Nothing to install, nothing uploaded, nothing waiting on a server.',
+      text: 'I build tools that feel like native apps: a full image editor, a Factorio blueprint optimiser, a 3D weather globe and a shelf of puzzle games. Every one of them runs in a browser tab. Nothing to install, nothing uploaded, nothing waiting on a server.',
     },
     work: {
       label: 'Selected work',
       open: name => `Open ${name}`,
       source: 'Source',
+      screenshots: 'Screenshots',
     },
     numbers: {
       title: 'By the numbers.',
@@ -36,7 +37,7 @@ export const STRINGS = {
       games: 'puzzle games, each one built from scratch.',
       servers: 'servers. Your files and blueprints never leave the page.',
     },
-    marquee: ['Canvas · WebGL · Web Workers · ES modules · TypeScript ·', 'paint.net web · FactorioTools · Games ·'],
+    marquee: ['Canvas · WebGL · Web Workers · ES modules · TypeScript ·', 'paint.net web · FactorioTools · Weather Globe · Games ·'],
     outro: {
       title: 'There’s more.',
       lede: 'Experiments, Minecraft tooling, Factorio mods and the odd fork. All of it is on the projects page.',
@@ -79,12 +80,13 @@ export const STRINGS = {
     },
     statement: {
       label: 'Über mich',
-      text: 'Ich baue Tools, die sich wie native Apps anfühlen: einen kompletten Bildeditor, einen Optimierer für Factorio-Blaupausen und ein ganzes Regal voller Rätselspiele. Alle laufen in einem Browser-Tab. Nichts zu installieren, nichts hochzuladen, kein Warten auf einen Server.',
+      text: 'Ich baue Tools, die sich wie native Apps anfühlen: einen kompletten Bildeditor, einen Optimierer für Factorio-Blaupausen, einen 3D-Wetter-Globus und ein ganzes Regal voller Rätselspiele. Alle laufen in einem Browser-Tab. Nichts zu installieren, nichts hochzuladen, kein Warten auf einen Server.',
     },
     work: {
       label: 'Ausgewählte Arbeiten',
       open: name => `${name} öffnen`,
       source: 'Quellcode',
+      screenshots: 'Screenshots',
     },
     numbers: {
       title: 'In Zahlen.',
@@ -94,7 +96,7 @@ export const STRINGS = {
       games: 'Rätselspiele, jedes von Grund auf selbst gebaut.',
       servers: 'Server. Deine Dateien und Blaupausen verlassen nie die Seite.',
     },
-    marquee: ['Canvas · WebGL · Web Worker · ES-Module · TypeScript ·', 'paint.net web · FactorioTools · Spiele ·'],
+    marquee: ['Canvas · WebGL · Web Worker · ES-Module · TypeScript ·', 'paint.net web · FactorioTools · Wetter-Globus · Spiele ·'],
     outro: {
       title: 'Da ist noch mehr.',
       lede: 'Experimente, Minecraft-Tools, Factorio-Mods und der eine oder andere Fork. Alles davon steht auf der Projektseite.',

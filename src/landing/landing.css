@@ -102,8 +102,8 @@
   line-height: 1;
   text-align: center;
   padding: 0 var(--gutter);
-  text-shadow: 0 4px 60px rgba(0, 0, 0, 0.6);
   text-wrap: balance;
+  will-change: transform, opacity;
 }
 /* German phrases run longer ("Keine Installation."). */
 .hero-phrase:lang(de) {
@@ -198,13 +198,14 @@
   padding: 0 var(--gutter);
   perspective: 1400px;
 }
+/* Soft by construction (wide gradients) rather than filter: blur(), which is
+   costly to rasterise at this size. */
 .showcase-glow {
   position: absolute;
-  inset: 10% 10% -5%;
+  inset: -5% 0 -15%;
   background:
-    radial-gradient(50% 50% at 30% 50%, color-mix(in srgb, var(--a) 45%, transparent), transparent 70%),
-    radial-gradient(50% 50% at 70% 50%, color-mix(in srgb, var(--b) 40%, transparent), transparent 70%);
-  filter: blur(80px);
+    radial-gradient(40% 45% at 30% 50%, color-mix(in srgb, var(--a) 30%, transparent), transparent),
+    radial-gradient(40% 45% at 70% 50%, color-mix(in srgb, var(--b) 26%, transparent), transparent);
   pointer-events: none;
 }
 .showcase-device {

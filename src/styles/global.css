@@ -112,6 +112,7 @@ p {
   line-height: 1.02;
   font-weight: 700;
   letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .title {
@@ -225,6 +226,12 @@ p {
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
   box-shadow: 0 1px 0 var(--hairline);
+}
+/* Over the live 3D canvas: solid instead of blurred (see Hero.jsx). */
+html[data-hero-active] .nav[data-scrolled='true'] {
+  background: rgba(0, 0, 0, 0.82);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 .nav-inner {
   height: 100%;
@@ -353,8 +360,9 @@ p {
 .browser-dots-spacer {
   width: calc(3 * clamp(7px, 0.8vw, 11px) + 12px);
 }
+/* 16:9 matches the FactorioTools shots; taller ones are anchored to the top. */
 .browser-view {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
   background: #111;
 }
 .browser-view img {
@@ -382,4 +390,108 @@ p {
 }
 .nav-links .nav-lang:hover {
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- Screenshot carousel ---------- */
+
+/* Let vertical page scrolling through, keep horizontal swipes for the carousel. */
+.carousel {
+  position: relative;
+  touch-action: pan-y;
+}
+
+.browser-view {
+  position: relative;
+}
+.browser-view img {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.03);
+  transition:
+    opacity 0.8s var(--ease-out),
+    transform 1.4s var(--ease-out);
+}
+.browser-view img.is-active {
+  opacity: 1;
+  transform: none;
+}
+
+.carousel-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+.carousel-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+}
+.carousel-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  margin: 0 2px;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition:
+    width 0.5s var(--ease-out),
+    background-color 0.3s;
+}
+.carousel-dot:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+.carousel-dot[aria-current='true'] {
+  width: 36px;
+  background: rgba(255, 255, 255, 0.35);
+}
+.carousel-dot-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--text);
+  transform-origin: left center;
+  animation-name: carousel-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes carousel-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .carousel-dot[aria-current='true'] {
+    background: var(--text);
+  }
+}
+/* Overlay variant: the pill sits on the bottom edge of the screenshot. */
+.carousel-nav.is-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 2;
+  margin: 0;
+  transform: translateX(-50%);
+}
+.carousel-nav.is-overlay .carousel-dots {
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.carousel-caption {
+  font-size: 13px;
+  color: var(--text-2);
 }

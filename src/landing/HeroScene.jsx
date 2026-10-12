@@ -1,12 +1,22 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Environment, Lightformer, MeshTransmissionMaterial, Text } from '@react-three/drei';
+import { Environment, Lightformer, MeshTransmissionMaterial, PerformanceMonitor, Text } from '@react-three/drei';
 import fontUrl from '@fontsource/inter/files/inter-latin-800-normal.woff?url';
 
 const { damp, smoothstep, clamp } = THREE.MathUtils;
 const TEXT_Z = -1.4;
 const BLACK = new THREE.Color('#000000');
+
+// The glass shader runs `samples` × 3 (chromatic aberration) texture reads per
+// pixel, so pixel ratio and sample count are what decide the frame cost.
+// Retina Safari at full DPR with 10 samples was far too slow; these tiers keep
+// the look while staying cheap, and PerformanceMonitor drops a tier on
+// machines that still can't hold the frame rate.
+const TIERS = {
+  high: { dpr: 1.25, samples: 5, resolution: 384, segments: [220, 36] },
+  low: { dpr: 0.85, samples: 3, resolution: 256, segments: [160, 24] },
+};
 
 // Overshooting ease for the intro "pop".
 const easeOutBack = x => {
@@ -15,7 +25,7 @@ const easeOutBack = x => {
   return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
 };
 
-function GlassKnot({ progress, reduced, lowPower }) {
+function GlassKnot({ progress, reduced, tier }) {
   const ref = useRef(null);
   const spin = useRef(0);
   const viewport = useThree(state => state.viewport);
@@ -43,13 +53,11 @@ function GlassKnot({ progress, reduced, lowPower }) {
 
   return (
     <mesh ref={ref} scale={0.0001}>
-      <torusKnotGeometry args={[1, 0.34, lowPower ? 200 : 320, lowPower ? 32 : 56, 2, 3]} />
+      <torusKnotGeometry args={[1, 0.34, ...tier.segments, 2, 3]} />
       <MeshTransmissionMaterial
-        backside
-        backsideThickness={0.35}
         thickness={0.55}
-        samples={lowPower ? 4 : 10}
-        resolution={lowPower ? 256 : 768}
+        samples={tier.samples}
+        resolution={tier.resolution}
         roughness={0.04}
         ior={1.32}
         chromaticAberration={0.16}
@@ -60,8 +68,6 @@ function GlassKnot({ progress, reduced, lowPower }) {
         iridescence={0.7}
         iridescenceIOR={1.25}
         iridescenceThicknessRange={[100, 900]}
-        clearcoat={1}
-        clearcoatRoughness={0.1}
         color="#ffffff"
         background={BLACK}
       />
@@ -122,19 +128,21 @@ function Lights() {
 }
 
 export default function HeroScene({ progress, active, reduced }) {
-  const lowPower = typeof window !== 'undefined' && (window.innerWidth < 768 || (navigator.hardwareConcurrency ?? 8) <= 4);
+  const [tierName, setTierName] = useState(() => (window.innerWidth < 768 ? 'low' : 'high'));
+  const tier = TIERS[tierName];
 
   return (
     <Canvas
       frameloop={active ? 'always' : 'never'}
-      dpr={[1, lowPower ? 1.5 : 2]}
+      dpr={Math.min(window.devicePixelRatio || 1, tier.dpr)}
       camera={{ position: [0, 0, 6], fov: 35 }}
-      gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+      gl={{ antialias: false, alpha: false, powerPreference: 'high-performance', stencil: false }}
       aria-hidden="true"
     >
+      <PerformanceMonitor onDecline={() => setTierName('low')} flipflops={1} />
       <color attach="background" args={['#000000']} />
       <Wordmark progress={progress} reduced={reduced} />
-      <GlassKnot progress={progress} reduced={reduced} lowPower={lowPower} />
+      <GlassKnot progress={progress} reduced={reduced} tier={tier} />
       <Lights />
     </Canvas>
   );

@@ -15,15 +15,16 @@ const hasWebGL = () => {
   }
 };
 
-// One line of the scroll-driven sequence: fades/blurs in over [a, b], out over [c, d].
+// One line of the scroll-driven sequence: fades in over [a, b], out over [c, d].
+// Opacity and transform only: animating `filter: blur()` on viewport-wide
+// type every scroll frame is expensive, especially in Safari.
 function Phrase({ progress, range: [a, b, c, d], children }) {
   const hold = d === undefined;
   const opacity = useTransform(progress, hold ? [a, b] : [a, b, c, d], hold ? [0, 1] : [0, 1, 1, 0]);
   const y = useTransform(progress, hold ? [a, b] : [a, b, c, d], hold ? [40, 0] : [40, 0, 0, -40]);
-  const blur = useTransform(progress, hold ? [a, b] : [a, b, c, d], hold ? [12, 0] : [12, 0, 0, 12]);
-  const filter = useTransform(blur, v => `blur(${v}px)`);
+  const scale = useTransform(progress, hold ? [a, b] : [a, b, c, d], hold ? [0.94, 1] : [0.94, 1, 1, 1.04]);
   return (
-    <motion.p className="hero-phrase" style={{ opacity, y, filter }}>
+    <motion.p className="hero-phrase" style={{ opacity, y, scale }}>
       {children}
     </motion.p>
   );
@@ -59,6 +60,13 @@ export default function Hero() {
     io.observe(el);
     return () => io.disconnect();
   }, []);
+
+  // While the canvas is on screen the nav skips its backdrop blur: blurring a
+  // live WebGL canvas forces Safari to re-blur that strip on every frame.
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-hero-active', active);
+    return () => document.documentElement.removeAttribute('data-hero-active');
+  }, [active]);
 
   return (
     <section ref={sectionRef} className="hero" aria-labelledby="hero-title">

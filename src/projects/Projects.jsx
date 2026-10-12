@@ -2,6 +2,7 @@ import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } fro
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import BrowserFrame from '../components/BrowserFrame';
+import { CarouselDots, resolveSlides, useCarousel } from '../components/Carousel';
 import BlurText from '../components/reactbits/BlurText';
 import SpotlightCard from '../components/reactbits/SpotlightCard';
 import { ArrowUpRight, StarIcon } from '../components/Icons';
@@ -48,8 +49,13 @@ const timeAgo = (iso, lang, justNow) => {
   return justNow;
 };
 
-// Screenshot that tilts toward the pointer.
-function TiltFrame({ project, label }) {
+// Screenshot(s) that tilt toward the pointer; several become a carousel.
+function TiltFrame({ project: raw, label }) {
+  const lang = useLang();
+  const t = useT();
+  const slides = resolveSlides(raw, lang);
+  const carousel = useCarousel(slides.length);
+  const slide = slides[carousel.index];
   const reduced = useReducedMotion();
   const px = useMotionValue(0);
   const py = useMotionValue(0);
@@ -68,28 +74,41 @@ function TiltFrame({ project, label }) {
   };
 
   return (
-    <a
-      href={project.url}
-      className="tilt"
-      onPointerMove={onMove}
-      onPointerLeave={onLeave}
-      aria-label={label}
-    >
-      <motion.div className="tilt-inner" style={{ rotateX, rotateY }} whileHover={{ scale: 1.02 }} transition={{ duration: 0.4, ease: EASE }}>
-        <BrowserFrame url={project.urlLabel} src={project.image} alt={project.imageAlt} eager />
-      </motion.div>
-    </a>
+    <div ref={carousel.ref} className="carousel" {...carousel.bind}>
+      <a
+        href={slide.url}
+        className="tilt"
+        onPointerMove={onMove}
+        onPointerLeave={onLeave}
+        aria-label={slides.length > 1 ? `${label}: ${slide.label}` : label}
+      >
+        <motion.div className="tilt-inner" style={{ rotateX, rotateY }} whileHover={{ scale: 1.02 }} transition={{ duration: 0.4, ease: EASE }}>
+          <BrowserFrame url={slide.urlLabel} slides={slides} index={carousel.index} eager />
+        </motion.div>
+      </a>
+      {slides.length > 1 && (
+        <CarouselDots
+          slides={slides}
+          index={carousel.index}
+          onSelect={carousel.select}
+          onDone={carousel.next}
+          playing={carousel.playing}
+          label={t.work.screenshots}
+          overlay
+        />
+      )}
+    </div>
   );
 }
 
-function FeaturedCard({ project: raw, index }) {
+function FeaturedCard({ project: raw, index, wide }) {
   const lang = useLang();
   const t = useT();
   const project = localize(raw, lang);
   const [a, b] = project.accent;
   return (
     <motion.article
-      className={`feature${index === 0 ? ' feature-lead' : ''}`}
+      className={`feature${wide ? ' feature-lead' : ''}`}
       style={{ '--a': a, '--b': b }}
       initial={{ opacity: 0, y: 48 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -99,7 +118,7 @@ function FeaturedCard({ project: raw, index }) {
     >
       <SpotlightCard className="feature-card" spotlightColor={a} intensity={0.16} spotlightSize={420} borderGlow={0.7}>
         <div className="feature-media">
-          <TiltFrame project={project} label={`${t.projects.open}: ${project.name}`} />
+          <TiltFrame project={raw} label={`${t.projects.open}: ${project.name}`} />
         </div>
         <div className="feature-body">
           <p className="feature-eyebrow">{project.eyebrow}</p>
@@ -228,7 +247,13 @@ export default function Projects() {
 
         <section className="container features" aria-label={t.featured}>
           {FEATURED.map((project, i) => (
-            <FeaturedCard key={project.id} project={project} index={i} />
+            <FeaturedCard
+              key={project.id}
+              project={project}
+              index={i}
+              // First card spans the row; so does the last one if it would sit alone.
+              wide={i === 0 || (i === FEATURED.length - 1 && i % 2 === 1)}
+            />
           ))}
         </section>
 
