@@ -112,6 +112,7 @@ p {
   line-height: 1.02;
   font-weight: 700;
   letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .title {

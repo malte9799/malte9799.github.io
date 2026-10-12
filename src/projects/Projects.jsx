@@ -101,14 +101,14 @@ function TiltFrame({ project: raw, label }) {
   );
 }
 
-function FeaturedCard({ project: raw, index }) {
+function FeaturedCard({ project: raw, index, wide }) {
   const lang = useLang();
   const t = useT();
   const project = localize(raw, lang);
   const [a, b] = project.accent;
   return (
     <motion.article
-      className={`feature${index === 0 ? ' feature-lead' : ''}`}
+      className={`feature${wide ? ' feature-lead' : ''}`}
       style={{ '--a': a, '--b': b }}
       initial={{ opacity: 0, y: 48 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -247,7 +247,13 @@ export default function Projects() {
 
         <section className="container features" aria-label={t.featured}>
           {FEATURED.map((project, i) => (
-            <FeaturedCard key={project.id} project={project} index={i} />
+            <FeaturedCard
+              key={project.id}
+              project={project}
+              index={i}
+              // First card spans the row; so does the last one if it would sit alone.
+              wide={i === 0 || (i === FEATURED.length - 1 && i % 2 === 1)}
+            />
           ))}
         </section>
 
