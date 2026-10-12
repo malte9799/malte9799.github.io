@@ -27,6 +27,7 @@ export const STRINGS = {
       label: 'Selected work',
       open: name => `Open ${name}`,
       source: 'Source',
+      screenshots: 'Screenshots',
     },
     numbers: {
       title: 'By the numbers.',
@@ -85,6 +86,7 @@ export const STRINGS = {
       label: 'Ausgewählte Arbeiten',
       open: name => `${name} öffnen`,
       source: 'Quellcode',
+      screenshots: 'Screenshots',
     },
     numbers: {
       title: 'In Zahlen.',

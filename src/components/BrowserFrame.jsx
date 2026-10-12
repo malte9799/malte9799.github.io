@@ -1,5 +1,6 @@
-// A minimal Safari-style window around a screenshot.
-export default function BrowserFrame({ url, src, alt, eager = false }) {
+// A minimal Safari-style window around one or more screenshots. With several
+// slides they are stacked and cross-faded; `index` picks the visible one.
+export default function BrowserFrame({ url, slides, index = 0, eager = false }) {
   return (
     <div className="browser">
       <div className="browser-bar" aria-hidden="true">
@@ -12,7 +13,19 @@ export default function BrowserFrame({ url, src, alt, eager = false }) {
         <div className="browser-dots-spacer" />
       </div>
       <div className="browser-view">
-        <img src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} decoding="async" width="1600" height="1000" />
+        {slides.map((slide, i) => (
+          <img
+            key={slide.src}
+            src={slide.src}
+            alt={i === index ? slide.alt : ''}
+            aria-hidden={i === index ? undefined : 'true'}
+            className={i === index ? 'is-active' : undefined}
+            loading={eager && i === 0 ? 'eager' : 'lazy'}
+            decoding="async"
+            width="1600"
+            height="900"
+          />
+        ))}
       </div>
     </div>
   );

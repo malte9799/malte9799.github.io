@@ -1,5 +1,6 @@
 // Featured projects, shown on the landing page and at the top of /projects/.
-// Screenshots live in public/img/ (16:10-ish, ~1600px wide, webp).
+// Screenshots live in public/img/ (16:10-ish, ~1600px wide, webp). A project with
+// several screenshots gets a carousel; a slide's `url`/`urlLabel` default to the project's.
 // Text fields are { en, de }; resolve them with pick() from src/i18n.
 
 export const GITHUB_USER = 'malte9799';
@@ -18,11 +19,15 @@ export const FEATURED = [
     url: 'https://malte9799.github.io/paint.net/',
     urlLabel: 'malte9799.github.io/paint.net',
     repo: 'https://github.com/malte9799/paint.net',
-    image: '/img/paintnet.webp',
-    imageAlt: {
-      en: 'paint.net web with a Julia fractal rendered on the canvas, the Tools, History, Layers and Colors windows around it',
-      de: 'paint.net web mit einem Julia-Fraktal auf der Leinwand, umgeben von den Fenstern Werkzeuge, Verlauf, Ebenen und Farben',
-    },
+    screenshots: [
+      {
+        src: '/img/paintnet.webp',
+        alt: {
+          en: 'paint.net web with a Julia fractal rendered on the canvas, the Tools, History, Layers and Colors windows around it',
+          de: 'paint.net web mit einem Julia-Fraktal auf der Leinwand, umgeben von den Fenstern Werkzeuge, Verlauf, Ebenen und Farben',
+        },
+      },
+    ],
     accent: ['#4f8cff', '#36d1ff'],
     tags: {
       en: ['ES modules', 'Canvas 2D', 'Web Workers', 'Installable PWA'],
@@ -41,11 +46,37 @@ export const FEATURED = [
     url: 'https://malte9799.github.io/FactorioTools/',
     urlLabel: 'malte9799.github.io/FactorioTools',
     repo: 'https://github.com/malte9799/FactorioTools',
-    image: '/img/factoriotools.webp',
-    imageAlt: {
-      en: 'FactorioTools showing a logistic science build with per-machine rate labels and the Rate Calculator reporting 56% efficiency',
-      de: 'FactorioTools mit einem Aufbau für Logistik-Wissenschaftspakete, Ratenangaben an jeder Maschine und dem Ratenrechner bei 56 % Effizienz',
-    },
+    // Shown as a carousel; each slide links to its own tool.
+    screenshots: [
+      {
+        src: '/img/factoriotools.webp',
+        label: { en: 'Blueprint editor', de: 'Blaupausen-Editor' },
+        alt: {
+          en: 'FactorioTools showing a logistic science build with per-machine rate labels and the Rate Calculator reporting 56% efficiency',
+          de: 'FactorioTools mit einem Aufbau für Logistik-Wissenschaftspakete, Ratenangaben an jeder Maschine und dem Ratenrechner bei 56 % Effizienz',
+        },
+      },
+      {
+        src: '/img/factoriotools-seed-viewer.webp',
+        label: { en: 'Seed viewer', de: 'Seed-Viewer' },
+        url: 'https://malte9799.github.io/FactorioTools/#/seed-viewer',
+        urlLabel: 'malte9799.github.io/FactorioTools/#/seed-viewer',
+        alt: {
+          en: 'Seed Viewer showing the Nauvis map of seed 123 with ore patches, enemy bases, forests and cliffs, and a panel listing the nearest patches',
+          de: 'Seed-Viewer mit der Nauvis-Karte von Seed 123: Erzfelder, Gegnerbasen, Wälder und Klippen, daneben eine Liste der nächsten Erzfelder',
+        },
+      },
+      {
+        src: '/img/factoriotools-planner.webp',
+        label: { en: 'Production planner', de: 'Produktionsplaner' },
+        url: 'https://malte9799.github.io/FactorioTools/#/planner',
+        urlLabel: 'malte9799.github.io/FactorioTools/#/planner',
+        alt: {
+          en: 'Production Planner showing 60 chemical science packs a minute as a flow diagram from raw resources to the science pack, with machine counts on every step',
+          de: 'Produktionsplaner mit 60 Chemie-Wissenschaftspaketen pro Minute als Flussdiagramm von den Rohstoffen bis zum Wissenschaftspaket, mit Maschinenanzahl an jedem Schritt',
+        },
+      },
+    ],
     accent: ['#ffb547', '#ff6a3d'],
     tags: {
       en: ['TypeScript', 'Simulation', 'Sprite rendering', 'Client-side only'],
@@ -64,11 +95,15 @@ export const FEATURED = [
     url: '/games/',
     urlLabel: 'malte9799.github.io/games',
     repo: 'https://github.com/malte9799/malte9799.github.io/tree/main/games',
-    image: '/img/games.webp',
-    imageAlt: {
-      en: 'The games menu: a grid of cards for Minesweeper, Bug Nudge, Snake, Nonogram, Conway’s Life, 2048 and more',
-      de: 'Das Spielemenü: ein Raster aus Karten für Minesweeper, Bug Nudge, Snake, Nonogram, Conway’s Life, 2048 und mehr',
-    },
+    screenshots: [
+      {
+        src: '/img/games.webp',
+        alt: {
+          en: 'The games menu: a grid of cards for Minesweeper, Bug Nudge, Snake, Nonogram, Conway’s Life, 2048 and more',
+          de: 'Das Spielemenü: ein Raster aus Karten für Minesweeper, Bug Nudge, Snake, Nonogram, Conway’s Life, 2048 und mehr',
+        },
+      },
+    ],
     accent: ['#b4f461', '#2fd39a'],
     tags: {
       en: ['p5.js', 'Procedural generation', 'Solvers'],
