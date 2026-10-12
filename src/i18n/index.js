@@ -10,8 +10,12 @@ export const LangContext = createContext('en');
 export const useLang = () => useContext(LangContext);
 export const useT = () => STRINGS[useLang()];
 
+// Prefix a root path with the build's base ('/' in production, '/previews/<branch>/'
+// in a branch preview): '/games/' -> '/previews/x/games/'.
+export const withBase = path => import.meta.env.BASE_URL.replace(/\/$/, '') + path;
+
 // Internal page path in the given language: '/projects/' -> '/de/projects/'.
-export const localePath = (lang, path) => (lang === 'de' ? `/de${path}` : path);
+export const localePath = (lang, path) => withBase(lang === 'de' ? `/de${path}` : path);
 
 // Resolve a value that is either plain or a per-language { en, de } object.
 export const pick = (value, lang) =>
