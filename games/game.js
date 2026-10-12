@@ -492,6 +492,16 @@ function _wireShell() {
     if (el && b.onClick) el.addEventListener("click", b.onClick);
   }
 
+  // A mouse-clicked button keeps focus, so a later Space/Enter would both
+  // re-press it and trigger the game's own shortcut. Drop focus after
+  // pointer clicks (detail > 0); keyboard users keep theirs.
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest && e.target.closest("button");
+    if (btn && e.detail > 0) btn.blur();
+  });
+  // same for the preset dropdown once a choice is made
+  sel.addEventListener("change", () => sel.blur());
+
   if (_cfg.info) {
     document
       .getElementById("btn-info")
