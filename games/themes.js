@@ -6,10 +6,7 @@
 //   font   the canvas font; fonts = Google Fonts families to load
 //   fx     rendering tweaks applied to every p5 sketch:
 //            corners  multiplier on rect() corner radii (0 = square)
-//            density  forced pixelDensity (pixel theme renders at half res)
 //            text     multiplier on textSize() for fonts that run small/large
-//            snap     round text to this many device pixels, so a bitmap font
-//                     lands on its pixel grid (pixel theme)
 // The page styling for each theme lives in themes.css (html[data-theme=…]).
 //
 // PAL is updated *in place* on a theme switch, so games that cached a
@@ -91,54 +88,20 @@ const THEMES = [
     },
   },
   {
-    id: "terminal", name: "Terminal", sub: "green phosphor CRT",
-    font: "VT323", fonts: ["VT323"],
-    fx: { corners: 0, text: 1.25 },
+    id: "artcraft", name: "Artcraft", sub: "fine line art, quiet paper",
+    font: "Instrument Sans", fonts: ["Instrument+Sans:wght@400;500;600;700"],
+    fx: { corners: 0.3 },
     pal: {
-      bg: [3, 8, 5], board: [4, 10, 6], well: [7, 20, 12], panel: [10, 30, 17], panelHi: [18, 48, 28],
-      line: [18, 52, 31], lineHi: [40, 110, 64], ink: [140, 255, 170], muted: [70, 170, 100], dim: [36, 90, 52],
-      sun: [255, 196, 64], mint: [80, 255, 140], rose: [255, 90, 80], sky: [120, 255, 230],
-      lilac: [200, 255, 140], peach: [255, 150, 60], aqua: [90, 230, 210],
-      mintHi: [190, 255, 210], skyHi: [200, 255, 245], sunHi: [255, 240, 190], aquaHi: [200, 255, 240],
-      fillInk: [80, 255, 140], mine: [40, 110, 64], mineHi: [140, 255, 170], onLight: [3, 8, 5], onDark: [140, 255, 170],
-      tiles: [[10, 30, 17], [16, 50, 28], [24, 80, 42], [32, 110, 56], [44, 150, 76], [70, 200, 104],
-              [120, 255, 150], [255, 196, 64], [255, 160, 40], [255, 120, 40], [255, 90, 80]],
-      tilesNeg: [[60, 16, 14], [90, 22, 18], [120, 28, 22], [160, 36, 28], [200, 46, 36]],
-      flood: [[80, 255, 140], [255, 196, 64], [90, 200, 255], [255, 90, 80], [200, 120, 255], [255, 140, 40], [30, 120, 60], [230, 230, 200]],
-    },
-  },
-  {
-    id: "pixel", name: "Pixel", sub: "8-bit arcade, chunky pixels",
-    font: "Press Start 2P", fonts: ["Pixelify+Sans:wght@400;500;600;700", "Press+Start+2P"],
-    fx: { corners: 0, density: 0.5, text: 0.8, snap: 8 },
-    pal: {
-      bg: [26, 28, 44], board: [26, 28, 44], well: [38, 43, 66], panel: [51, 60, 87], panelHi: [86, 108, 134],
-      line: [51, 60, 87], lineHi: [86, 108, 134], ink: [244, 244, 244], muted: [148, 176, 194], dim: [86, 108, 134],
-      sun: [255, 205, 117], mint: [167, 240, 112], rose: [255, 0, 77], sky: [65, 166, 246],
-      lilac: [255, 119, 168], peach: [239, 125, 87], aqua: [115, 239, 247],
-      mintHi: [220, 255, 180], skyHi: [170, 220, 255], sunHi: [255, 241, 232], aquaHi: [220, 255, 255],
-      fillInk: [244, 244, 244], mine: [86, 108, 134], mineHi: [148, 176, 194], onLight: [26, 28, 44], onDark: [244, 244, 244],
-      tiles: [[51, 60, 87], [86, 108, 134], [37, 113, 121], [56, 183, 100], [167, 240, 112], [255, 205, 117],
-              [239, 125, 87], [177, 62, 83], [93, 39, 93], [59, 93, 201], [65, 166, 246]],
-      tilesNeg: [[93, 39, 93], [120, 40, 80], [150, 45, 75], [177, 62, 83], [210, 70, 90]],
-      flood: [[255, 0, 77], [255, 205, 117], [56, 183, 100], [65, 166, 246], [131, 118, 156], [239, 125, 87], [115, 239, 247], [255, 119, 168]],
-    },
-  },
-  {
-    id: "blueprint", name: "Blueprint", sub: "technical drawing",
-    font: "IBM Plex Mono", fonts: ["IBM+Plex+Mono:wght@400;500;600;700"],
-    fx: { corners: 0.15 },
-    pal: {
-      bg: [14, 58, 108], board: [17, 66, 122], well: [21, 74, 134], panel: [26, 86, 150], panelHi: [36, 102, 172],
-      line: [61, 120, 184], lineHi: [170, 205, 240], ink: [238, 246, 255], muted: [168, 201, 236], dim: [95, 147, 204],
-      sun: [255, 214, 102], mint: [140, 240, 200], rose: [255, 140, 140], sky: [180, 225, 255],
-      lilac: [255, 255, 255], peach: [255, 170, 120], aqua: [120, 230, 255],
-      mintHi: [210, 255, 235], skyHi: [230, 245, 255], sunHi: [255, 245, 210], aquaHi: [220, 250, 255],
-      fillInk: [238, 246, 255], mine: [95, 147, 204], mineHi: [238, 246, 255], onLight: [14, 58, 108], onDark: [238, 246, 255],
-      tiles: [[26, 86, 150], [36, 102, 172], [60, 130, 200], [90, 160, 220], [120, 190, 235], [160, 215, 245],
-              [200, 235, 255], [255, 214, 102], [255, 170, 120], [255, 140, 140], [255, 255, 255]],
-      tilesNeg: [[70, 40, 90], [90, 50, 110], [110, 60, 130], [130, 70, 150], [150, 80, 170]],
-      flood: [[255, 140, 140], [255, 214, 102], [140, 240, 200], [120, 200, 255], [200, 160, 255], [255, 170, 100], [30, 40, 90], [255, 255, 255]],
+      bg: [246, 245, 241], board: [250, 249, 246], well: [240, 239, 234], panel: [250, 249, 246], panelHi: [232, 230, 223],
+      line: [214, 212, 204], lineHi: [28, 28, 30], ink: [24, 24, 27], muted: [112, 111, 106], dim: [186, 184, 176],
+      sun: [24, 24, 27], mint: [24, 24, 27], rose: [24, 24, 27], sky: [24, 24, 27],
+      lilac: [24, 24, 27], peach: [24, 24, 27], aqua: [24, 24, 27],
+      mintHi: [232, 230, 223], skyHi: [232, 230, 223], sunHi: [232, 230, 223], aquaHi: [232, 230, 223],
+      fillInk: [24, 24, 27], mine: [24, 24, 27], mineHi: [112, 111, 106], onLight: [24, 24, 27], onDark: [250, 249, 246],
+      tiles: [[240, 239, 234], [232, 230, 223], [222, 220, 212], [208, 206, 197], [190, 188, 178], [168, 166, 156],
+              [140, 138, 130], [108, 107, 100], [76, 75, 70], [48, 48, 46], [24, 24, 27]],
+      tilesNeg: [[236, 226, 224], [226, 208, 205], [214, 188, 184], [200, 166, 160], [184, 140, 132]],
+      flood: [[24, 24, 27], [96, 95, 90], [168, 166, 156], [214, 212, 204], [60, 60, 58], [132, 130, 122], [190, 188, 178], [232, 230, 223]],
     },
   },
   {
@@ -165,7 +128,7 @@ const THEME_KEY = "games_theme";
 // live state read by game.js and the games
 const PAL = JSON.parse(JSON.stringify(_BASE));
 let FONT = "Outfit";
-let THEME_FX = { corners: 1, density: null, text: 1 };
+let THEME_FX = { corners: 1, text: 1 };
 let THEME = THEMES[0];
 
 function _deepAssign(target, src) {
@@ -198,7 +161,7 @@ function applyTheme(id, { save = true } = {}) {
   _deepAssign(PAL, _BASE);
   _deepAssign(PAL, t.pal);
   FONT = t.font;
-  THEME_FX = { corners: 1, density: null, text: 1, snap: 0, ...t.fx };
+  THEME_FX = { corners: 1, text: 1, ...t.fx };
   document.documentElement.dataset.theme = t.id;
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = "rgb(" + PAL.bg.join(",") + ")";
@@ -226,8 +189,7 @@ function themeFontReady() {
 
 // ---- p5 rendering hooks ----
 // Theme effects apply to every sketch without touching game code:
-// rect() corner radii are scaled, textSize() is scaled for the font, and
-// the pixel theme renders at a fixed low pixel density.
+// rect() corner radii and textSize() are scaled for the theme.
 if (typeof p5 !== "undefined") {
   const _rect = p5.prototype.rect;
   p5.prototype.rect = function (x, y, w, h, ...r) {
@@ -237,26 +199,17 @@ if (typeof p5 !== "undefined") {
   const _textSize = p5.prototype.textSize;
   p5.prototype.textSize = function (s) {
     if (!arguments.length || typeof s !== "number") return _textSize.apply(this, arguments);
-    let size = s * THEME_FX.text;
-    if (THEME_FX.snap) {
-      const d = THEME_FX.density || this.pixelDensity();
-      size = Math.max(THEME_FX.snap, Math.floor((size * d) / THEME_FX.snap) * THEME_FX.snap) / d;
-    }
-    return _textSize.call(this, size);
+    return _textSize.call(this, s * THEME_FX.text);
   };
   p5.prototype.registerMethod("pre", function () {
     if (!this._renderer || !this._renderer.drawingContext) return;
     this.textFont(FONT);
-    if (this._nativeDensity === undefined) this._nativeDensity = this.pixelDensity();
-    const want = THEME_FX.density || this._nativeDensity;
-    if (this.pixelDensity() !== want) this.pixelDensity(want);
   });
 }
 
 // Prepare a one-shot (noLoop) sketch, like the home previews, for the theme.
 function themeSketch(p) {
   p.textFont(FONT);
-  if (THEME_FX.density) p.pixelDensity(THEME_FX.density);
 }
 
 // ---- picker UI ----
