@@ -337,7 +337,7 @@ new p5(function(p) {
   // ── render ──────────────────────────────────────────────────────────────────
 
   function drawWorld(p) {
-    p.background(20, 18, 15);
+    p.background(...PAL.board);
 
     const cx = p.width / 2, cy = p.height / 2;
     const left  = Math.floor(camX - cx / zoom) - 1;
@@ -347,7 +347,7 @@ new p5(function(p) {
 
     // grid lines (only when zoomed in enough)
     if (zoom >= 6) {
-      p.stroke(30, 27, 24);
+      p.stroke(...PAL.well);
       p.strokeWeight(1);
       for (let x = left; x <= right; x++) {
         const sx = (x - camX) * zoom + cx;
@@ -372,7 +372,7 @@ new p5(function(p) {
       const alpha = (fade / 4) * 85;
       const scaleVal = 0.5 + (fade / 4) * 0.42; // shrink as it dies
       
-      p.fill(127, 176, 105, alpha); // fade green
+      p.fill(...PAL.mint, alpha); // fade green
       
       const sizeC = (zoom - pad * 2) * scaleVal;
       const offsetC = (zoom - sizeC) / 2;
@@ -388,20 +388,20 @@ new p5(function(p) {
       const pad = zoom > 5 ? Math.min(zoom * 0.08, 1.5) : 0;
       
       // Theme colors matching the style
-      // Age 1: born cyan [90, 180, 190]
-      // Age 2-5: standard green [127, 176, 105]
-      // Age 6-15: gold [230, 180, 34]
-      // Age > 15: deep orange [220, 120, 60]
-      let col = [127, 176, 105];
+      // Age 1: born cyan PAL.aqua
+      // Age 2-5: standard green PAL.mint
+      // Age 6-15: gold PAL.sun
+      // Age > 15: deep orange PAL.peach
+      let col = PAL.mint;
       let scaleVal = 0.95;
 
       if (age === 1) {
-        col = [90, 180, 190]; // newborn cyan
+        col = PAL.aqua; // newborn cyan
         scaleVal = 0.78; // small pop scale
       } else if (age >= 16) {
-        col = [220, 120, 60]; // mature orange
+        col = PAL.peach; // mature orange
       } else if (age >= 6) {
-        col = [230, 180, 34]; // stable gold
+        col = PAL.sun; // stable gold
       }
 
       p.fill(col[0], col[1], col[2]);
@@ -439,7 +439,7 @@ new p5(function(p) {
 
     const cx = p.width / 2, cy = p.height / 2;
     p.noStroke();
-    p.fill(90, 180, 190, 100); // cyan ghost template
+    p.fill(...PAL.aqua, 100); // cyan ghost template
     for (const [dx, dy] of cells) {
       const sx = (ghostX + dx - camX) * zoom + cx;
       const sy = (ghostY + dy - camY) * zoom + cy;
@@ -457,9 +457,9 @@ new p5(function(p) {
 
     const eraseMode = activeTool === "erase";
     p.noStroke();
-    if (eraseMode) p.fill(200, 50, 63, 60);
-    else if (activeTool === "random") p.fill(230, 180, 34, 55);
-    else p.fill(90, 180, 190, 55); // Cyan brush preview
+    if (eraseMode) p.fill(...PAL.rose, 60);
+    else if (activeTool === "random") p.fill(...PAL.sun, 55);
+    else p.fill(...PAL.aqua, 55); // Cyan brush preview
 
     for (let dy = -r; dy <= r; dy++) {
       for (let dx = -r; dx <= r; dx++) {
@@ -682,7 +682,7 @@ function infoAnim(p, w, h, frame) {
   const phase = Math.floor(t / PHASE_LEN);
   const sub = Math.floor((t % PHASE_LEN) / (PHASE_LEN / 2)) % 2; // 0/1 within phase
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
   p.noStroke();
 
   function drawCells(cells, col) {
@@ -697,7 +697,7 @@ function infoAnim(p, w, h, frame) {
     // blinker: horizontal <-> vertical every half-phase
     const horiz = [[-1,0],[0,0],[1,0]];
     const vert  = [[0,-1],[0,0],[0,1]];
-    drawCells(sub === 0 ? horiz : vert, [127, 176, 105]);
+    drawCells(sub === 0 ? horiz : vert, PAL.mint);
   } else {
     // glider crawling one step diagonally per sub-tick, across 4 sub-steps total
     const step = Math.floor((t % PHASE_LEN) / (PHASE_LEN / 4));
@@ -707,7 +707,7 @@ function infoAnim(p, w, h, frame) {
       [[0,-1],[1,0],[-1,1],[0,1],[1,1]].map(([x,y]) => [x+1,y+1]),
       [[-1,0],[1,0],[0,1],[1,1],[1,-1]].map(([x,y]) => [x+1,y+1]),
     ];
-    drawCells(gliderFrames[step % 4], [90, 180, 190]);
+    drawCells(gliderFrames[step % 4], PAL.aqua);
   }
 }
 

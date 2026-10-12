@@ -54,13 +54,13 @@ let s2Boost = false;
 let s1BoostTick = 0;
 let s2BoostTick = 0;
 
-const C1     = [127, 176, 105];
+const C1     = PAL.mint;
 const C1HEAD = [190, 240, 150];
-const C2     = [90,  160, 210];
+const C2     = PAL.sky;
 const C2HEAD = [150, 210, 255];
-const FOOD_C = [230, 180, 34];
-const BG     = [20,  18,  15];
-const GRID_C = [28,  25,  22];
+const FOOD_C = PAL.sun;
+const BG     = PAL.board;
+const GRID_C = PAL.well;
 
 const MIN_LEN = 3;
 
@@ -214,7 +214,7 @@ function spawnBoostSparks(s) {
       vy: -s.dir.y * random(1.5, 4.5) + random(-0.5, 0.5),
       life: random(80, 140),
       size: random(1.5, 3.5),
-      col: [243, 237, 224], // white rocket spark
+      col: PAL.ink, // white rocket spark
     });
   }
 }
@@ -317,10 +317,10 @@ function toggleLoop() {
 }
 
 function saveState() {
-  saveJSON("snake_state", { gridW, gridH, twoPlayer, edgeLoop });
+  saveSettings("snake_state", { gridW, gridH, twoPlayer, edgeLoop });
 }
 function loadState() {
-  const d = loadJSON("snake_state");
+  const d = loadSettings("snake_state");
   if (typeof d.gridW === "number") gridW = d.gridW;
   if (typeof d.gridH === "number") gridH = d.gridH;
   if (typeof d.twoPlayer === "boolean") twoPlayer = d.twoPlayer;
@@ -348,22 +348,22 @@ function infoAnim(p, w, h, frame) {
   const phase = Math.floor(t / PHASE_LEN);
   const localT = (t % PHASE_LEN) / PHASE_LEN;
 
-  p.background(20, 18, 15);
-  p.stroke(28, 25, 22); p.strokeWeight(1);
+  p.background(...PAL.board);
+  p.stroke(...PAL.well); p.strokeWeight(1);
   for (let x = 0; x <= gw; x++) p.line(ox + x*cs, oy, ox + x*cs, oy + gh*cs);
   for (let y = 0; y <= gh; y++) p.line(ox, oy + y*cs, ox + gw*cs, oy + y*cs);
   p.noStroke();
 
   function drawFood(gx, gy) {
     const cx = ox+gx*cs+cs/2, cy = oy+gy*cs+cs/2;
-    p.fill(230, 180, 34, 30); p.circle(cx, cy, cs * 0.9);
-    p.fill(230, 180, 34); p.circle(cx, cy, cs * 0.55);
-    p.fill(243, 237, 224); p.circle(cx, cy, cs * 0.25);
+    p.fill(...PAL.sun, 30); p.circle(cx, cy, cs * 0.9);
+    p.fill(...PAL.sun); p.circle(cx, cy, cs * 0.55);
+    p.fill(...PAL.ink); p.circle(cx, cy, cs * 0.25);
   }
 
   function drawSnake(body, dir) {
     const [hr, hg, hb] = [190, 240, 150];
-    const [r, g, b] = [127, 176, 105];
+    const [r, g, b] = PAL.mint;
     body.forEach((seg, i) => {
       if (i === 0) return;
       const prev = body[i - 1];
@@ -381,7 +381,7 @@ function infoAnim(p, w, h, frame) {
       if (i === 0) {
         p.fill(hr, hg, hb, 40); p.circle(cx, cy, cs * 0.95);
         p.fill(hr, hg, hb); p.circle(cx, cy, cs * 0.46);
-        p.fill(20, 18, 15);
+        p.fill(...PAL.board);
         const eyeOff = cs * 0.16;
         if (dir.x !== 0) { p.circle(cx + dir.x*eyeOff, cy - eyeOff, cs*0.08); p.circle(cx + dir.x*eyeOff, cy + eyeOff, cs*0.08); }
         else { p.circle(cx - eyeOff, cy + dir.y*eyeOff, cs*0.08); p.circle(cx + eyeOff, cy + dir.y*eyeOff, cs*0.08); }
@@ -412,7 +412,7 @@ function infoAnim(p, w, h, frame) {
     drawSnake(body, { x: 1, y: 0 });
     if (flash) {
       const cx = ox + 3*cs + cs/2, cy = oy + 2*cs + cs/2;
-      p.noFill(); p.stroke(200, 50, 63, 220); p.strokeWeight(3);
+      p.noFill(); p.stroke(...PAL.rose, 220); p.strokeWeight(3);
       p.circle(cx, cy, cs * 0.9);
     }
   }
@@ -476,7 +476,7 @@ function draw() {
     circle(cx, cy, cs * 0.55);
     
     // Brighter center core
-    fill(243, 237, 224);
+    fill(...PAL.ink);
     circle(cx, cy, cs * 0.25);
   });
 
@@ -546,7 +546,7 @@ function drawSnakeBody(s, offX, offY, cs) {
       circle(cx, cy, cs * 0.46);
       
       // Subtle eyes
-      fill(20, 18, 15);
+      fill(...PAL.board);
       const eyeOffset = cs * 0.16;
       if (s.dir.x !== 0) {
         circle(cx + s.dir.x * eyeOffset, cy - eyeOffset, cs * 0.08);

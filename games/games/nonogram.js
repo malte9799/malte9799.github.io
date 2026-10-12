@@ -266,10 +266,10 @@ function toggleCell(i, j, mode) {
   const current = board[i][j];
   if (mode === 1) { // fill
     board[i][j] = current === 1 ? 0 : 1;
-    if (board[i][j] === 1) spawnInkDust(i, j, [230, 225, 210]);
+    if (board[i][j] === 1) spawnInkDust(i, j, PAL.ink);
   } else if (mode === 2) { // cross
     board[i][j] = current === 2 ? 0 : 2;
-    if (board[i][j] === 2) spawnInkDust(i, j, [80, 72, 64]);
+    if (board[i][j] === 2) spawnInkDust(i, j, PAL.dim);
   }
   if (checkSolved()) {
     solved = true;
@@ -292,7 +292,7 @@ function hintStep() {
   
   // Set target and spawn sparks
   board[c.i][c.j] = c.target;
-  spawnInkDust(c.i, c.j, c.target === 1 ? [127, 176, 105] : [200, 50, 63]);
+  spawnInkDust(c.i, c.j, c.target === 1 ? PAL.mint : PAL.rose);
 
   if (checkSolved()) {
     solved = true;
@@ -302,11 +302,11 @@ function hintStep() {
 }
 
 function saveState() {
-  saveJSON("nonogram_state", { cols, rows, seed });
+  saveSettings("nonogram_state", { cols, rows, seed });
 }
 
 function loadState() {
-  const d = loadJSON("nonogram_state");
+  const d = loadSettings("nonogram_state");
   if (typeof d.cols === "number") cols = d.cols;
   if (typeof d.rows === "number") rows = d.rows;
   if (typeof d.seed === "number") seed = d.seed;
@@ -387,7 +387,7 @@ function infoAnim(p, w, h, frame) {
   if (phase >= 1) { board[1][targetRow] = 1; board[2][targetRow] = 1; board[3][targetRow] = 1; }
   if (phase >= 2) { board[0][targetRow] = 2; board[4][targetRow] = 2; }
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
   p.noStroke();
 
   const rowComplete = phase === 2;
@@ -399,7 +399,7 @@ function infoAnim(p, w, h, frame) {
   p.textSize(fs);
   for (let i = 0; i < C; i++) {
     const x = gx + i * cw;
-    p.fill(155, 145, 130);
+    p.fill(...PAL.muted);
     for (let k = 0; k < cluesC[i].length; k++) {
       const ty = gy - 5 - (cluesC[i].length - 1 - k) * ch;
       p.text(cluesC[i][k], x + cw / 2, ty);
@@ -411,7 +411,7 @@ function infoAnim(p, w, h, frame) {
   for (let j = 0; j < R; j++) {
     const y = gy + j * ch;
     const isTarget = j === targetRow;
-    p.fill(isTarget ? p.color(127, 176, 105) : p.color(155, 145, 130));
+    p.fill(isTarget ? p.color(...PAL.mint) : p.color(...PAL.muted));
     for (let k = 0; k < cluesR[j].length; k++) {
       const tx = gx - 5 - (cluesR[j].length - 1 - k) * cw;
       p.text(cluesR[j][k], tx, y + ch / 2);
@@ -421,7 +421,7 @@ function infoAnim(p, w, h, frame) {
 
   // target row glow backdrop once solved
   if (rowComplete) {
-    p.fill(127, 176, 105, 18); p.noStroke();
+    p.fill(...PAL.mint, 18); p.noStroke();
     p.rect(boardOx, gy + targetRow * ch, gx + C * cw - boardOx, ch);
   }
 
@@ -431,25 +431,25 @@ function infoAnim(p, w, h, frame) {
       const x = gx + i * cw, y = gy + j * ch;
       const v = board[i][j];
       if (v === 1) {
-        p.fill(230, 225, 210, 45); p.noStroke();
+        p.fill(...PAL.ink, 45); p.noStroke();
         p.rect(x - 1, y - 1, cw + 2, ch + 2, 2);
-        p.fill(243, 237, 224);
+        p.fill(...PAL.ink);
         p.rect(x + 1, y + 1, cw - 2, ch - 2, 2);
       } else if (v === 2) {
-        p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
-        p.stroke(80, 72, 64); p.strokeWeight(1.8);
+        p.fill(...PAL.panel); p.noStroke(); p.rect(x, y, cw, ch);
+        p.stroke(...PAL.dim); p.strokeWeight(1.8);
         const padC = cw * 0.24;
         p.line(x + padC, y + padC, x + cw - padC, y + ch - padC);
         p.line(x + cw - padC, y + padC, x + padC, y + ch - padC);
         p.noStroke();
       } else {
-        p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
+        p.fill(...PAL.panel); p.noStroke(); p.rect(x, y, cw, ch);
       }
     }
   }
 
   // grid lines
-  p.stroke(58, 53, 46); p.strokeWeight(1);
+  p.stroke(...PAL.line); p.strokeWeight(1);
   for (let i = 0; i <= C; i++) p.line(gx + i * cw, gy, gx + i * cw, gy + R * ch);
   for (let j = 0; j <= R; j++) p.line(gx, gy + j * ch, gx + C * cw, gy + j * ch);
 }
@@ -464,7 +464,7 @@ function setup() {
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
 
   const gx = width * CLUE_FRAC, gy = height * CLUE_FRAC;
   const cw = (width - gx) / cols, ch = (height - gy) / rows;
@@ -486,7 +486,7 @@ function draw() {
   if (hoverCol >= 0 && hoverRow >= 0) {
     noStroke();
     // Translucent guide bands
-    fill(127, 176, 105, 12);
+    fill(...PAL.mint, 12);
     rect(gx + hoverCol * cw, gy, cw, rows * ch);
     rect(gx, gy + hoverRow * ch, cols * cw, ch);
   }
@@ -504,11 +504,11 @@ function draw() {
     const correct = _colCorrect(i);
     const isHovered = i === hoverCol;
     
-    let baseColor = correct ? [127, 176, 105] : [155, 145, 130];
-    if (isHovered && !correct) baseColor = [243, 237, 224]; // glow text when hovered
+    let baseColor = correct ? PAL.mint : PAL.muted;
+    if (isHovered && !correct) baseColor = PAL.ink; // glow text when hovered
 
     if (correct) {
-      fill(127, 176, 105, 18); noStroke();
+      fill(...PAL.mint, 18); noStroke();
       rect(x, 0, cw, gy + rows * ch);
     }
 
@@ -527,11 +527,11 @@ function draw() {
     const correct = _rowCorrect(j);
     const isHovered = j === hoverRow;
     
-    let baseColor = correct ? [127, 176, 105] : [155, 145, 130];
-    if (isHovered && !correct) baseColor = [243, 237, 224];
+    let baseColor = correct ? PAL.mint : PAL.muted;
+    if (isHovered && !correct) baseColor = PAL.ink;
 
     if (correct) {
-      fill(127, 176, 105, 18); noStroke();
+      fill(...PAL.mint, 18); noStroke();
       rect(0, y, gx + cols * cw, ch);
     }
 
@@ -553,15 +553,15 @@ function draw() {
       if (v === 1) {
         // Glowing filled cell
         noStroke();
-        fill(230, 225, 210, 45); // glow backdrop
+        fill(...PAL.ink, 45); // glow backdrop
         rect(x - 1, y - 1, cw + 2, ch + 2, 2);
-        fill(243, 237, 224);
+        fill(...PAL.ink);
         rect(x + 1, y + 1, cw - 2, ch - 2, 2);
       } else if (v === 2) {
         // Crossed cell (Sketchy hand-drawn feel)
-        fill(38, 35, 32); noStroke(); rect(x, y, cw, ch);
+        fill(...PAL.panel); noStroke(); rect(x, y, cw, ch);
         
-        stroke(80, 72, 64); strokeWeight(1.8);
+        stroke(...PAL.dim); strokeWeight(1.8);
         const pad = cw * 0.22;
         
         // Add tiny hand-drawn wiggles (randomized slightly but seed stable)
@@ -572,18 +572,18 @@ function draw() {
         line(x + cw - pad - w2, y + pad + w1, x + pad + w2, y + ch - pad - w1);
       } else {
         // Empty cell
-        fill(38, 35, 32); noStroke(); rect(x, y, cw, ch);
+        fill(...PAL.panel); noStroke(); rect(x, y, cw, ch);
       }
     }
   }
 
   // Draw Grid lines
-  stroke(58, 53, 46); strokeWeight(1);
+  stroke(...PAL.line); strokeWeight(1);
   for (let i = 0; i <= cols; i++) line(gx + i * cw, gy, gx + i * cw, gy + rows * ch);
   for (let j = 0; j <= rows; j++) line(gx, gy + j * ch, gx + cols * cw, gy + j * ch);
 
   // Bold every 5th line
-  stroke(80, 72, 64); strokeWeight(2.2);
+  stroke(...PAL.dim); strokeWeight(2.2);
   for (let i = 0; i <= cols; i += 5) line(gx + i * cw, gy, gx + i * cw, gy + rows * ch);
   for (let j = 0; j <= rows; j += 5) line(gx, gy + j * ch, gx + cols * cw, gy + j * ch);
 
@@ -591,7 +591,7 @@ function draw() {
   if (hoverCol >= 0 && hoverRow >= 0) {
     const x = gx + hoverCol * cw, y = gy + hoverRow * ch;
     noFill();
-    stroke(155, 145, 130, 160);
+    stroke(...PAL.muted, 160);
     strokeWeight(1.5);
     rect(x, y, cw, ch);
   }
@@ -603,7 +603,7 @@ function draw() {
   // Victory solved overlay
   if (solved) {
     setStatus("solved — Picross solved successfully", "solved");
-    drawBoardOverlay(gx, gy, width - gx, height - gy, "SOLVED", null, [127, 176, 105]);
+    drawBoardOverlay(gx, gy, width - gx, height - gy, "SOLVED", null, PAL.mint);
   } else {
     setStatus("left drag = fill · right/ctrl drag = cross", null);
   }

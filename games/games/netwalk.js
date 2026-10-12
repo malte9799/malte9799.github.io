@@ -364,7 +364,7 @@ function infoAnim(p, w, h, frame) {
   const ox = Math.floor((w - bw) / 2);
   const oy = Math.floor((h - bh) / 2);
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
 
   const PHASE_LEN = 70;
   const t = frame % (PHASE_LEN * 2);
@@ -378,14 +378,14 @@ function infoAnim(p, w, h, frame) {
 
   function drawPipe(cx, cy, mask, glow) {
     p.strokeWeight(cs * 0.16);
-    p.stroke(glow ? p.color(127, 200, 230) : p.color(70, 64, 56));
+    p.stroke(glow ? p.color(127, 200, 230) : p.color(...PAL.dim));
     for (const d of ALL_DIRS) {
       if (!(mask & d)) continue;
       const ex = cx + DX[d] * cs / 2, ey = cy + DY[d] * cs / 2;
       p.line(cx, cy, ex, ey);
     }
     p.noStroke();
-    p.fill(glow ? p.color(190, 230, 245) : p.color(90, 84, 74));
+    p.fill(glow ? p.color(190, 230, 245) : p.color(...PAL.dim));
     p.circle(cx, cy, cs * 0.22);
   }
 
@@ -399,13 +399,13 @@ function infoAnim(p, w, h, frame) {
 
   // source glyph
   p.noStroke();
-  p.fill(230, 180, 34);
+  p.fill(...PAL.sun);
   p.circle(c0.x, c0.y, cs * 0.34);
 
   // pulse traveling when connected
   if (midConnected) {
     const px = p.lerp(c0.x, c2.x, localT);
-    p.fill(243, 237, 224, 220);
+    p.fill(...PAL.ink, 220);
     p.circle(px, c1.y, cs * 0.14);
   }
 }
@@ -421,9 +421,9 @@ function setup() {
   newGame();
 }
 
-const EMPTY_COL = [70, 64, 56];
+const EMPTY_COL = PAL.dim;
 const FILL_COL = [127, 210, 230];
-const EMPTY_HUB_COL = [90, 84, 74];
+const EMPTY_HUB_COL = PAL.dim;
 const FILL_HUB_COL = [200, 235, 245];
 
 // Draws a pipe piece. `mask` = open arms (bitmask). `touchMask` = arms whose
@@ -494,7 +494,7 @@ function clampFrac(v) {
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
 
   const maxBoardW = min(width * 0.92, height * 0.92, 440);
   cellSize = floor(maxBoardW / SIZE);
@@ -507,7 +507,7 @@ function draw() {
 
   // grid backdrop
   noStroke();
-  fill(28, 25, 22);
+  fill(...PAL.well);
   rect(ox, oy, boardW, boardW, 6);
 
   // draw pipes
@@ -550,9 +550,9 @@ function draw() {
     const cx = ox + sourceC * cellSize + cellSize / 2;
     const cy = oy + sourceR * cellSize + cellSize / 2;
     noStroke();
-    fill(230, 180, 34, 35);
+    fill(...PAL.sun, 35);
     circle(cx, cy, cellSize * 0.66);
-    fill(230, 180, 34);
+    fill(...PAL.sun);
     circle(cx, cy, cellSize * 0.4);
   }
 
@@ -565,7 +565,7 @@ function draw() {
       const cy = oy + r * cellSize + cellSize / 2;
       const glowAmt = fillLevel.get(r + "," + c) ?? 0;
       noFill();
-      stroke(lerpColor(color(90, 84, 74), color(190, 235, 245), glowAmt));
+      stroke(lerpColor(color(...PAL.dim), color(190, 235, 245), glowAmt));
       strokeWeight(2);
       circle(cx, cy, cellSize * 0.5);
     }
@@ -580,7 +580,7 @@ function draw() {
         const cx = ox + c * cellSize + cellSize / 2;
         const cy = oy + r * cellSize + cellSize / 2;
         noFill();
-        stroke(155, 145, 130, 110);
+        stroke(...PAL.muted, 110);
         strokeWeight(1.5);
         rect(ox + c * cellSize + 2, oy + r * cellSize + 2, cellSize - 4, cellSize - 4, 6);
       }
@@ -589,7 +589,7 @@ function draw() {
 
   // solved overlay
   if (gameOver) {
-    drawBoardOverlay(ox, oy, boardW, boardW, "NETWORK ONLINE", "Every node is powered", [127, 176, 105]);
+    drawBoardOverlay(ox, oy, boardW, boardW, "NETWORK ONLINE", "Every node is powered", PAL.mint);
   }
 }
 

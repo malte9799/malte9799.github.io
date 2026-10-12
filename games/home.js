@@ -26,11 +26,10 @@ function buildHome() {
       a.href = "index.html?game=" + game.id;
       a.dataset.id = game.id;
       a.innerHTML = `
-        <div class="card-overlay">
-          <div class="card-text">
-            <div class="card-title">${game.title}</div>
-            <div class="card-desc">${game.desc}</div>
-          </div>
+        <div class="preview"></div>
+        <div class="card-text">
+          <div class="card-title">${game.title}</div>
+          <div class="card-desc">${game.desc}</div>
         </div>
         <button class="star-btn${stars.has(game.id) ? " starred" : ""}" title="${stars.has(game.id) ? "Unstar game" : "Star game"}" aria-label="${stars.has(game.id) ? "Unstar" : "Star"} ${game.title}" aria-pressed="${stars.has(game.id) ? "true" : "false"}">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="star-icon">
@@ -60,19 +59,25 @@ function buildHome() {
       grid.appendChild(a);
 
       // inject p5 canvas as preview
+      const holder = a.querySelector(".preview");
       new p5(function(p) {
         p.setup = function() {
           const cnv = p.createCanvas(600, 360);
-          cnv.parent(a);
-          cnv.elt.style.position = "absolute";
-          cnv.elt.style.inset = "0";
-          a.insertBefore(cnv.elt, a.firstChild);
+          cnv.parent(holder);
           p.noLoop();
+          p.textFont(FONT);
           game.preview(p, 600, 360);
         };
       });
     });
   }
 
-  buildCards();
+  // previews are drawn once, so wait for the canvas font before drawing them
+  const fontReady = document.fonts
+    ? Promise.race([
+        Promise.all([document.fonts.load(`700 16px ${FONT}`), document.fonts.load(`400 16px ${FONT}`)]),
+        new Promise((r) => setTimeout(r, 1500)),
+      ]).catch(() => {})
+    : Promise.resolve();
+  fontReady.then(buildCards);
 }

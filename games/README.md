@@ -65,9 +65,9 @@ let SIZE = 10, COUNT = 3;
 
 function clamp() { COUNT = Math.min(COUNT, SIZE); }
 
-function saveState() { saveJSON("mygame_state", { SIZE, COUNT }); }
+function saveState() { saveSettings("mygame_state", { SIZE, COUNT }); }
 function loadState() {
-  const d = loadJSON("mygame_state");
+  const d = loadSettings("mygame_state");
   if (typeof d.SIZE === "number") SIZE = d.SIZE;
   if (typeof d.COUNT === "number") COUNT = d.COUNT;
 }
@@ -157,7 +157,7 @@ function drawMyGame(p, w, h) {
 | `confirmHint(fn)` / `resetHint()` | "Sure?" double-press guard for the Hint button; reset on new game |
 | `setButtonActive(id, on)` | gold "toggled" styling for mode buttons (flag mode, 2P, ...) |
 | `syncSliderUI()` | push current values back into sliders + preset dropdown |
-| `saveJSON(key, obj)` / `loadJSON(key)` | localStorage settings; key convention `"<id>_state"`, type-check every field on load |
+| `saveSettings(key, obj)` / `loadSettings(key)` | localStorage settings; key convention `"<id>_state"`, type-check every field on load |
 | `spawnBurst(x, y, opts)` | radial particle burst; opts: `count, speed:[lo,hi], life:[lo,hi], size:[lo,hi], col:[r,g,b], drag, decay` |
 | `addParticle({x, y, vx, vy, ...})` | directional/custom particles |
 | `drawParticles()` | update + render, call once per `draw()` |

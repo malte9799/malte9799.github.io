@@ -187,10 +187,10 @@ function newGame() {
 }
 
 function saveState() {
-  saveJSON("sudoku_size", { N, BW, BH });
+  saveSettings("sudoku_size", { N, BW, BH });
 }
 function loadState() {
-  const d = loadJSON("sudoku_size");
+  const d = loadSettings("sudoku_size");
   if (typeof d.N === "number") N = d.N;
   if (typeof d.BW === "number") BW = d.BW;
   if (typeof d.BH === "number") BH = d.BH;
@@ -391,12 +391,12 @@ function infoAnim(p, w, h, frame) {
   const filled = t >= FILL_AT;
   const sinceFill = t - FILL_AT;
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
   p.noStroke();
 
   // row/column highlight fades in during the scan
   if (scanT > 0) {
-    p.fill(230, 180, 34, 12 * scanT);
+    p.fill(...PAL.sun, 12 * scanT);
     p.rect(ox, oy + targetR * cs, boardW, cs);
     p.rect(ox + targetC * cs, oy, cs, boardW);
   }
@@ -407,9 +407,9 @@ function infoAnim(p, w, h, frame) {
       if (r === targetR && c === targetC && filled) {
         // green flash that settles into a soft tint
         const flash = Math.max(45, 110 - sinceFill * 2);
-        p.fill(127, 176, 105, flash);
+        p.fill(...PAL.mint, flash);
       } else {
-        p.fill(30, 27, 23);
+        p.fill(...PAL.well);
       }
       p.rect(x, y, cs, cs);
     }
@@ -425,7 +425,7 @@ function infoAnim(p, w, h, frame) {
       // digits in the target's row/col shift toward "taken" gold as the scan sweeps
       const inLine = (r === targetR || c === targetC);
       const dim = inLine ? scanT : 0;
-      p.fill(p.lerpColor(p.color(243, 237, 224), p.color(230, 190, 100), dim));
+      p.fill(p.lerpColor(p.color(...PAL.ink), p.color(230, 190, 100), dim));
       p.textSize(cs * 0.5);
       p.text(v, x, y + 1);
     }
@@ -440,12 +440,12 @@ function infoAnim(p, w, h, frame) {
     p.text(3, ox + targetC * cs + cs / 2, oy + targetR * cs + cs / 2 + 1);
   }
 
-  p.stroke(58, 53, 46); p.strokeWeight(1);
+  p.stroke(...PAL.line); p.strokeWeight(1);
   for (let i = 0; i <= n; i++) {
     p.line(ox + i * cs, oy, ox + i * cs, oy + boardW);
     p.line(ox, oy + i * cs, ox + boardW, oy + i * cs);
   }
-  p.stroke(120, 110, 95); p.strokeWeight(2.2);
+  p.stroke(...PAL.lineHi); p.strokeWeight(2.2);
   for (let i = 0; i <= n; i += bw) p.line(ox + i * cs, oy, ox + i * cs, oy + boardW);
   for (let j = 0; j <= n; j += bh) p.line(ox, oy + j * cs, ox + boardW, oy + j * cs);
 
@@ -453,12 +453,12 @@ function infoAnim(p, w, h, frame) {
   p.noFill();
   if (!filled) {
     const pulse = t < SELECT_END ? 1.0 + 0.06 * p.sin(frame * 0.25) : 1.0;
-    p.stroke(230, 180, 34, 200);
+    p.stroke(...PAL.sun, 200);
     p.strokeWeight(2);
     const grow = (pulse - 1) * cs;
     p.rect(ox + targetC * cs - grow / 2, oy + targetR * cs - grow / 2, cs + grow, cs + grow);
   } else {
-    p.stroke(127, 176, 105, 200);
+    p.stroke(...PAL.mint, 200);
     p.strokeWeight(2);
     p.rect(ox + targetC * cs, oy + targetR * cs, cs, cs);
   }
@@ -490,7 +490,7 @@ function layout() {
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
   layout();
 
   // hovered cell (for subtle feedback)
@@ -503,11 +503,11 @@ function draw() {
   // selection row/col/box highlight
   if (selR >= 0) {
     noStroke();
-    fill(230, 180, 34, 14);
+    fill(...PAL.sun, 14);
     rect(ox, oy + selR * cellSize, boardPx, cellSize);
     rect(ox + selC * cellSize, oy, cellSize, boardPx);
     const { br, bc } = boxOrigin(selR, selC);
-    fill(230, 180, 34, 10);
+    fill(...PAL.sun, 10);
     rect(ox + bc * cellSize, oy + br * cellSize, cellSize * BW, cellSize * BH);
   }
 
@@ -524,26 +524,26 @@ function draw() {
       const sameVal = v !== 0 && selR >= 0 && board[selR][selC] === v;
 
       if (isSel) {
-        fill(230, 180, 34, 55);
+        fill(...PAL.sun, 55);
         noStroke();
         rect(x, y, cellSize, cellSize);
       } else if (isConflict) {
-        fill(200, 50, 63, 40);
+        fill(...PAL.rose, 40);
         noStroke();
         rect(x, y, cellSize, cellSize);
       } else if (sameVal) {
-        fill(243, 237, 224, 18);
+        fill(...PAL.ink, 18);
         noStroke();
         rect(x, y, cellSize, cellSize);
       } else if (r === hr && c === hc && !solved) {
-        fill(243, 237, 224, 8);
+        fill(...PAL.ink, 8);
         noStroke();
         rect(x, y, cellSize, cellSize);
       }
 
       if (v !== 0) {
         if (isConflict) fill(230, 110, 120);
-        else if (isGiven) fill(243, 237, 224);
+        else if (isGiven) fill(...PAL.ink);
         else fill(150, 190, 230);
         noStroke();
         textSize(cellSize * 0.5);
@@ -555,24 +555,24 @@ function draw() {
   }
 
   // grid lines
-  stroke(58, 53, 46); strokeWeight(1);
+  stroke(...PAL.line); strokeWeight(1);
   for (let i = 0; i <= N; i++) {
     line(ox + i * cellSize, oy, ox + i * cellSize, oy + boardPx);
     line(ox, oy + i * cellSize, ox + boardPx, oy + i * cellSize);
   }
   // box borders
-  stroke(155, 145, 130); strokeWeight(2.4);
+  stroke(...PAL.muted); strokeWeight(2.4);
   for (let i = 0; i <= N; i += BW) line(ox + i * cellSize, oy, ox + i * cellSize, oy + boardPx);
   for (let j = 0; j <= N; j += BH) line(ox, oy + j * cellSize, ox + boardPx, oy + j * cellSize);
   noFill();
-  stroke(155, 145, 130); strokeWeight(2.4);
+  stroke(...PAL.muted); strokeWeight(2.4);
   rect(ox, oy, boardPx, boardPx);
 
   // number pad
   drawNumberPad();
 
   if (solved) {
-    drawBoardOverlay(ox, oy, boardPx, boardPx, "SOLVED", null, [127, 176, 105]);
+    drawBoardOverlay(ox, oy, boardPx, boardPx, "SOLVED", null, PAL.mint);
   }
 }
 
@@ -622,9 +622,9 @@ function drawNumberPad() {
     const complete = count >= N;
 
     noStroke();
-    fill(complete ? color(58, 74, 48) : color(38, 35, 32));
+    fill(complete ? color(58, 74, 48) : color(...PAL.panel));
     rect(r.x, r.y, r.w, r.h, 6);
-    fill(complete ? color(120, 170, 100) : color(243, 237, 224));
+    fill(complete ? color(120, 170, 100) : color(...PAL.ink));
     textSize(r.h * (noteMode ? 0.28 : 0.5));
     text(r.v, cx, cy + 1);
   }

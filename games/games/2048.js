@@ -49,8 +49,8 @@ const ANIM_DUR = 8; // frames
 
 // tile color palette matching the site theme
 const TILE_COLORS = {
-  0:    [38, 35, 32],
-  2:    [58, 54, 48],
+  0:    PAL.panel,
+  2:    PAL.panelHi,
   4:    [72, 66, 56],
   8:    [180, 110, 48],
   16:   [200, 90, 40],
@@ -60,7 +60,7 @@ const TILE_COLORS = {
   256:  [210, 180, 40],
   512:  [220, 190, 30],
   1024: [230, 200, 20],
-  2048: [230, 180, 34],
+  2048: PAL.sun,
 };
 
 // negative (cancel-mode) tiles share the board's bug-red accent, darkening
@@ -76,12 +76,12 @@ const NEG_TILE_COLORS = {
 function tileColor(v) {
   if (v < 0) return NEG_TILE_COLORS[-v] || [220, 50, 63];
   if (TILE_COLORS[v]) return TILE_COLORS[v];
-  return [230, 180, 34]; // any higher value
+  return PAL.sun; // any higher value
 }
 
 function tileFg(v) {
   if (v < 0) return [243, 220, 222];
-  return v <= 4 ? [155, 145, 130] : [243, 237, 224];
+  return v <= 4 ? PAL.muted : PAL.ink;
 }
 
 function makeGrid(n) {
@@ -400,16 +400,16 @@ function infoAnim(p, w, h, frame) {
     ? p.map(spawnPopT, 0, 0.7, 0, 1.1)
     : p.map(spawnPopT, 0.7, 1, 1.1, 1);
 
-  p.background(28, 25, 22);
+  p.background(...PAL.well);
 
   // board backdrop + empty cell grid, same styling as the real board
   const padBoard = pad * 0.6;
-  p.fill(38, 35, 32);
+  p.fill(...PAL.panel);
   p.noStroke();
   p.rect(ox - padBoard, oy - padBoard, bw + padBoard * 2, bh + padBoard * 2, (bw + padBoard * 2) * 0.03);
   for (let r = 0; r < N; r++) {
     for (let c = 0; c < N; c++) {
-      p.fill(28, 25, 22);
+      p.fill(...PAL.well);
       p.rect(cellX(c) - cs/2, cellY(r) - cs/2, cs, cs, cs * 0.1);
     }
   }
@@ -488,7 +488,7 @@ function setup() {
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
 
   // In fullscreen the canvas wrap is already positioned below the navbar,
   // so canvas coords start at 0,0 below it — no offset needed.
@@ -505,7 +505,7 @@ function draw() {
   const oy = floor((availH - boardH) / 2);
 
   // board background
-  fill(38, 35, 32);
+  fill(...PAL.panel);
   noStroke();
   rect(ox, oy, boardW, boardH, boardW * 0.03);
 
@@ -514,7 +514,7 @@ function draw() {
     for (let c = 0; c < SIZE; c++) {
       const x = ox + BOARD_PAD + c * (tileSize + GAP);
       const y = oy + BOARD_PAD + r * (tileSize + GAP);
-      fill(28, 25, 22);
+      fill(...PAL.well);
       noStroke();
       rect(x, y, tileSize, tileSize, tileSize * 0.1);
     }
@@ -594,9 +594,9 @@ function draw() {
 
   // game over overlay
   if (gameOver) {
-    drawBoardOverlay(ox, oy, boardW, boardH, "GAME OVER", "press N for new game", [200, 50, 63]);
+    drawBoardOverlay(ox, oy, boardW, boardH, "GAME OVER", "press N for new game", PAL.rose);
   } else if (won && !wonAcked) {
-    drawBoardOverlay(ox, oy, boardW, boardH, "YOU WIN!", "press any key to keep playing", [230, 180, 34]);
+    drawBoardOverlay(ox, oy, boardW, boardH, "YOU WIN!", "press any key to keep playing", PAL.sun);
   }
 }
 

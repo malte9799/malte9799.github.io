@@ -33,7 +33,7 @@ const LINES = [
 ];
 
 const X = 1, O = 2;
-const MARK_COLOR = { [X]: [127, 176, 105], [O]: [90, 160, 210] };
+const MARK_COLOR = { [X]: PAL.mint, [O]: PAL.sky };
 const MARK_GLOW   = { [X]: [190, 240, 150], [O]: [150, 210, 255] };
 
 let superMode = false;
@@ -255,7 +255,7 @@ function drawMark(cx, cy, s, mark, alpha, scale) {
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
   computeLayout();
 
   // In Normal mode there's only ever one board (b=0); Super mode has all nine.
@@ -269,7 +269,7 @@ function draw() {
       if (!isLegal) continue;
       const { x, y } = bigCellOrigin(b);
       noStroke();
-      fill(230, 180, 34, 22);
+      fill(...PAL.sun, 22);
       rect(x, y, BIG_CELL, BIG_CELL, BIG_CELL * 0.06);
     }
   }
@@ -281,12 +281,12 @@ function draw() {
     // Decided sub-board backdrop tint
     if (superMode && cellWinner[b]) {
       noStroke();
-      if (cellWinner[b] === 3) fill(58, 53, 46, 90);
+      if (cellWinner[b] === 3) fill(...PAL.line, 90);
       else fill(...MARK_COLOR[cellWinner[b]], 26);
       rect(x, y, BIG_CELL, BIG_CELL, BIG_CELL * 0.06);
     }
 
-    stroke(58, 53, 46);
+    stroke(...PAL.line);
     strokeWeight(Math.max(1, SMALL_CELL * 0.02));
     for (let g = 1; g < 3; g++) {
       line(x + g * SMALL_CELL, y, x + g * SMALL_CELL, y + BIG_CELL);
@@ -313,7 +313,7 @@ function draw() {
 
   // Bold separators between the 3 big cells.
   if (superMode) {
-    stroke(120, 110, 95);
+    stroke(...PAL.lineHi);
     strokeWeight(Math.max(2, BOARD * 0.012));
     for (let g = 1; g < 3; g++) {
       const off = PAD + g * BIG_CELL + (g - 0.5) * BIG_GAP;
@@ -328,7 +328,7 @@ function draw() {
     if (hit && canPlay(hit.b, hit.i)) {
       const { cx, cy } = cellCenter(hit.b, hit.i);
       noFill();
-      stroke(155, 145, 130, 110);
+      stroke(...PAL.muted, 110);
       strokeWeight(1.5);
       rect(cx - SMALL_CELL * 0.4, cy - SMALL_CELL * 0.4, SMALL_CELL * 0.8, SMALL_CELL * 0.8, 4);
     }
@@ -347,7 +347,7 @@ function draw() {
   drawParticles();
 
   if (winner) {
-    const col = winner === 3 ? [155, 145, 130] : MARK_GLOW[winner];
+    const col = winner === 3 ? PAL.muted : MARK_GLOW[winner];
     const title = winner === 3 ? "DRAW" : (winner === X ? "X WINS" : "O WINS");
     drawBoardOverlay(0, 0, width, height, title, "press N or New game to play again", col);
   }
@@ -384,11 +384,11 @@ function keyPressed() {
 // ---- state persistence ----
 
 function saveState() {
-  saveJSON("tictactoe_state", { superMode });
+  saveSettings("tictactoe_state", { superMode });
 }
 
 function loadState() {
-  const d = loadJSON("tictactoe_state");
+  const d = loadSettings("tictactoe_state");
   if (typeof d.superMode === "boolean") superMode = d.superMode;
 }
 
@@ -434,14 +434,14 @@ function infoAnim(p, w, h, frame) {
   const localT = (t % PHASE_LEN) / PHASE_LEN;
   const move = MOVES[phase];
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
 
   // draw a mark with a draw-in progress 0..1 (X = two strokes, O = arc sweep)
   function mark(cx, cy, s, m, progress, alpha) {
     const a = alpha ?? 255;
     p.noFill();
     if (m === 1) {
-      p.stroke(127, 176, 105, a);
+      p.stroke(...PAL.mint, a);
       p.strokeWeight(Math.max(2, s * 0.14));
       p.strokeCap(p.ROUND);
       const k = s * 0.28;
@@ -450,7 +450,7 @@ function infoAnim(p, w, h, frame) {
       if (p1 > 0) p.line(cx - k, cy - k, cx - k + 2 * k * p1, cy - k + 2 * k * p1);
       if (p2 > 0) p.line(cx + k, cy - k, cx + k - 2 * k * p2, cy - k + 2 * k * p2);
     } else {
-      p.stroke(90, 160, 210, a);
+      p.stroke(...PAL.sky, a);
       p.strokeWeight(Math.max(2, s * 0.12));
       if (progress > 0) p.arc(cx, cy, s * 0.56, s * 0.56, -p.HALF_PI, -p.HALF_PI + p.TWO_PI * progress);
     }
@@ -466,15 +466,15 @@ function infoAnim(p, w, h, frame) {
     if (b === activeBoard && localT < DRAW_END) {
       // board the current player must play in
       p.noStroke();
-      p.fill(230, 180, 34, 22);
+      p.fill(...PAL.sun, 22);
       p.rect(x, y, big, big, big * 0.06);
     }
     if (b === move.routed && highlightAlpha > 0) {
       p.noStroke();
-      p.fill(230, 180, 34, highlightAlpha);
+      p.fill(...PAL.sun, highlightAlpha);
       p.rect(x, y, big, big, big * 0.06);
     }
-    p.stroke(58, 53, 46);
+    p.stroke(...PAL.line);
     p.strokeWeight(1);
     for (let g = 1; g < 3; g++) {
       p.line(x + g * small, y, x + g * small, y + big);
@@ -494,7 +494,7 @@ function infoAnim(p, w, h, frame) {
     // pulse ring on the cell about to be played
     const pulse = 1.0 + 0.15 * p.sin(frame * 0.3);
     p.noFill();
-    p.stroke(243, 237, 224, 200);
+    p.stroke(...PAL.ink, 200);
     p.strokeWeight(2);
     p.circle(mcx, mcy, small * 0.55 * pulse);
   } else {
@@ -509,11 +509,11 @@ function infoAnim(p, w, h, frame) {
     const tx = x + big / 2, ty = y + big / 2;
     const e = easeInOutQuad(routeT);
     p.noStroke();
-    p.fill(230, 180, 34, 230);
+    p.fill(...PAL.sun, 230);
     p.circle(p.lerp(mcx, tx, e), p.lerp(mcy, ty, e), small * 0.2);
   }
 
-  p.stroke(120, 110, 95);
+  p.stroke(...PAL.lineHi);
   p.strokeWeight(2);
   for (let g = 1; g < 3; g++) {
     const off1 = ox + g * big + (g - 0.5) * gap;

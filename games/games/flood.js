@@ -46,10 +46,10 @@ const RIPPLE_STEP = 3; // frames of delay per unit of (r+c) distance
 const RIPPLE_FLIP_DUR = 10; // frames for a single cell's flip-scale animation
 
 const PALETTE = [
-  [200, 50, 63],   // red
-  [230, 180, 34],  // gold
-  [127, 176, 105], // green
-  [90, 160, 210],  // blue
+  PAL.rose,   // red
+  PAL.sun,  // gold
+  PAL.mint, // green
+  PAL.sky,  // blue
   [180, 110, 200], // purple
   [220, 140, 60],  // orange
   [90, 200, 190],  // teal
@@ -369,7 +369,7 @@ function infoAnim(p, w, h, frame) {
     }
   }
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
   p.noStroke();
 
   for (let r = 0; r < INFO_N; r++) {
@@ -402,7 +402,7 @@ function infoAnim(p, w, h, frame) {
   if (rippleState) {
     for (const [key, t] of rippleState) if (t >= 0.5) ownedSet.add(key);
   }
-  p.stroke(243, 237, 224, 200);
+  p.stroke(...PAL.ink, 200);
   p.strokeWeight(2);
   for (const key of ownedSet) {
     const [r, c] = key.split(",").map(Number);
@@ -428,7 +428,7 @@ function setup() {
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
 
   const availW = width;
   const boardAreaH = height - 64;
@@ -494,7 +494,7 @@ function draw() {
   if (rippleState) {
     for (const [key, t] of rippleState) if (t >= 0.5) ownedSet.add(key);
   }
-  stroke(243, 237, 224, 200);
+  stroke(...PAL.ink, 200);
   strokeWeight(2);
   for (const key of ownedSet) {
     const [r, c] = key.split(",").map(Number);
@@ -519,7 +519,7 @@ function draw() {
     rect(x + 4, swatchY + padY, sw - 8, swatchH - padY, 6);
     if (grid[0][0] === i) {
       noFill();
-      stroke(243, 237, 224, 200);
+      stroke(...PAL.ink, 200);
       strokeWeight(2);
       rect(x + 4, swatchY + padY, sw - 8, swatchH - padY, 6);
     }
@@ -531,7 +531,7 @@ function draw() {
       ox, oy, boardW, boardW,
       won ? "BOARD FLOODED" : "OUT OF MOVES",
       won ? "Solved in " + moves + " moves" : "Press New board to retry",
-      won ? [127, 176, 105] : [200, 50, 63],
+      won ? PAL.mint : PAL.rose,
     );
   }
 }

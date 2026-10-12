@@ -3,51 +3,75 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#0f101e" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <title>Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" />
 <link rel="stylesheet" href="shared.css" />
 <style>
-  body { background: var(--bg); }
   #home {
-    max-width: 960px;
+    max-width: 1080px;
     margin: 0 auto;
-    padding: 48px 24px 64px;
+    padding: 64px 24px 80px;
   }
+  #home .hero { display: block; text-align: center; margin-bottom: 44px; }
+  #home .hero .site-link { display: inline-flex; }
+  #home .site-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 500; color: var(--muted);
+    text-decoration: none; margin: -8px -8px 14px; padding: 8px; transition: color 0.15s;
+  }
+  #home .site-link:hover { color: var(--ink); }
   #home h1 {
-    text-align: center;
-    font-size: 28px;
-    letter-spacing: 0.18em;
-    margin-bottom: 6px;
+    font-size: clamp(44px, 8vw, 72px);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    margin: 0 0 12px;
+    background: linear-gradient(100deg, #ffd99a 0%, #ffb0c2 35%, #c8b6ff 65%, #9fe8ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
   #home .subtitle {
-    text-align: center;
-    font-size: 12px;
+    font-size: 17px;
     color: var(--muted);
-    letter-spacing: 0.08em;
-    margin-bottom: 40px;
+    margin: 0;
   }
   #home .grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    gap: 20px;
   }
-  @media (max-width: 640px) { #home .grid { grid-template-columns: 1fr; } }
-  @media (min-width: 641px) and (max-width: 880px) { #home .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) { #home .grid { grid-template-columns: 1fr; } #home { padding-top: 44px; } }
+  @media (min-width: 641px) and (max-width: 900px) { #home .grid { grid-template-columns: repeat(2, 1fr); } }
 
   #home .card {
     position: relative;
-    display: block;
-    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px;
     overflow: hidden;
-    border: 2px solid var(--panel-edge);
-    aspect-ratio: 5 / 3;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: linear-gradient(180deg, rgba(40, 44, 78, 0.55), rgba(28, 31, 54, 0.55));
     text-decoration: none;
-    transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
-    background: var(--panel);
+    color: inherit;
+    transition: transform 0.25s var(--ease), border-color 0.2s, box-shadow 0.25s var(--ease);
+    box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.8);
   }
   #home .card:hover {
-    transform: translateY(-3px);
-    border-color: #555048;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+    transform: translateY(-4px);
+    border-color: rgba(176, 152, 255, 0.35);
+    box-shadow: 0 22px 50px -20px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(176, 152, 255, 0.12), 0 10px 40px -10px rgba(176, 152, 255, 0.25);
+  }
+  #home .card:focus-visible { outline: 2px solid var(--lilac); outline-offset: 3px; }
+  #home .card .preview {
+    position: relative;
+    aspect-ratio: 5 / 3;
+    background: var(--board);
+    overflow: hidden;
   }
   #home .card canvas {
     width: 100% !important;
@@ -55,87 +79,65 @@
     display: block;
     position: absolute;
     inset: 0;
+    transition: transform 0.4s var(--ease);
   }
-  #home .card-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 0;
-    background: linear-gradient(to top, rgba(20,18,15,0.88) 0%, rgba(20,18,15,0.0) 55%);
-  }
+  #home .card:hover canvas { transform: scale(1.035); }
   #home .card-text {
-    padding: 14px 16px;
+    padding: 14px 18px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
   }
   #home .card-title {
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: -0.01em;
     color: var(--ink);
-    line-height: 1.2;
+    line-height: 1.25;
   }
   #home .card-desc {
-    font-size: 11px;
+    font-size: 14px;
     color: var(--muted);
-    letter-spacing: 0.07em;
-    margin-top: 3px;
+    margin-top: 2px;
   }
   #home .star-btn {
     position: absolute;
     top: 12px;
     right: 12px;
     z-index: 2;
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
+    flex: none;
     border-radius: 50%;
-    background: rgba(30, 27, 24, 0.4);
+    background: rgba(15, 16, 30, 0.55);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     opacity: 0;
     transform: scale(0.9);
-    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-                background-color 0.2s,
-                border-color 0.2s,
-                color 0.2s;
+    transition: opacity 0.2s var(--ease), transform 0.2s var(--ease), background-color 0.2s, border-color 0.2s, color 0.2s;
     color: var(--muted);
     padding: 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   }
-  #home .card:hover .star-btn {
-    opacity: 0.7;
-    transform: scale(1);
-  }
+  #home .card:hover .star-btn { opacity: 0.85; transform: scale(1); }
   #home .star-btn:hover {
     opacity: 1 !important;
-    color: var(--home);
-    background: rgba(30, 27, 24, 0.75);
-    border-color: rgba(230, 180, 34, 0.4);
-    transform: scale(1.1) !important;
+    color: var(--sun);
+    background: rgba(15, 16, 30, 0.8);
+    border-color: rgba(255, 204, 112, 0.45);
+    transform: scale(1.08) !important;
   }
   #home .star-btn.starred {
     opacity: 1 !important;
     transform: scale(1) !important;
-    color: var(--home);
-    background: rgba(30, 27, 24, 0.6);
-    border-color: rgba(230, 180, 34, 0.25);
+    color: var(--sun);
+    border-color: rgba(255, 204, 112, 0.3);
   }
-  #home .star-btn.starred:hover {
-    background: rgba(30, 27, 24, 0.8);
-    border-color: rgba(230, 180, 34, 0.5);
-  }
-  #home .star-btn:active {
-    transform: scale(0.95) !important;
-  }
+  #home .star-btn:active { transform: scale(0.95) !important; }
   #home .star-btn:focus-visible {
-    outline: 2px solid var(--home);
+    outline: 2px solid var(--sun);
     outline-offset: 2px;
     opacity: 1 !important;
     transform: scale(1) !important;
@@ -147,23 +149,12 @@
     stroke: currentColor;
     stroke-width: 2.2;
     stroke-linejoin: round;
-    transition: fill 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                stroke 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-                transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: fill 0.25s var(--ease), transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-  #home .star-btn.starred .star-icon {
-    fill: var(--home);
-    stroke: var(--home);
-    transform: scale(1.1);
-  }
-  #home .star-btn:active .star-icon {
-    transform: scale(0.85);
-  }
+  #home .star-btn.starred .star-icon { fill: var(--sun); transform: scale(1.1); }
+  #home .star-btn:active .star-icon { transform: scale(0.85); }
   @media (hover: none) {
-    #home .star-btn {
-      opacity: 0.5;
-      transform: scale(1);
-    }
+    #home .star-btn { opacity: 0.7; transform: scale(1); }
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
@@ -172,8 +163,11 @@
 </head>
 <body>
 <div id="home">
-  <h1>Games</h1>
-  <p class="subtitle">small puzzles by malte</p>
+  <header class="hero">
+    <a class="site-link" href="/">← malte9799</a>
+    <h1>Games</h1>
+    <p class="subtitle">small puzzles &amp; toys, made by malte</p>
+  </header>
 
   <div class="grid" id="grid"></div>
 </div>
@@ -184,7 +178,7 @@
 // the UI into #app); no param shows the home card grid from manifest.js.
 //
 // Game ideas that would fit this collection (grid/puzzle games, p5 canvas,
-// same dark gold/green theme — add via games/<id>.js + a manifest.js entry):
+// same "Midnight" theme (PAL in game.js) — add via games/<id>.js + a manifest.js entry):
 //   - Sokoban        — push crates onto targets, undo-heavy puzzling
 //   - 15-Puzzle      — sliding tiles into order, with a picture mode
 //   - Memory Pairs   — flip two cards, match symbols, count the tries
@@ -200,10 +194,11 @@
 
 const _gameName = new URLSearchParams(location.search).get("game");
 
-function loadScript(src, onload) {
+function loadScript(src, onload, onerror) {
   const s = document.createElement("script");
   s.src = src;
   if (onload) s.onload = onload;
+  if (onerror) s.onerror = onerror;
   document.body.appendChild(s);
 }
 
@@ -213,7 +208,15 @@ if (_gameName) {
   document.title = _gameName.charAt(0).toUpperCase() + _gameName.slice(1);
   document.getElementById("home").style.display = "none";
   document.getElementById("app").style.display = "";
-  loadScript("games/" + _gameName + ".js");
+  // only plain ids, so ?game= can't point the loader at another path
+  const ok = /^[a-z0-9-]+$/i.test(_gameName);
+  const notFound = () => {
+    document.getElementById("app").innerHTML =
+      `<a class="back-link" href="index.html">← Games</a><header><h1>Not found</h1></header>` +
+      `<p class="tag" style="text-align:left">There's no game called “${_gameName.replace(/[<>&"]/g, "")}”.</p>`;
+  };
+  if (ok) loadScript("games/" + _gameName + ".js", null, notFound);
+  else notFound();
 } else {
   // Home view: manifest.js (registry + previews) and home.js (card grid)
   // are only loaded here so their globals never collide with a running game.

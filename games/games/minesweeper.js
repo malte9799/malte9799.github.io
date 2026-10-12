@@ -40,14 +40,14 @@ let numMines = 22;
 
 const NUM_COLORS = [
   null,
-  [127, 176, 105],
-  [230, 180, 34],
-  [200, 50, 63],
-  [150, 130, 200],
-  [220, 120, 60],
-  [90, 180, 190],
-  [243, 237, 224],
-  [155, 145, 130],
+  PAL.mint,
+  PAL.sun,
+  PAL.rose,
+  PAL.lilac,
+  PAL.peach,
+  PAL.aqua,
+  PAL.ink,
+  PAL.muted,
 ];
 
 let grid = [];
@@ -123,8 +123,8 @@ function cellCenter(i, j) {
 function triggerExplosion(i, j) {
   const { cx, cy } = cellCenter(i, j);
   // Big bomb explosion, mostly red with some gold
-  spawnBurst(cx, cy, { count: 49, speed: [1.5, 7.5], life: [180, 255], size: [3, 8], col: [200, 50, 63], drag: 0.96 });
-  spawnBurst(cx, cy, { count: 26, speed: [1.5, 7.5], life: [180, 255], size: [3, 8], col: [230, 180, 34], drag: 0.96 });
+  spawnBurst(cx, cy, { count: 49, speed: [1.5, 7.5], life: [180, 255], size: [3, 8], col: PAL.rose, drag: 0.96 });
+  spawnBurst(cx, cy, { count: 26, speed: [1.5, 7.5], life: [180, 255], size: [3, 8], col: PAL.sun, drag: 0.96 });
 }
 
 function spawnFlagDust(i, j) {
@@ -198,7 +198,7 @@ function hintStep() {
 
   // Highlight the hint cell by spawning green particles around it
   const { cx, cy } = cellCenter(hi, hj);
-  spawnBurst(cx, cy, { count: 8, speed: [0.1, 0.7], life: [180, 180], size: [2, 4], col: [127, 176, 105] });
+  spawnBurst(cx, cy, { count: 8, speed: [0.1, 0.7], life: [180, 180], size: [2, 4], col: PAL.mint });
 
   revealCell(hi, hj);
   flashNote("revealed a safe cell");
@@ -209,11 +209,11 @@ function clamp() {
 }
 
 function saveState() {
-  saveJSON("minesweeper_state", { cols, rows, numMines });
+  saveSettings("minesweeper_state", { cols, rows, numMines });
 }
 
 function loadState() {
-  const d = loadJSON("minesweeper_state");
+  const d = loadSettings("minesweeper_state");
   if (typeof d.cols === "number") cols = d.cols;
   if (typeof d.rows === "number") rows = d.rows;
   if (typeof d.numMines === "number") numMines = d.numMines;
@@ -276,10 +276,10 @@ function infoAnim(p, w, h, frame) {
   const exploded = phase === 2 && t - PHASE_LEN * 2 > PHASE_LEN * 0.35;
   const clickPulse = phase === 2 && !exploded;
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
   p.noStroke();
 
-  const NUM_COLORS = [null, [127,176,105],[230,180,34],[200,50,63],[150,130,200],[220,120,60],[90,180,190],[243,237,224],[155,145,130]];
+  const NUM_COLORS = [null, PAL.mint,PAL.sun,PAL.rose,PAL.lilac,PAL.peach,PAL.aqua,PAL.ink,PAL.muted];
 
   for (let c = 0; c < C; c++) {
     for (let r = 0; r < R; r++) {
@@ -290,11 +290,11 @@ function infoAnim(p, w, h, frame) {
 
       if (isRevealed) {
         if (v === MINE) {
-          p.fill(200, 50, 63, 70); p.rect(x, y, cs, cs);
-          p.fill(200, 50, 63); p.circle(x + cs/2, y + cs/2, cs * 0.5);
-          p.fill(28, 25, 22); p.circle(x + cs/2, y + cs/2, cs * 0.2);
+          p.fill(...PAL.rose, 70); p.rect(x, y, cs, cs);
+          p.fill(...PAL.rose); p.circle(x + cs/2, y + cs/2, cs * 0.5);
+          p.fill(...PAL.well); p.circle(x + cs/2, y + cs/2, cs * 0.2);
         } else {
-          p.fill(30, 27, 23); p.rect(x, y, cs, cs);
+          p.fill(...PAL.well); p.rect(x, y, cs, cs);
           if (v > 0) {
             const col = NUM_COLORS[v];
             p.fill(col[0], col[1], col[2]);
@@ -305,10 +305,10 @@ function infoAnim(p, w, h, frame) {
           }
         }
       } else {
-        p.fill(38, 35, 32); p.rect(x, y, cs, cs);
-        p.fill(56, 51, 45, 90); p.rect(x, y, cs, cs * 0.14);
+        p.fill(...PAL.panel); p.rect(x, y, cs, cs);
+        p.fill(...PAL.panelHi, 90); p.rect(x, y, cs, cs * 0.14);
         if (flagged.has(key)) {
-          p.fill(230, 180, 34);
+          p.fill(...PAL.sun);
           const fr = cs * 0.16;
           p.rect(x + cs/2 - fr/2, y + cs/2 - fr/2, fr, fr, 2);
         }
@@ -321,7 +321,7 @@ function infoAnim(p, w, h, frame) {
     const cx = ox + 0.5 * cs, cy = oy + 4.5 * cs;
     const pulse = 1.0 + 0.15 * p.sin(frame * 0.3);
     p.noFill();
-    p.stroke(243, 237, 224, 200);
+    p.stroke(...PAL.ink, 200);
     p.strokeWeight(2);
     p.circle(cx, cy, cs * 0.55 * pulse);
   }
@@ -342,13 +342,13 @@ function cellW() { return width / cols; }
 function cellH() { return height / rows; }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
   const cw = cellW(), ch = cellH();
   const fs = Math.min(cw, ch) * 0.52;
 
   // Grid background
   noStroke();
-  fill(25, 23, 20);
+  fill(...PAL.well);
   rect(0, 0, width, height);
 
   for (let i = 0; i < cols; i++) {
@@ -368,7 +368,7 @@ function draw() {
 
       if (c.revealed) {
         // Draw open cell base
-        fill(30, 27, 23); noStroke(); rect(x, y, cw, ch);
+        fill(...PAL.well); noStroke(); rect(x, y, cw, ch);
         
         // Push transformation matrix to scale the cell contents on reveal
         push();
@@ -376,10 +376,10 @@ function draw() {
         scale(c.revealTime);
 
         if (c.mine) {
-          fill(200, 50, 63, 70); noStroke(); rect(-cw/2, -ch/2, cw, ch);
-          fill(200, 50, 63); circle(0, 0, Math.min(cw, ch) * 0.52);
+          fill(...PAL.rose, 70); noStroke(); rect(-cw/2, -ch/2, cw, ch);
+          fill(...PAL.rose); circle(0, 0, Math.min(cw, ch) * 0.52);
           // Dark center
-          fill(28, 25, 22); circle(0, 0, Math.min(cw, ch) * 0.2);
+          fill(...PAL.well); circle(0, 0, Math.min(cw, ch) * 0.2);
         } else {
           if (c.count > 0) {
             const col = NUM_COLORS[c.count];
@@ -397,9 +397,9 @@ function draw() {
         pop();
       } else {
         // Draw covered cell base
-        fill(38, 35, 32); noStroke(); rect(x, y, cw, ch);
+        fill(...PAL.panel); noStroke(); rect(x, y, cw, ch);
         // Beveled light top highlight
-        fill(56, 51, 45, 90); rect(x, y, cw, ch * 0.14);
+        fill(...PAL.panelHi, 90); rect(x, y, cw, ch * 0.14);
 
         if (c.flagTime > 0.0) {
           push();
@@ -407,7 +407,7 @@ function draw() {
           scale(c.flagTime);
           
           // Draw flag
-          fill(230, 180, 34);
+          fill(...PAL.sun);
           const r = Math.min(cw, ch) * 0.18;
           rect(-r/2, -r/2, r, r, 2);
           pop();
@@ -417,7 +417,7 @@ function draw() {
   }
 
   // Draw grid lines
-  stroke(58, 53, 46); strokeWeight(1);
+  stroke(...PAL.line); strokeWeight(1);
   for (let g = 0; g <= cols; g++) line(g * cw, 0, g * cw, height);
   for (let g = 0; g <= rows; g++) line(0, g * ch, width, g * ch);
 
