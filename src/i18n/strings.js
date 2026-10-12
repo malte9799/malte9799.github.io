@@ -10,6 +10,10 @@ export const STRINGS = {
       switchTo: 'Deutsch',
       switchLabel: 'Auf Deutsch lesen',
     },
+    ruler: {
+      landing: ['Start', 'About', 'Work', 'Numbers', 'More'],
+      projects: ['Featured', 'On GitHub'],
+    },
     footer: {
       credit: 'Built with React, Three.js and Motion. Text effects adapted from',
     },
@@ -70,6 +74,10 @@ export const STRINGS = {
       main: 'Hauptnavigation',
       switchTo: 'English',
       switchLabel: 'Read in English',
+    },
+    ruler: {
+      landing: ['Start', 'Über mich', 'Projekte', 'Zahlen', 'Mehr'],
+      projects: ['Ausgewählt', 'Auf GitHub'],
     },
     footer: {
       credit: 'Gebaut mit React, Three.js und Motion. Texteffekte adaptiert von',

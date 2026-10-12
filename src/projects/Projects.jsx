@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
+import ScrollRuler from '../components/ScrollRuler';
 import BrowserFrame from '../components/BrowserFrame';
 import { CarouselArrows, CarouselDots, resolveSlides, useCarousel } from '../components/Carousel';
 import BlurText from '../components/reactbits/BlurText';
@@ -221,12 +223,18 @@ function RepoList() {
 }
 
 export default function Projects() {
-  const t = useT().projects;
+  const strings = useT();
+  const t = strings.projects;
   useLenis();
+  const rulerSections = useMemo(
+    () => ['.features', '.more'].map((selector, i) => ({ selector, label: strings.ruler.projects[i] })),
+    [strings]
+  );
 
   return (
     <>
       <Nav page="/projects/" />
+      <ScrollRuler sections={rulerSections} />
       <main>
         <header className="projects-hero container">
           <motion.p
