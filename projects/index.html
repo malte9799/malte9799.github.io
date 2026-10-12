@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
+    <script>
+      // Send German-speaking visitors to /de/ unless they picked a language before.
+      try {
+        var pref = localStorage.getItem('lang');
+        if (pref === 'de' || (!pref && /^de\b/i.test(navigator.language || '')))
+          location.replace('/de' + location.pathname + location.search + location.hash);
+      } catch (e) {}
+    </script>
+    <title>Projects — Malte</title>
+    <meta name="description" content="Everything Malte has built: paint.net web, FactorioTools, a puzzle arcade and more on GitHub." />
+    <meta property="og:title" content="Projects — Malte" />
+    <meta property="og:description" content="paint.net web, FactorioTools, a puzzle arcade and more on GitHub." />
+    <meta property="og:image" content="https://malte9799.github.io/img/factoriotools.webp" />
+    <meta property="og:locale" content="en_US" />
+    <link rel="alternate" hreflang="en" href="https://malte9799.github.io/projects/" />
+    <link rel="alternate" hreflang="de" href="https://malte9799.github.io/de/projects/" />
+    <link rel="alternate" hreflang="x-default" href="https://malte9799.github.io/projects/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>This page needs JavaScript. Projects: <a href="https://malte9799.github.io/paint.net/">paint.net web</a>, <a href="https://malte9799.github.io/FactorioTools/">FactorioTools</a>, <a href="/games/">Games</a>, <a href="https://github.com/malte9799">GitHub</a>.</noscript>
+    <script type="module" src="/src/projects/main.jsx"></script>
+  </body>
+</html>
