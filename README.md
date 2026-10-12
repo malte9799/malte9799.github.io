@@ -20,3 +20,11 @@ npm run build     # static site in dist/
 
 Pushing to `main` builds and deploys via `.github/workflows/deploy.yml`
 (Settings → Pages → Source must be set to **GitHub Actions**).
+
+**Branch previews.** The same workflow also builds every other branch (newest 12) into
+`/previews/<branch>/`, e.g. `https://malte9799.github.io/previews/my-branch/`; the list is at
+`/previews/`. `scripts/build-pages.mjs` does the work (`node scripts/build-pages.mjs` locally,
+after fetching the branches → `site/`). Each run replaces the whole deployment, so production
+(`main`) is never touched by a branch push and a deleted branch loses its preview. One-time
+setting: Settings → Environments → github-pages → Deployment branches → *No restriction*.
+In code, link with `withBase()` / `import.meta.env.BASE_URL` rather than a bare `/path`.
