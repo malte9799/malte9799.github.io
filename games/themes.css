@@ -266,223 +266,283 @@ html[data-theme="paper"] .tag,
 html[data-theme="paper"] .info-text { font-size: 16px; }
 html[data-theme="paper"] #home .card-title { font-family: var(--font-display); font-size: 28px; }
 
-/* ---- Terminal: green phosphor CRT, scanlines and glow ---- */
-html[data-theme="terminal"] {
-  --bg: #030805;
-  --board: #040a06;
-  --panel: #07140c;
-  --panel-2: #0d2416;
-  --panel-edge: #1c5a32;
-  --edge-hover: #3fae66;
-  --grid-line: #12341f;
-  --hairline: #1c5a32;
-  --ink: #8cffaa;
-  --muted: #46aa64;
-  --dim: #245a34;
-  --sun: #ffc440;
-  --mint: #50ff8c;
-  --rose: #ff5a50;
-  --sky: #78ffe6;
-  --lilac: #c8ff8c;
-  --accent: #50ff8c;
-  --toggle: #ffc440;
-  --toggle-fg: #ffc440;
+/* ---- Artcraft: fine line art on quiet paper — hairlines, drawn-on frames, scroll + hover motion ---- */
+html[data-theme="artcraft"] {
+  --bg: #f6f5f1;
+  --board: #faf9f6;
+  --panel: #faf9f6;
+  --panel-2: #efeee9;
+  --panel-edge: rgba(24, 24, 27, 0.2);
+  --edge-hover: #18181b;
+  --grid-line: #d6d4cc;
+  --hairline: rgba(24, 24, 27, 0.16);
+  --ink: #18181b;
+  --muted: #706f6a;
+  --dim: #bab8b0;
+  --sun: #18181b;
+  --mint: #18181b;
+  --rose: #18181b;
+  --sky: #18181b;
+  --lilac: #18181b;
+  --accent: #18181b;
+  --toggle: #18181b;
+  --toggle-fg: #18181b;
 
-  --font: "VT323", ui-monospace, Menlo, monospace;
+  --font: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: var(--font);
-  --ui-tracking: 0.03em;
-  --title-size: 34px;
-  --title-weight: 400;
-  --title-tracking: 0.06em;
-  --title-transform: uppercase;
-  --hero-fill: linear-gradient(#8cffaa, #8cffaa);
-  --hero-size: clamp(56px, 10vw, 96px);
+  --ui-tracking: 0;
+  --title-size: 26px;
+  --title-weight: 500;
+  --title-tracking: -0.02em;
+  --title-transform: none;
+  /* hero title is an outline that fills with ink on hover (see #home h1 below) */
+  --hero-fill: linear-gradient(#18181b, #18181b) no-repeat 0 100% / 100% 0%;
+  --hero-size: clamp(64px, 14vw, 140px);
 
-  --r-sm: 0px;
-  --r-md: 0px;
-  --r-lg: 0px;
-  --r-xl: 0px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 4px;
+  --r-xl: 4px;
   --border-w: 1px;
 
-  --page-bg: radial-gradient(ellipse at 50% 40%, #07160d 0%, #020503 75%);
-  --wrap-shadow: 0 0 0 1px rgba(80, 255, 140, 0.15), 0 0 40px rgba(80, 255, 140, 0.08);
-  --btn-press: none;
-  --primary-bg: #50ff8c;
-  --primary-hover: #8cffaa;
-  --primary-fg: #031007;
-  --primary-border: #50ff8c;
-  --primary-shadow: 0 0 14px rgba(80, 255, 140, 0.45);
-  --card-bg: var(--board);
-  --card-shadow: none;
-  --card-hover-shadow: 0 0 24px rgba(80, 255, 140, 0.25);
-  --card-hover-lift: none;
-  --modal-bg: var(--board);
-  --modal-shadow: 0 0 40px rgba(80, 255, 140, 0.15);
-  --backdrop: rgba(2, 6, 3, 0.85);
-  --bar-bg: rgba(3, 8, 5, 0.92);
-  --chip-bg: rgba(3, 8, 5, 0.8);
-}
-html[data-theme="terminal"] body { text-shadow: 0 0 6px rgba(80, 255, 140, 0.45); }
-html[data-theme="terminal"] button,
-html[data-theme="terminal"] .preset-row select,
-html[data-theme="terminal"] .status,
-html[data-theme="terminal"] .tag,
-html[data-theme="terminal"] .info-text,
-html[data-theme="terminal"] .back-link { font-size: 19px; }
-html[data-theme="terminal"] button.primary { text-shadow: none; }
-html[data-theme="terminal"] canvas { filter: drop-shadow(0 0 3px rgba(80, 255, 140, 0.35)); }
-/* scanlines + vignette over every screen */
-html[data-theme="terminal"] #canvas-wrap::after,
-html[data-theme="terminal"] #home .card .preview::after,
-html[data-theme="terminal"] body::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 2;
-  background:
-    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.28) 0 1px, transparent 1px 3px),
-    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
-}
-html[data-theme="terminal"] body::after { position: fixed; z-index: 300; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 1px, transparent 1px 3px); }
-html[data-theme="terminal"] #home h1::after { content: "_"; animation: term-blink 1s steps(1) infinite; }
-@keyframes term-blink { 50% { opacity: 0; } }
-
-/* ---- Pixel: 8-bit arcade, rendered at half resolution ---- */
-html[data-theme="pixel"] {
-  --bg: #1a1c2c;
-  --board: #1a1c2c;
-  --panel: #333c57;
-  --panel-2: #3f4a6b;
-  --panel-edge: #0f1020;
-  --edge-hover: #0f1020;
-  --grid-line: #333c57;
-  --hairline: #0f1020;
-  --ink: #f4f4f4;
-  --muted: #94b0c2;
-  --dim: #566c86;
-  --sun: #ffcd75;
-  --mint: #a7f070;
-  --rose: #ef5a6f;
-  --sky: #41a6f6;
-  --lilac: #73eff7;
-  --accent: #ffcd75;
-  --toggle: #ffcd75;
-  --toggle-fg: #ffcd75;
-
-  --font: "Pixelify Sans", ui-monospace, monospace;
-  --font-display: "Press Start 2P", var(--font);
-  --title-size: 18px;
-  --title-weight: 400;
-  --title-tracking: 0;
-  --hero-fill: linear-gradient(180deg, #ffcd75 0 50%, #ef7d57 50% 100%);
-  --hero-size: clamp(30px, 6vw, 52px);
-
-  --r-sm: 0px;
-  --r-md: 0px;
-  --r-lg: 0px;
-  --r-xl: 0px;
-  --border-w: 3px;
-
-  --page-bg: #1a1c2c;
-  --wrap-shadow: 6px 6px 0 #0f1020;
-  --btn-shadow: inset -3px -3px 0 rgba(0, 0, 0, 0.35), inset 3px 3px 0 rgba(255, 255, 255, 0.12);
-  --btn-shadow-press: inset 3px 3px 0 rgba(0, 0, 0, 0.35);
-  --btn-press: translateY(2px);
-  --primary-bg: #38b764;
-  --primary-hover: #45c873;
-  --primary-fg: #ffffff;
-  --primary-border: #0f1020;
-  --primary-shadow: inset -3px -3px 0 rgba(0, 0, 0, 0.3), inset 3px 3px 0 rgba(255, 255, 255, 0.25);
-  --card-bg: #333c57;
-  --card-shadow: 6px 6px 0 #0f1020;
-  --card-hover-shadow: 10px 10px 0 #0f1020;
-  --card-hover-lift: translate(-4px, -4px);
-  --modal-bg: #29366f;
-  --modal-shadow: 8px 8px 0 #0f1020;
-  --backdrop: rgba(15, 16, 32, 0.8);
-  --bar-bg: #1a1c2c;
-  --chip-bg: #1a1c2c;
-}
-html[data-theme="pixel"] canvas { image-rendering: pixelated; }
-html[data-theme="pixel"] h1 { line-height: 1.5; }
-html[data-theme="pixel"] button,
-html[data-theme="pixel"] .preset-row select { font-size: 15px; }
-html[data-theme="pixel"] #home h1 { text-shadow: 4px 4px 0 #0f1020; }
-
-/* ---- Blueprint: white technical lines on blueprint paper ---- */
-html[data-theme="blueprint"] {
-  --bg: #0e3a6c;
-  --board: #11427a;
-  --panel: #174b88;
-  --panel-2: #1e5a9c;
-  --panel-edge: #7fb2e6;
-  --edge-hover: #d6ebff;
-  --grid-line: #3d78b8;
-  --hairline: rgba(214, 235, 255, 0.55);
-  --ink: #eef6ff;
-  --muted: #a8c9ec;
-  --dim: #5f93cc;
-  --sun: #ffd666;
-  --mint: #8cf0c8;
-  --rose: #ff8c8c;
-  --sky: #b4e1ff;
-  --lilac: #ffffff;
-  --accent: #ffffff;
-  --toggle: #ffd666;
-  --toggle-fg: #ffd666;
-
-  --font: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --font-display: "IBM Plex Mono", ui-monospace, monospace;
-  --ui-tracking: 0.02em;
-  --title-size: 22px;
-  --title-weight: 600;
-  --title-tracking: 0.08em;
-  --title-transform: uppercase;
-  --hero-fill: linear-gradient(#ffffff, #ffffff);
-  --hero-size: clamp(36px, 7vw, 60px);
-
-  --r-sm: 2px;
-  --r-md: 2px;
-  --r-lg: 2px;
-  --r-xl: 3px;
-  --border-w: 1px;
-
-  --page-bg:
-    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 0 / 100px 100px,
-    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 0 / 100px 100px,
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 20px 20px,
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px) 0 0 / 20px 20px,
-    var(--bg);
-  --wrap-shadow: 0 0 0 6px rgba(255, 255, 255, 0.04);
-  --primary-bg: #eef6ff;
-  --primary-hover: #ffffff;
-  --primary-fg: #0e3a6c;
-  --primary-border: #eef6ff;
+  --page-bg: var(--bg);
+  --wrap-shadow: none;
+  --btn-shadow: none;
+  --btn-shadow-press: none;
+  --btn-press: scale(0.98);
+  --primary-bg: #18181b;
+  --primary-hover: #18181b;
+  --primary-fg: #faf9f6;
+  --primary-border: #18181b;
   --primary-shadow: none;
-  --card-bg: rgba(17, 66, 122, 0.85);
+  --card-bg: transparent;
   --card-shadow: none;
-  --card-hover-shadow: 0 0 0 1px #ffffff;
+  --card-hover-shadow: none;
   --card-hover-lift: none;
-  --modal-bg: #11427a;
-  --modal-shadow: 0 20px 60px rgba(4, 20, 40, 0.5);
-  --backdrop: rgba(10, 40, 76, 0.75);
-  --bar-bg: rgba(14, 58, 108, 0.92);
-  --chip-bg: rgba(14, 58, 108, 0.8);
+  --modal-bg: #faf9f6;
+  --modal-shadow: 0 0 0 1px rgba(24, 24, 27, 0.2), 0 24px 60px -24px rgba(24, 24, 27, 0.35);
+  --backdrop: rgba(246, 245, 241, 0.8);
+  --bar-bg: rgba(246, 245, 241, 0.9);
+  --chip-bg: rgba(250, 249, 246, 0.9);
+  color-scheme: light;
 }
-html[data-theme="blueprint"] #canvas-wrap::after,
-html[data-theme="blueprint"] #home .card .preview::after {
-  /* construction-line grid drawn over the board */
+
+/* vertical guide lines run down the page and draw themselves in on load */
+html[data-theme="artcraft"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 0 50%;
+  width: min(1080px, 100vw);
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+  background:
+    linear-gradient(rgba(24, 24, 27, 0.09), rgba(24, 24, 27, 0.09)) 0 0 / 1px 100% no-repeat,
+    linear-gradient(rgba(24, 24, 27, 0.09), rgba(24, 24, 27, 0.09)) 33.333% 0 / 1px 100% no-repeat,
+    linear-gradient(rgba(24, 24, 27, 0.09), rgba(24, 24, 27, 0.09)) 66.666% 0 / 1px 100% no-repeat,
+    linear-gradient(rgba(24, 24, 27, 0.09), rgba(24, 24, 27, 0.09)) 100% 0 / 1px 100% no-repeat;
+  animation: art-guides 1.6s var(--ease) both;
+}
+@keyframes art-guides { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+html[data-theme="artcraft"] #home,
+html[data-theme="artcraft"] #app { position: relative; z-index: 1; }
+
+/* buttons: outline, ink fills in from the left on hover */
+html[data-theme="artcraft"] button,
+html[data-theme="artcraft"] .preset-row select {
+  background-color: transparent;
+  font-weight: 500;
+}
+html[data-theme="artcraft"] button {
+  background-image: linear-gradient(var(--ink), var(--ink));
+  background-repeat: no-repeat;
+  background-position: 0 50%;
+  background-size: 0% 100%;
+  transition: background-size 0.45s var(--ease), color 0.3s, border-color 0.2s, transform 0.08s;
+}
+html[data-theme="artcraft"] button:hover {
+  background-color: transparent;
+  background-size: 100% 100%;
+  color: var(--bg);
+  border-color: var(--ink);
+}
+html[data-theme="artcraft"] button.primary { background-color: var(--ink); background-image: linear-gradient(var(--bg), var(--bg)); }
+html[data-theme="artcraft"] button.primary:hover { background-color: var(--ink); color: var(--ink); }
+html[data-theme="artcraft"] button.active,
+html[data-theme="artcraft"] button.hint-confirm { background-color: var(--panel-2); border-color: var(--ink); color: var(--ink); }
+html[data-theme="artcraft"] button.active:hover,
+html[data-theme="artcraft"] button.hint-confirm:hover { color: var(--bg); background-color: var(--panel-2); }
+html[data-theme="artcraft"] .preset-row select:hover { background-color: transparent; border-color: var(--ink); }
+html[data-theme="artcraft"] .status .dot { box-shadow: none !important; }
+
+/* game board: hairline frame with corner brackets that tighten on hover */
+html[data-theme="artcraft"] #canvas-wrap { overflow: visible; border-color: var(--hairline); transition: border-color 0.3s; }
+html[data-theme="artcraft"] #canvas-wrap.fs { overflow: hidden; }
+html[data-theme="artcraft"] #canvas-wrap:not(.fs)::after,
+html[data-theme="artcraft"] #home .card .preview::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: 10px;
   pointer-events: none;
   z-index: 2;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px) 0 0 / 22px 22px,
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px) 0 0 / 22px 22px;
+    linear-gradient(var(--ink), var(--ink)) 0 0 / 14px 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 0 0 / 1px 14px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 100% 0 / 14px 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 100% 0 / 1px 14px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 0 100% / 14px 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 0 100% / 1px 14px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 100% 100% / 14px 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 100% 100% / 1px 14px no-repeat;
+  opacity: 0.5;
+  transition: inset 0.45s var(--ease), opacity 0.3s;
 }
-html[data-theme="blueprint"] #canvas-wrap { border-style: dashed; }
+html[data-theme="artcraft"] #canvas-wrap:not(.fs):hover::after { inset: 6px; opacity: 0.8; }
+
+/* home: header */
+html[data-theme="artcraft"] #home .hero { position: relative; margin-bottom: 64px; padding-top: 12px; }
+html[data-theme="artcraft"] #home .hero::after {
+  /* rule under the header, drawn left to right */
+  content: "";
+  display: block;
+  height: 1px;
+  margin-top: 40px;
+  background: var(--ink);
+  opacity: 0.2;
+  transform-origin: 0 50%;
+  animation: art-rule 1.4s 0.3s var(--ease) both;
+}
+@keyframes art-rule { from { transform: scaleX(0); } }
+html[data-theme="artcraft"] #home h1 {
+  position: relative;
+  display: inline-block;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  -webkit-text-stroke: 1.2px var(--ink);
+  transition: background-size 0.7s var(--ease);
+  cursor: default;
+}
+html[data-theme="artcraft"] #home h1:hover { background-size: 100% 100%; }
+html[data-theme="artcraft"] #home .subtitle { position: relative; letter-spacing: 0.01em; }
+html[data-theme="artcraft"] #home .site-link { position: relative; z-index: 2; }
+
+/* line-art drawing behind the title: strokes draw in, then react to hover + scroll */
+#home .art-lines { display: none; }
+html[data-theme="artcraft"] #home .art-lines {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: min(920px, 100%);
+  height: 100%;
+  transform: translate(calc(-50% + var(--mx, 0) * 14px), calc(var(--my, 0) * 10px));
+  transition: transform 0.6s var(--ease);
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
+}
+html[data-theme="artcraft"] #home .art-lines path,
+html[data-theme="artcraft"] #home .art-lines rect,
+html[data-theme="artcraft"] #home .art-lines circle {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: art-draw 2.2s var(--ease) forwards;
+  animation-delay: calc(var(--d, 0) * 0.12s + 0.2s);
+  transition: stroke-width 0.3s;
+}
+@keyframes art-draw { to { stroke-dashoffset: 0; } }
+html[data-theme="artcraft"] #home .hero:hover .art-lines { opacity: 0.6; }
+html[data-theme="artcraft"] #home .art-lines .spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.9s var(--ease);
+}
+html[data-theme="artcraft"] #home .hero:hover .art-lines .spin { transform: rotate(90deg); }
+html[data-theme="artcraft"] #home .hero:hover .art-lines .spin-r { transform: rotate(-90deg); }
+@supports (animation-timeline: scroll()) {
+  html[data-theme="artcraft"] #home .art-lines {
+    animation: art-scroll linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 420px;
+  }
+  @keyframes art-scroll { to { opacity: 0; translate: 0 -60px; scale: 1.06; } }
+}
+
+/* home: cards are open frames — hairline border, ink line draws along the top on hover */
+html[data-theme="artcraft"] #home .grid { gap: 28px; }
+html[data-theme="artcraft"] #home .card {
+  overflow: hidden;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  transition: border-color 0.35s, background-color 0.35s;
+}
+html[data-theme="artcraft"] #home .card::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 1px;
+  z-index: 3;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.7s var(--ease);
+}
+html[data-theme="artcraft"] #home .card:hover::before,
+html[data-theme="artcraft"] #home .card:focus-visible::before { transform: scaleX(1); }
+html[data-theme="artcraft"] #home .card:hover { border-color: var(--ink); background-color: var(--board); }
+html[data-theme="artcraft"] #home .card .preview { background: transparent; border-bottom: 1px solid var(--hairline); }
+html[data-theme="artcraft"] #home .card canvas { transition: transform 0.9s var(--ease), opacity 0.4s; opacity: 0.9; }
+html[data-theme="artcraft"] #home .card:hover canvas { transform: scale(1.05); opacity: 1; }
+html[data-theme="artcraft"] #home .card .card-text { border-top: 0; padding: 16px 18px 18px; position: relative; }
+html[data-theme="artcraft"] #home .card-title {
+  display: inline;
+  font-weight: 500;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  background: linear-gradient(var(--ink), var(--ink)) 0 100% / 0% 1px no-repeat;
+  transition: background-size 0.5s var(--ease);
+}
+html[data-theme="artcraft"] #home .card:hover .card-title { background-size: 100% 1px; }
+html[data-theme="artcraft"] #home .card-text::after {
+  /* arrow drawn from lines, slides in on hover */
+  content: "";
+  position: absolute;
+  right: 18px; top: 20px;
+  width: 9px; height: 9px;
+  border-top: 1px solid var(--ink);
+  border-right: 1px solid var(--ink);
+  opacity: 0;
+  transform: translate(-8px, 8px);
+  transition: opacity 0.3s, transform 0.5s var(--ease);
+}
+html[data-theme="artcraft"] #home .card:hover .card-text::after { opacity: 1; transform: translate(0, 0); }
+html[data-theme="artcraft"] #home .star-btn { border-radius: 50%; background: var(--chip-bg); border-color: var(--hairline); }
+html[data-theme="artcraft"] #home .star-btn .star-icon { stroke-width: 1.5; }
+html[data-theme="artcraft"] #home .star-btn.starred .star-icon { fill: var(--ink); }
+
+/* scroll reveal: cards rise in while their frame fades up (class set by home.js) */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme="artcraft"] #home .card.reveal {
+    opacity: 0;
+    transform: translateY(36px);
+    transition: opacity 0.9s var(--ease), transform 0.9s var(--ease), border-color 0.35s, background-color 0.35s;
+    transition-delay: calc(var(--i, 0) * 90ms), calc(var(--i, 0) * 90ms), 0s, 0s;
+  }
+  html[data-theme="artcraft"] #home .card.reveal.in { opacity: 1; transform: none; }
+  html[data-theme="artcraft"] #home .card.reveal.in canvas { animation: art-preview-in 1.2s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 150ms); }
+  @keyframes art-preview-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="artcraft"] body::before,
+  html[data-theme="artcraft"] #home .hero::after { animation: none; }
+  html[data-theme="artcraft"] #home .art-lines * { animation: none !important; stroke-dashoffset: 0 !important; }
+}
 
 /* ---- Brutal: neo-brutalism, thick black outlines and hard shadows ---- */
 html[data-theme="brutal"] {

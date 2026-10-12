@@ -13,6 +13,15 @@ function buildHome() {
   }
 
   let sketches = [];
+  const revealed = new Set(); // cards already shown don't animate again on a rebuild
+
+  // scroll reveal: cards get .in as they enter the viewport (only the Artcraft
+  // design styles .reveal; elsewhere the classes are inert)
+  const revealer = "IntersectionObserver" in window
+    ? new IntersectionObserver((entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add("in"); revealed.add(e.target.dataset.id); revealer.unobserve(e.target); }
+      }), { threshold: 0.12, rootMargin: "0px 0px -6% 0px" })
+    : null;
 
   function buildCards() {
     sketches.forEach((sk) => sk.remove());
@@ -24,9 +33,10 @@ function buildHome() {
       return as - bs;
     });
 
-    sorted.forEach(game => {
+    sorted.forEach((game, idx) => {
       const a = document.createElement("a");
-      a.className = "card";
+      a.className = "card" + (revealer ? " reveal" : "");
+      a.style.setProperty("--i", idx % 3);
       a.href = "index.html?game=" + game.id;
       a.dataset.id = game.id;
       a.innerHTML = `
@@ -61,6 +71,7 @@ function buildHome() {
       });
 
       grid.appendChild(a);
+      if (revealer) { if (revealed.has(game.id)) a.classList.add("in"); else revealer.observe(a); }
 
       // inject p5 canvas as preview
       const holder = a.querySelector(".preview");

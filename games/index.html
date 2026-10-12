@@ -165,6 +165,25 @@
 <body>
 <div id="home">
   <header class="hero">
+    <svg class="art-lines" viewBox="0 0 800 360" aria-hidden="true">
+      <rect pathLength="1" style="--d:0" x="300" y="50" width="200" height="200" rx="6" />
+      <path pathLength="1" style="--d:2" d="M367 50V250M433 50V250M300 117H500M300 183H500" />
+      <circle pathLength="1" class="spin" style="--d:4" cx="333" cy="83" r="20" />
+      <path pathLength="1" class="spin-r spin" style="--d:5" d="M382 132L418 168M418 132L382 168" />
+      <circle pathLength="1" class="spin" style="--d:6" cx="467" cy="216" r="20" />
+      <path pathLength="1" class="spin-r spin" style="--d:7" d="M315 198L351 234M351 198L315 234" />
+      <path pathLength="1" style="--d:3" d="M20 300q40-70 80 0t80 0 80 0 80 0" />
+      <path pathLength="1" style="--d:8" d="M20 300q40-70 80 0t80 0 80 0 80 0" transform="translate(0 20)" />
+      <circle pathLength="1" style="--d:5" cx="650" cy="130" r="64" />
+      <circle pathLength="1" style="--d:6" cx="650" cy="130" r="42" />
+      <circle pathLength="1" style="--d:7" cx="650" cy="130" r="20" />
+      <path pathLength="1" style="--d:8" d="M560 130H740M650 40V220" />
+      <rect pathLength="1" class="spin" style="--d:9" x="580" y="260" width="70" height="70" rx="14" />
+      <circle pathLength="1" style="--d:10" cx="600" cy="280" r="3" />
+      <circle pathLength="1" style="--d:10" cx="615" cy="295" r="3" />
+      <circle pathLength="1" style="--d:10" cx="630" cy="310" r="3" />
+      <path pathLength="1" style="--d:9" d="M60 60l60-40 60 40-60 40zM60 60v50l60 40V100M180 60v50l-60 40" />
+    </svg>
     <a class="site-link" href="/">← malte9799</a>
     <h1>Games</h1>
     <p class="subtitle">small puzzles &amp; toys, made by malte</p>
@@ -222,6 +241,15 @@ if (_gameName) {
   // Home view: manifest.js (registry + previews) and home.js (card grid)
   // are only loaded here so their globals never collide with a running game.
   loadScript("manifest.js", () => loadScript("home.js", () => buildHome()));
+
+  // line art follows the pointer a little (Artcraft design; harmless otherwise)
+  const _home = document.getElementById("home");
+  if (matchMedia("(hover: hover) and (prefers-reduced-motion: no-preference)").matches) {
+    addEventListener("pointermove", (e) => {
+      _home.style.setProperty("--mx", (e.clientX / innerWidth - 0.5).toFixed(3));
+      _home.style.setProperty("--my", (e.clientY / innerHeight - 0.5).toFixed(3));
+    }, { passive: true });
+  }
 }
 </script>
 </body>

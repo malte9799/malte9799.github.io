@@ -173,14 +173,13 @@ function drawMyGame(p, w, h) {
 ## Conventions
 
 - **Designs.** The player picks a design (Midnight, Classic, Studio, Paper,
-  Terminal, Pixel, Blueprint, Brutal) with the "Design" button; mechanics
+  Artcraft — fine line art —, Brutal) with the "Design" button; mechanics
   never change, only looks. So never hardcode colours in canvas code —
   spread `PAL`, e.g. `fill(...PAL.sun, 80)` or `p.stroke(...PAL.line)`.
   PAL is updated in place on a switch, so caching `const C = PAL.mint` is
   fine, but don't copy the numbers out. Don't call `textFont()` either:
   every sketch draws in the design's font automatically, and `rect()` corner
-  radii / `textSize()` are scaled per design (square corners in Pixel,
-  bigger text in Terminal, a half-resolution canvas in Pixel).
+  radii / `textSize()` are scaled per design.
   To add a design: one entry in `THEMES` (themes.js) + one
   `html[data-theme=…]` block in themes.css with the same variables.
   `board` canvas bg · `well` sunken cells · `panel`/`panelHi` raised tiles ·
