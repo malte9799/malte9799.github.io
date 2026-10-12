@@ -8,7 +8,7 @@ import { CarouselArrows, CarouselDots, resolveSlides, useCarousel } from '../com
 import BlurText from '../components/reactbits/BlurText';
 import SpotlightCard from '../components/reactbits/SpotlightCard';
 import { ArrowUpRight, StarIcon } from '../components/Icons';
-import { FEATURED, GITHUB_URL } from '../data/projects';
+import { EXTRAS, FEATURED, GITHUB_URL } from '../data/projects';
 import { useLenis } from '../lib/useLenis';
 import { localize, useLang, useT } from '../i18n';
 import { useRepos } from './useRepos';
@@ -154,6 +154,48 @@ function FeaturedCard({ project: raw, index, wide }) {
   );
 }
 
+function ExtraCard({ project, index }) {
+  const lang = useLang();
+  const strings = useT();
+  const t = strings.projects;
+  const p = localize(project, lang);
+
+  return (
+    <motion.article
+      className="extra"
+      style={{ '--a': p.accent[0] }}
+      aria-labelledby={`x-${p.id}`}
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-10% 0px' }}
+      transition={{ duration: 0.8, delay: index * 0.06, ease: EASE }}
+    >
+      <SpotlightCard className="extra-card" spotlightColor={p.accent[0]} intensity={0.14} spotlightSize={320} borderGlow={0.6}>
+        <p className="extra-eyebrow">{p.eyebrow}</p>
+        <h2 id={`x-${p.id}`} className="extra-name">{p.name}</h2>
+        <p className="extra-desc">{p.description}</p>
+        <ul className="feature-tags" aria-label={strings.builtWith}>
+          {p.tags.map(tag => (
+            <li key={tag} className="chip">
+              {tag}
+            </li>
+          ))}
+        </ul>
+        <div className="extra-links">
+          <a className="text-link" href={p.url}>
+            {t.open}
+            <ArrowUpRight style={{ width: 12, height: 12 }} />
+          </a>
+          <a className="text-link" href={p.repo}>
+            {t.viewSource}
+            <ArrowUpRight style={{ width: 12, height: 12 }} />
+          </a>
+        </div>
+      </SpotlightCard>
+    </motion.article>
+  );
+}
+
 function RepoList() {
   const lang = useLang();
   const t = useT().projects;
@@ -265,6 +307,9 @@ export default function Projects() {
               // First card spans the row; so does the last one if it would sit alone.
               wide={i === 0 || (i === FEATURED.length - 1 && i % 2 === 1)}
             />
+          ))}
+          {EXTRAS.map((project, i) => (
+            <ExtraCard key={project.id} project={project} index={i} />
           ))}
         </section>
 

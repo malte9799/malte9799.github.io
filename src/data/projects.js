@@ -211,5 +211,23 @@ export const FEATURED = [
   },
 ];
 
+// Smaller featured projects: compact cards (no screenshot) at the end of the
+// featured grid on /projects/ only, not on the landing page.
+export const EXTRAS = [
+  {
+    id: 'just-watch',
+    name: 'just-watch',
+    eyebrow: { en: 'Movies & shows', de: 'Filme & Serien' },
+    description: {
+      en: 'Search films, shows and anime through TMDB, watch trailers and play episodes in an embedded player. Keeps a watchlist and what you’ve seen in the browser. Plain HTML and JS, no backend.',
+      de: 'Filme, Serien und Anime über TMDB suchen, Trailer ansehen und Folgen im eingebetteten Player abspielen. Merkliste und Gesehenes bleiben im Browser. Reines HTML und JS, kein Backend.',
+    },
+    url: 'https://malte9799.github.io/just-watch/',
+    repo: 'https://github.com/malte9799/just-watch',
+    accent: ['#ff5f6d', '#ffc371'],
+    tags: { en: ['JavaScript', 'TMDB API'], de: ['JavaScript', 'TMDB-API'] },
+  },
+];
+
 // Repos left out of the live "More on GitHub" list (featured above, or this site).
-export const HIDDEN_REPOS = new Set(['paint.net', 'FactorioTools', 'orbis', 'fluent-emoji', `${GITHUB_USER}.github.io`]);
+export const HIDDEN_REPOS = new Set(['paint.net', 'FactorioTools', 'orbis', 'fluent-emoji', 'just-watch', `${GITHUB_USER}.github.io`]);
