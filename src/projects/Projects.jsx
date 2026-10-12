@@ -7,6 +7,7 @@ import SpotlightCard from '../components/reactbits/SpotlightCard';
 import { ArrowUpRight, StarIcon } from '../components/Icons';
 import { FEATURED, GITHUB_URL } from '../data/projects';
 import { useLenis } from '../lib/useLenis';
+import { localize, useLang, useT } from '../i18n';
 import { useRepos } from './useRepos';
 
 const EASE = [0.22, 1, 0.36, 1];
@@ -30,8 +31,8 @@ const LANGUAGE_COLORS = {
   mcfunction: '#e2a54a',
 };
 
-const timeAgo = iso => {
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+const timeAgo = (iso, lang, justNow) => {
+  const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' });
   const seconds = (new Date(iso).getTime() - Date.now()) / 1000;
   const units = [
     ['year', 31536000],
@@ -44,11 +45,11 @@ const timeAgo = iso => {
   for (const [unit, size] of units) {
     if (Math.abs(seconds) >= size) return rtf.format(Math.round(seconds / size), unit);
   }
-  return 'just now';
+  return justNow;
 };
 
 // Screenshot that tilts toward the pointer.
-function TiltFrame({ project }) {
+function TiltFrame({ project, label }) {
   const reduced = useReducedMotion();
   const px = useMotionValue(0);
   const py = useMotionValue(0);
@@ -72,7 +73,7 @@ function TiltFrame({ project }) {
       className="tilt"
       onPointerMove={onMove}
       onPointerLeave={onLeave}
-      aria-label={`Open ${project.name}`}
+      aria-label={label}
     >
       <motion.div className="tilt-inner" style={{ rotateX, rotateY }} whileHover={{ scale: 1.02 }} transition={{ duration: 0.4, ease: EASE }}>
         <BrowserFrame url={project.urlLabel} src={project.image} alt={project.imageAlt} eager />
@@ -81,7 +82,10 @@ function TiltFrame({ project }) {
   );
 }
 
-function FeaturedCard({ project, index }) {
+function FeaturedCard({ project: raw, index }) {
+  const lang = useLang();
+  const t = useT();
+  const project = localize(raw, lang);
   const [a, b] = project.accent;
   return (
     <motion.article
@@ -95,7 +99,7 @@ function FeaturedCard({ project, index }) {
     >
       <SpotlightCard className="feature-card" spotlightColor={a} intensity={0.16} spotlightSize={420} borderGlow={0.7}>
         <div className="feature-media">
-          <TiltFrame project={project} />
+          <TiltFrame project={project} label={`${t.projects.open}: ${project.name}`} />
         </div>
         <div className="feature-body">
           <p className="feature-eyebrow">{project.eyebrow}</p>
@@ -103,7 +107,7 @@ function FeaturedCard({ project, index }) {
             {project.name}
           </h2>
           <p className="feature-desc">{project.description}</p>
-          <ul className="feature-tags" aria-label="Built with">
+          <ul className="feature-tags" aria-label={t.builtWith}>
             {project.tags.map(tag => (
               <li key={tag} className="chip">
                 {tag}
@@ -112,11 +116,11 @@ function FeaturedCard({ project, index }) {
           </ul>
           <div className="feature-links">
             <a className="btn btn-primary" href={project.url}>
-              Open
+              {t.projects.open}
               <ArrowUpRight />
             </a>
             <a className="text-link" href={project.repo}>
-              View source
+              {t.projects.viewSource}
               <ArrowUpRight style={{ width: 12, height: 12 }} />
             </a>
           </div>
@@ -127,14 +131,16 @@ function FeaturedCard({ project, index }) {
 }
 
 function RepoList() {
+  const lang = useLang();
+  const t = useT().projects;
   const { status, repos } = useRepos();
 
   if (status === 'error') {
     return (
       <p className="repos-error">
-        Couldn’t reach GitHub just now.{' '}
+        {t.error}{' '}
         <a className="text-link" href={`${GITHUB_URL}?tab=repositories`}>
-          Browse the repositories on GitHub
+          {t.browse}
           <ArrowUpRight style={{ width: 12, height: 12 }} />
         </a>
       </p>
@@ -143,7 +149,7 @@ function RepoList() {
 
   if (status === 'loading') {
     return (
-      <ul className="repos" aria-busy="true" aria-label="Loading repositories">
+      <ul className="repos" aria-busy="true" aria-label={t.loading}>
         {Array.from({ length: 6 }, (_, i) => (
           <li key={i} className="repo repo-skeleton">
             <span />
@@ -167,7 +173,7 @@ function RepoList() {
           <a className="repo" href={repo.homepage || repo.url}>
             <div className="repo-main">
               <span className="repo-name">{repo.name}</span>
-              <span className="repo-desc">{repo.description || 'No description yet.'}</span>
+              <span className="repo-desc">{repo.description || t.noDescription}</span>
             </div>
             <div className="repo-meta">
               {repo.language && (
@@ -182,7 +188,7 @@ function RepoList() {
                   {repo.stars}
                 </span>
               )}
-              <span className="repo-time">{timeAgo(repo.pushedAt)}</span>
+              <span className="repo-time">{timeAgo(repo.pushedAt, lang, t.justNow)}</span>
               <ArrowUpRight className="repo-arrow" />
             </div>
           </a>
@@ -193,11 +199,12 @@ function RepoList() {
 }
 
 export default function Projects() {
+  const t = useT().projects;
   useLenis();
 
   return (
     <>
-      <Nav current="projects" />
+      <Nav page="/projects/" />
       <main>
         <header className="projects-hero container">
           <motion.p
@@ -206,20 +213,20 @@ export default function Projects() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: EASE }}
           >
-            Projects
+            {t.eyebrow}
           </motion.p>
-          <BlurText as="h1" text="Things I’ve built." className="headline projects-title" delay={120} direction="bottom" />
+          <BlurText as="h1" text={t.title} className="headline projects-title" delay={120} direction="bottom" />
           <motion.p
             className="lede projects-lede"
             initial={{ opacity: 0, y: 16, filter: 'blur(6px)' }}
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             transition={{ duration: 1, delay: 0.45, ease: EASE }}
           >
-            Mostly for the browser, mostly because I wanted to use them. Each one opens in a tab.
+            {t.lede}
           </motion.p>
         </header>
 
-        <section className="container features" aria-label="Featured projects">
+        <section className="container features" aria-label={t.featured}>
           {FEATURED.map((project, i) => (
             <FeaturedCard key={project.id} project={project} index={i} />
           ))}
@@ -235,10 +242,10 @@ export default function Projects() {
               viewport={{ once: true }}
               transition={{ duration: 0.9, ease: EASE }}
             >
-              More on GitHub.
+              {t.more}
             </motion.h2>
             <a className="text-link" href={`${GITHUB_URL}?tab=repositories`}>
-              All repositories
+              {t.allRepos}
               <ArrowUpRight style={{ width: 12, height: 12 }} />
             </a>
           </div>

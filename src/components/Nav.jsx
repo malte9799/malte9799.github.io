@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { GITHUB_URL } from '../data/projects';
+import { localePath, rememberLang, useLang, useT } from '../i18n';
 import { GitHubIcon } from './Icons';
 
-export default function Nav({ current }) {
+// `page` is the language-neutral path of the current page, e.g. '/' or '/projects/'.
+export default function Nav({ page = '/' }) {
+  const lang = useLang();
+  const t = useT().nav;
+  const other = lang === 'en' ? 'de' : 'en';
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -14,19 +19,30 @@ export default function Nav({ current }) {
 
   return (
     <header className="nav" data-scrolled={scrolled}>
-      <nav className="container nav-inner" aria-label="Main">
-        <a className="nav-logo" href="/">
+      <nav className="container nav-inner" aria-label={t.main}>
+        <a className="nav-logo" href={localePath(lang, '/')}>
           <img src="/favicon.svg" alt="" />
           Malte
         </a>
         <div className="nav-links">
-          <a className="nav-hide-sm" href="/#work">
-            Work
+          <a className="nav-hide-sm" href={`${localePath(lang, '/')}#work`}>
+            {t.work}
           </a>
-          <a href="/projects/" aria-current={current === 'projects' ? 'page' : undefined}>
-            Projects
+          <a href={localePath(lang, '/projects/')} aria-current={page === '/projects/' ? 'page' : undefined}>
+            {t.projects}
           </a>
-          <a href="/games/">Games</a>
+          <a href="/games/">{t.games}</a>
+          <a
+            className="nav-lang"
+            href={localePath(other, page)}
+            hrefLang={other}
+            lang={other}
+            aria-label={t.switchLabel}
+            title={t.switchLabel}
+            onClick={() => rememberLang(other)}
+          >
+            {other.toUpperCase()}
+          </a>
           <a href={GITHUB_URL} aria-label="GitHub">
             <GitHubIcon />
           </a>

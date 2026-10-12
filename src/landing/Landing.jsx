@@ -10,7 +10,7 @@ export default function Landing() {
 
   return (
     <>
-      <Nav />
+      <Nav page="/" />
       <main>
         <Hero />
         <Statement />

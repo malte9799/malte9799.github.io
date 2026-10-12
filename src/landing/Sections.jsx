@@ -7,10 +7,12 @@ import ShinyText from '../components/reactbits/ShinyText';
 import Magnet from '../components/reactbits/Magnet';
 import { ArrowRight, GitHubIcon } from '../components/Icons';
 import { GITHUB_URL } from '../data/projects';
+import { localePath, useLang, useT } from '../i18n';
 
 export function Statement() {
+  const t = useT().statement;
   return (
-    <section className="statement" aria-label="About">
+    <section className="statement" aria-label={t.label}>
       <div className="container">
         <ScrollReveal
           baseOpacity={0.12}
@@ -21,22 +23,21 @@ export function Statement() {
           wordAnimationEnd="center center"
           rotationEnd="center center"
         >
-          I build tools that feel like native apps: a full image editor, a Factorio blueprint optimiser and a shelf of
-          puzzle games. Every one of them runs in a browser tab. Nothing to install, nothing uploaded, nothing waiting on
-          a server.
+          {t.text}
         </ScrollReveal>
       </div>
     </section>
   );
 }
 
+// `label` is a key into the numbers strings.
 const STATS = [
-  { to: 33, label: 'effects in paint.net web, each previewed live in a Web Worker.', span: 'wide', accent: '#4f8cff' },
-  { to: 20, label: 'layer blend modes.', accent: '#36d1ff' },
-  { to: 16, suffix: '×', label: 'fast-forward on the tick-by-tick belt simulation.', accent: '#ffb547' },
-  { to: 11, label: 'puzzle games, each one built from scratch.', span: 'wide', accent: '#b4f461' },
+  { to: 33, label: 'effects', span: 'wide', accent: '#4f8cff' },
+  { to: 20, label: 'blendModes', accent: '#36d1ff' },
+  { to: 16, suffix: '×', label: 'fastForward', accent: '#ffb547' },
+  { to: 11, label: 'games', span: 'wide', accent: '#b4f461' },
   // CountUp's "down" runs from `to` back to `from`, so this lands on 0.
-  { to: 100, direction: 'down', label: 'servers. Your files and blueprints never leave the page.', span: 'full', accent: '#f0abfc' },
+  { to: 100, direction: 'down', label: 'servers', span: 'full', accent: '#f0abfc' },
 ];
 
 const cardReveal = {
@@ -45,6 +46,7 @@ const cardReveal = {
 };
 
 export function Numbers() {
+  const t = useT().numbers;
   return (
     <section className="numbers" aria-labelledby="numbers-title">
       <div className="container">
@@ -56,7 +58,7 @@ export function Numbers() {
           viewport={{ once: true, margin: '-10% 0px' }}
           transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         >
-          By the numbers.
+          {t.title}
         </motion.h2>
         <div className="bento">
           {STATS.map((stat, i) => (
@@ -74,7 +76,7 @@ export function Numbers() {
                   <CountUp from={stat.from ?? 0} to={stat.to} direction={stat.direction} duration={1.6} />
                   {stat.suffix}
                 </p>
-                <p className="bento-label">{stat.label}</p>
+                <p className="bento-label">{t[stat.label]}</p>
               </SpotlightCard>
             </motion.div>
           ))}
@@ -85,10 +87,11 @@ export function Numbers() {
 }
 
 export function Marquee() {
+  const t = useT();
   return (
     <section className="marquee" aria-hidden="true">
       <ScrollVelocity
-        texts={['Canvas · WebGL · Web Workers · ES modules · TypeScript ·', 'paint.net web · FactorioTools · Games ·']}
+        texts={t.marquee}
         velocity={40}
         numCopies={4}
         className="marquee-text"
@@ -98,6 +101,8 @@ export function Marquee() {
 }
 
 export function Outro() {
+  const lang = useLang();
+  const t = useT().outro;
   return (
     <section className="outro" aria-labelledby="outro-title">
       <div className="container outro-inner">
@@ -110,14 +115,14 @@ export function Outro() {
           transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
         >
           <ShinyText color="#a1a1a6" shineColor="#ffffff" speed={3} delay={1.2}>
-            There’s more.
+            {t.title}
           </ShinyText>
         </motion.h2>
-        <p className="lede outro-lede">Experiments, Minecraft tooling, Factorio mods and the odd fork. All of it is on the projects page.</p>
+        <p className="lede outro-lede">{t.lede}</p>
         <div className="outro-actions">
           <Magnet padding={60} magnetStrength={4}>
-            <a className="btn btn-primary btn-arrow" href="/projects/">
-              All projects
+            <a className="btn btn-primary btn-arrow" href={localePath(lang, '/projects/')}>
+              {t.allProjects}
               <ArrowRight />
             </a>
           </Magnet>

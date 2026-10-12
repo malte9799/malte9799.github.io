@@ -46,9 +46,16 @@
   color: var(--text);
   max-width: 20em;
 }
+/* Widths chosen so each line breaks after the first sentence. */
+.hero-tagline:lang(de) {
+  max-width: 26em;
+}
 @media (max-width: 600px) {
   .hero-tagline {
     max-width: 14em;
+  }
+  .hero-tagline:lang(de) {
+    max-width: 17em;
   }
 }
 .hero-scroll {
@@ -96,6 +103,11 @@
   text-align: center;
   padding: 0 var(--gutter);
   text-shadow: 0 4px 60px rgba(0, 0, 0, 0.6);
+  text-wrap: balance;
+}
+/* German phrases run longer ("Keine Installation."). */
+.hero-phrase:lang(de) {
+  font-size: clamp(40px, 8vw, 128px);
 }
 
 .hero-fallback {

@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform, useReducedMotion } from 'motion/react'
 import BrowserFrame from '../components/BrowserFrame';
 import { ArrowUpRight } from '../components/Icons';
 import { FEATURED } from '../data/projects';
+import { localize, useLang, useT } from '../i18n';
 
 const reveal = {
   hidden: { opacity: 0, y: 32, filter: 'blur(8px)' },
@@ -14,7 +15,10 @@ const reveal = {
   }),
 };
 
-function Showcase({ project, index }) {
+function Showcase({ project: raw, index }) {
+  const lang = useLang();
+  const t = useT();
+  const project = localize(raw, lang);
   const ref = useRef(null);
   const reduced = useReducedMotion();
   const [a, b] = project.accent;
@@ -49,11 +53,11 @@ function Showcase({ project, index }) {
           </motion.p>
           <motion.div className="showcase-actions" variants={reveal} custom={3}>
             <a className="btn btn-primary" href={project.url}>
-              Open {project.name}
+              {t.work.open(project.name)}
               <ArrowUpRight />
             </a>
             <a className="btn btn-ghost" href={project.repo}>
-              Source
+              {t.work.source}
               <ArrowUpRight />
             </a>
           </motion.div>
@@ -66,11 +70,11 @@ function Showcase({ project, index }) {
           href={project.url}
           className="showcase-device"
           style={{ rotateX, scale, y }}
-          aria-label={`Open ${project.name}`}
+          aria-label={t.work.open(project.name)}
         >
           <BrowserFrame url={project.urlLabel} src={project.image} alt={project.imageAlt} />
         </motion.a>
-        <ul className="showcase-tags" aria-label="Built with">
+        <ul className="showcase-tags" aria-label={t.builtWith}>
           {project.tags.map(tag => (
             <li key={tag} className="chip">
               {tag}
@@ -83,8 +87,9 @@ function Showcase({ project, index }) {
 }
 
 export default function Work() {
+  const t = useT();
   return (
-    <section id="work" className="work" aria-label="Selected work">
+    <section id="work" className="work" aria-label={t.work.label}>
       {FEATURED.map((project, i) => (
         <Showcase key={project.id} project={project} index={i} />
       ))}

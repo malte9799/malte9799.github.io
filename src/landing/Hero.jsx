@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion, useScroll, useTransform } from 'motion/react';
 import BlurText from '../components/reactbits/BlurText';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { useT } from '../i18n';
 
 const HeroScene = lazy(() => import('./HeroScene'));
 
@@ -38,6 +39,7 @@ function Fallback() {
 }
 
 export default function Hero() {
+  const t = useT().hero;
   const sectionRef = useRef(null);
   const reduced = useReducedMotion();
   const [active, setActive] = useState(true);
@@ -76,13 +78,13 @@ export default function Hero() {
         <motion.div className="hero-vignette" style={{ opacity: vignette }} aria-hidden="true" />
 
         <h1 id="hero-title" className="sr-only">
-          Malte builds software that feels native and runs in a browser tab.
+          {t.title}
         </h1>
 
         <motion.div className="hero-intro" style={{ opacity: introOpacity, y: introY }}>
           <BlurText
             as="p"
-            text="Software that feels native. Runs in a tab."
+            text={t.tagline}
             className="hero-tagline"
             delay={90}
             animateBy="words"
@@ -96,14 +98,14 @@ export default function Hero() {
 
         <div className="hero-phrases">
           <Phrase progress={scrollYProgress} range={[0.24, 0.32, 0.4, 0.48]}>
-            No installs.
+            {t.phrases[0]}
           </Phrase>
           <Phrase progress={scrollYProgress} range={[0.48, 0.56, 0.64, 0.72]}>
-            No servers.
+            {t.phrases[1]}
           </Phrase>
           <Phrase progress={scrollYProgress} range={[0.72, 0.82]}>
             <span className="gradient-text" style={{ '--a': '#7dd3fc', '--b': '#f0abfc' }}>
-              Just a link.
+              {t.phrases[2]}
             </span>
           </Phrase>
         </div>

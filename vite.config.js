@@ -25,7 +25,7 @@ const copyStaticDirs = () => ({
 export default defineConfig({
   plugins: [react(), copyStaticDirs()],
   optimizeDeps: {
-    entries: ['index.html', 'projects/index.html'],
+    entries: ['index.html', 'projects/index.html', 'de/index.html', 'de/projects/index.html'],
   },
   build: {
     // three.js + drei is one lazily loaded chunk (~300 kB gzip) for the hero.
@@ -34,6 +34,8 @@ export default defineConfig({
       input: {
         main: resolve(root, 'index.html'),
         projects: resolve(root, 'projects/index.html'),
+        de: resolve(root, 'de/index.html'),
+        deProjects: resolve(root, 'de/projects/index.html'),
       },
     },
   },
