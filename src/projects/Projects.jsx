@@ -2,7 +2,7 @@ import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } fro
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
 import BrowserFrame from '../components/BrowserFrame';
-import { CarouselDots, resolveSlides, useCarousel } from '../components/Carousel';
+import { CarouselArrows, CarouselDots, resolveSlides, useCarousel } from '../components/Carousel';
 import BlurText from '../components/reactbits/BlurText';
 import SpotlightCard from '../components/reactbits/SpotlightCard';
 import { ArrowUpRight, StarIcon } from '../components/Icons';
@@ -86,6 +86,9 @@ function TiltFrame({ project: raw, label }) {
           <BrowserFrame url={slide.urlLabel} slides={slides} index={carousel.index} eager />
         </motion.div>
       </a>
+      {slides.length > 1 && (
+        <CarouselArrows onPrev={carousel.prev} onNext={carousel.next} labels={{ prev: t.work.prevSlide, next: t.work.nextSlide }} />
+      )}
       {slides.length > 1 && (
         <CarouselDots
           slides={slides}

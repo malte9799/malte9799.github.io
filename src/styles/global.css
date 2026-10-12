@@ -477,6 +477,60 @@ html[data-hero-active] .nav[data-scrolled='true'] {
     background: var(--text);
   }
 }
+/* Previous / next arrows on the left and right edges of the screenshot. */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    background-color 0.3s;
+}
+.carousel-arrow.is-above-nav {
+  top: calc(50% - 28px);
+}
+.carousel-arrow.is-prev {
+  left: 12px;
+}
+.carousel-arrow.is-prev svg {
+  transform: scaleX(-1);
+}
+.carousel-arrow.is-next {
+  right: 12px;
+}
+.carousel-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+.carousel-arrow:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+.carousel:hover .carousel-arrow,
+.carousel:focus-within .carousel-arrow {
+  opacity: 1;
+}
+/* No hover on touch screens: keep the arrows visible, a little smaller. */
+@media (hover: none) {
+  .carousel-arrow {
+    width: 34px;
+    height: 34px;
+    opacity: 0.85;
+  }
+}
 /* Overlay variant: the pill sits on the bottom edge of the screenshot. */
 .carousel-nav.is-overlay {
   position: absolute;

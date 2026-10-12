@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from 'motion/react';
 import BrowserFrame from '../components/BrowserFrame';
-import { CarouselDots, resolveSlides, useCarousel } from '../components/Carousel';
+import { CarouselArrows, CarouselDots, resolveSlides, useCarousel } from '../components/Carousel';
 import { ArrowUpRight } from '../components/Icons';
 import { FEATURED } from '../data/projects';
 import { localize, useLang, useT } from '../i18n';
@@ -79,6 +79,9 @@ function Showcase({ project: raw, index }) {
           >
             <BrowserFrame url={slide.urlLabel} slides={slides} index={carousel.index} />
           </motion.a>
+          {slides.length > 1 && (
+            <CarouselArrows onPrev={carousel.prev} onNext={carousel.next} labels={{ prev: t.work.prevSlide, next: t.work.nextSlide }} below />
+          )}
           {slides.length > 1 && (
             <CarouselDots
               slides={slides}
