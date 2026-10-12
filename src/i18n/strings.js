@@ -12,7 +12,7 @@ export const STRINGS = {
     },
     ruler: {
       landing: ['Start', 'About', 'Work', 'Numbers', 'More'],
-      projects: ['Featured', 'On GitHub'],
+      projects: ['Featured', 'Smaller', 'On GitHub'],
     },
     footer: {
       credit: 'Built with React, Three.js and Motion. Text effects adapted from',
@@ -54,6 +54,7 @@ export const STRINGS = {
       title: 'Things I’ve built.',
       lede: 'Mostly for the browser, mostly because I wanted to use them. Each one opens in a tab.',
       featured: 'Featured projects',
+      extras: 'Smaller things.',
       open: 'Open',
       viewSource: 'View source',
       more: 'More on GitHub.',
@@ -77,7 +78,7 @@ export const STRINGS = {
     },
     ruler: {
       landing: ['Start', 'Über mich', 'Projekte', 'Zahlen', 'Mehr'],
-      projects: ['Ausgewählt', 'Auf GitHub'],
+      projects: ['Ausgewählt', 'Kleiner', 'Auf GitHub'],
     },
     footer: {
       credit: 'Gebaut mit React, Three.js und Motion. Texteffekte adaptiert von',
@@ -119,6 +120,7 @@ export const STRINGS = {
       title: 'Was ich gebaut habe.',
       lede: 'Meistens für den Browser, meistens, weil ich sie selbst nutzen wollte. Jedes davon öffnet sich in einem Tab.',
       featured: 'Ausgewählte Projekte',
+      extras: 'Kleinere Sachen.',
       open: 'Öffnen',
       viewSource: 'Quellcode ansehen',
       more: 'Mehr auf GitHub.',
