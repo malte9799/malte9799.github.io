@@ -335,9 +335,15 @@
 .marquee .rb-parallax:nth-child(1) .marquee-text {
   color: var(--text);
 }
+/* Outlined row. Variable fonts (SF Pro in Safari) are drawn from overlapping
+   contours, and a plain text-stroke traces every one of them, so crossbars and
+   joins show through. Painting the stroke first and then a fill in the
+   background colour hides everything inside the letters; only the outer half
+   of the stroke stays visible, hence 2px for a 1px line. */
 .marquee .rb-parallax:nth-child(2) .marquee-text {
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.35);
+  color: var(--bg);
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.35);
+  paint-order: stroke fill;
 }
 
 /* ---------- Outro ---------- */
