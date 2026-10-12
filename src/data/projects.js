@@ -87,42 +87,43 @@ export const FEATURED = [
     },
   },
   {
-    id: 'wetter',
-    name: { en: 'Weather Globe', de: 'Wetter-Globus' },
-    eyebrow: { en: 'Weather app', de: 'Wetter-App' },
+    id: 'orbis',
+    name: 'Orbis',
+    eyebrow: { en: 'Weather · Earth · Space', de: 'Wetter · Erde · Weltraum' },
     tagline: {
-      en: 'The weather outside.\nAnd across the globe.',
-      de: 'Das Wetter vor der Tür.\nUnd auf dem ganzen Globus.',
+      en: 'Weather, Earth\nand the solar system.',
+      de: 'Wetter, Erde\nund Sonnensystem.',
     },
     description: {
-      en: 'A forecast with a 48-hour chart, 14-day outlook, air quality, pollen and official severe-weather warnings, plus an interactive 3D globe with rain radar, animated wind, wildfires, storms, tornadoes and earthquakes. Every data source works without an API key.',
-      de: 'Eine Vorhersage mit 48-Stunden-Diagramm, 14-Tage-Ausblick, Luftqualität, Pollenflug und amtlichen Unwetterwarnungen, dazu ein interaktiver 3D-Globus mit Regenradar, animiertem Wind, Waldbränden, Stürmen, Tornados und Erdbeben. Alle Datenquellen funktionieren ohne API-Schlüssel.',
+      en: 'Local forecasts with a 48-hour chart, 14-day outlook, air quality, pollen and official severe-weather warnings, a live global weather map with radar, satellite, animated wind and natural events, and an interactive 3D solar system you can fast-forward through time.',
+      de: 'Lokale Vorhersagen mit 48-Stunden-Diagramm, 14-Tage-Ausblick, Luftqualität, Pollenflug und amtlichen Unwetterwarnungen, eine Live-Wetterkarte mit Radar, Satellit, animiertem Wind und Naturereignissen und ein interaktives 3D-Sonnensystem, in dem man die Zeit vor- und zurückspulen kann.',
     },
-    url: 'https://malte9799.github.io/wetter/',
-    urlLabel: 'malte9799.github.io/wetter',
-    repo: 'https://github.com/malte9799/wetter',
+    url: 'https://malte9799.github.io/orbis/',
+    urlLabel: 'malte9799.github.io/orbis',
+    repo: 'https://github.com/malte9799/orbis',
+    // TODO: replace with Orbis screenshots (these still show the old Wetter-Globus UI).
     screenshots: [
       {
         src: `${BASE}img/wetter.webp`,
         label: { en: 'Forecast', de: 'Vorhersage' },
         alt: {
-          en: 'Wetter-Globus forecast for Berlin: current conditions with tiles for wind, gusts, humidity, pressure, precipitation, cloud cover, UV index, sunrise and sunset, air quality and pollen',
-          de: 'Wetter-Globus-Vorhersage für Berlin: aktuelles Wetter mit Kacheln für Wind, Böen, Luftfeuchte, Luftdruck, Niederschlag, Bewölkung, UV-Index, Sonnenauf- und -untergang, Luftqualität und Pollen',
+          en: 'Orbis forecast for Berlin: current conditions with tiles for wind, gusts, humidity, pressure, precipitation, cloud cover, UV index, sunrise and sunset, air quality and pollen',
+          de: 'Orbis-Vorhersage für Berlin: aktuelles Wetter mit Kacheln für Wind, Böen, Luftfeuchte, Luftdruck, Niederschlag, Bewölkung, UV-Index, Sonnenauf- und -untergang, Luftqualität und Pollen',
         },
       },
       {
         src: `${BASE}img/wetter-charts.webp`,
         label: { en: '48 hours & 14 days', de: '48 Stunden & 14 Tage' },
         alt: {
-          en: 'Wetter-Globus charts: temperature and precipitation for the next 48 hours, and a 14-day forecast with temperature ranges and wind',
-          de: 'Wetter-Globus-Diagramme: Temperatur und Niederschlag der nächsten 48 Stunden und die 14-Tage-Vorhersage mit Temperaturspannen und Wind',
+          en: 'Orbis charts: temperature and precipitation for the next 48 hours, and a 14-day forecast with temperature ranges and wind',
+          de: 'Orbis-Diagramme: Temperatur und Niederschlag der nächsten 48 Stunden und die 14-Tage-Vorhersage mit Temperaturspannen und Wind',
         },
       },
     ],
     accent: ['#5ab0ff', '#ffc533'],
     tags: {
-      en: ['TypeScript', 'MapLibre GL', 'Open-Meteo', 'No framework'],
-      de: ['TypeScript', 'MapLibre GL', 'Open-Meteo', 'Ohne Framework'],
+      en: ['TypeScript', 'MapLibre GL', 'three.js', 'Open-Meteo'],
+      de: ['TypeScript', 'MapLibre GL', 'three.js', 'Open-Meteo'],
     },
   },
   {
@@ -152,7 +153,34 @@ export const FEATURED = [
       de: ['p5.js', 'Prozedurale Generierung', 'Löser'],
     },
   },
+  {
+    id: 'fluent-emoji',
+    name: 'Fluent Emoji',
+    eyebrow: { en: 'Emoji assets', de: 'Emoji-Assets' },
+    tagline: { en: 'Every Fluent emoji.\nAnimated.', de: 'Jedes Fluent-Emoji.\nAnimiert.' },
+    description: {
+      en: 'Microsoft’s Fluent emoji as a ready-to-use collection, including the animated versions, with an update script that keeps it in sync. Work on the animated set is ongoing.',
+      de: 'Microsofts Fluent-Emojis als sofort nutzbare Sammlung, auch in animierter Form, samt Update-Skript, das sie aktuell hält. Die Arbeit am animierten Set läuft noch.',
+    },
+    url: 'https://github.com/malte9799/fluent-emoji',
+    urlLabel: 'github.com/malte9799/fluent-emoji',
+    repo: 'https://github.com/malte9799/fluent-emoji',
+    screenshots: [
+      {
+        src: `${BASE}img/fluent-emoji.webp`,
+        alt: {
+          en: 'A banner of animated Fluent emoji',
+          de: 'Ein Banner mit animierten Fluent-Emojis',
+        },
+      },
+    ],
+    accent: ['#ff7ac6', '#ffd23f'],
+    tags: {
+      en: ['JavaScript', 'Animated emoji', 'MIT'],
+      de: ['JavaScript', 'Animierte Emojis', 'MIT'],
+    },
+  },
 ];
 
 // Repos left out of the live "More on GitHub" list (featured above, or this site).
-export const HIDDEN_REPOS = new Set(['paint.net', 'FactorioTools', 'wetter', 'weather', `${GITHUB_USER}.github.io`]);
+export const HIDDEN_REPOS = new Set(['paint.net', 'FactorioTools', 'orbis', 'fluent-emoji', `${GITHUB_USER}.github.io`]);
