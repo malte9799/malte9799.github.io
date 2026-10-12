@@ -1,8 +1,16 @@
 name: Deploy to GitHub Pages
 
+# Production (main) lives at the site root; every other branch is built into
+# /previews/<branch>/ and listed at /previews/. Each run rebuilds everything
+# and replaces the single Pages deployment, so a pushed branch never changes
+# production and a deleted branch loses its preview.
+#
+# One-time setting: Settings → Environments → github-pages → Deployment
+# branches and tags → "No restriction" (otherwise only main may deploy).
+
 on:
   push:
-    branches: [main]
+  delete:
   workflow_dispatch:
 
 permissions:
@@ -19,16 +27,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run build
+      - run: node scripts/build-pages.mjs
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: site
 
   deploy:
     needs: build

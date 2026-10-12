@@ -3,6 +3,9 @@
 // several screenshots gets a carousel; a slide's `url`/`urlLabel` default to the project's.
 // Text fields are { en, de }; resolve them with pick() from src/i18n.
 
+// '/' in production, '/previews/<branch>/' in a branch preview.
+const BASE = import.meta.env.BASE_URL;
+
 export const GITHUB_USER = 'malte9799';
 export const GITHUB_URL = `https://github.com/${GITHUB_USER}`;
 
@@ -21,7 +24,7 @@ export const FEATURED = [
     repo: 'https://github.com/malte9799/paint.net',
     screenshots: [
       {
-        src: '/img/paintnet.webp',
+        src: `${BASE}img/paintnet.webp`,
         alt: {
           en: 'paint.net web with a Julia fractal rendered on the canvas, the Tools, History, Layers and Colors windows around it',
           de: 'paint.net web mit einem Julia-Fraktal auf der Leinwand, umgeben von den Fenstern Werkzeuge, Verlauf, Ebenen und Farben',
@@ -49,7 +52,7 @@ export const FEATURED = [
     // Shown as a carousel; each slide links to its own tool.
     screenshots: [
       {
-        src: '/img/factoriotools.webp',
+        src: `${BASE}img/factoriotools.webp`,
         label: { en: 'Blueprint editor', de: 'Blaupausen-Editor' },
         alt: {
           en: 'FactorioTools showing a logistic science build with per-machine rate labels and the Rate Calculator reporting 56% efficiency',
@@ -57,7 +60,7 @@ export const FEATURED = [
         },
       },
       {
-        src: '/img/factoriotools-seed-viewer.webp',
+        src: `${BASE}img/factoriotools-seed-viewer.webp`,
         label: { en: 'Seed viewer', de: 'Seed-Viewer' },
         url: 'https://malte9799.github.io/FactorioTools/#/seed-viewer',
         urlLabel: 'malte9799.github.io/FactorioTools/#/seed-viewer',
@@ -67,7 +70,7 @@ export const FEATURED = [
         },
       },
       {
-        src: '/img/factoriotools-planner.webp',
+        src: `${BASE}img/factoriotools-planner.webp`,
         label: { en: 'Production planner', de: 'Produktionsplaner' },
         url: 'https://malte9799.github.io/FactorioTools/#/planner',
         urlLabel: 'malte9799.github.io/FactorioTools/#/planner',
@@ -100,7 +103,7 @@ export const FEATURED = [
     repo: 'https://github.com/malte9799/wetter',
     screenshots: [
       {
-        src: '/img/wetter.webp',
+        src: `${BASE}img/wetter.webp`,
         label: { en: 'Forecast', de: 'Vorhersage' },
         alt: {
           en: 'Wetter-Globus forecast for Berlin: current conditions with tiles for wind, gusts, humidity, pressure, precipitation, cloud cover, UV index, sunrise and sunset, air quality and pollen',
@@ -108,7 +111,7 @@ export const FEATURED = [
         },
       },
       {
-        src: '/img/wetter-charts.webp',
+        src: `${BASE}img/wetter-charts.webp`,
         label: { en: '48 hours & 14 days', de: '48 Stunden & 14 Tage' },
         alt: {
           en: 'Wetter-Globus charts: temperature and precipitation for the next 48 hours, and a 14-day forecast with temperature ranges and wind',
@@ -131,12 +134,12 @@ export const FEATURED = [
       en: 'Eleven hand-built puzzles, from Minesweeper and Sudoku to Netwalk and Conway’s Life. Nonograms are generated so they never need a guess, and most come with presets, hints and a confetti finish.',
       de: 'Elf selbst gebaute Rätsel, von Minesweeper und Sudoku bis Netwalk und Conways Spiel des Lebens. Nonogramme werden so erzeugt, dass man nie raten muss, und die meisten haben Voreinstellungen, Hinweise und ein Konfetti-Finale.',
     },
-    url: '/games/',
+    url: `${BASE}games/`,
     urlLabel: 'malte9799.github.io/games',
     repo: 'https://github.com/malte9799/malte9799.github.io/tree/main/games',
     screenshots: [
       {
-        src: '/img/games.webp',
+        src: `${BASE}img/games.webp`,
         alt: {
           en: 'The games menu: a grid of cards for Minesweeper, Bug Nudge, Snake, Nonogram, Conway’s Life, 2048 and more',
           de: 'Das Spielemenü: ein Raster aus Karten für Minesweeper, Bug Nudge, Snake, Nonogram, Conway’s Life, 2048 und mehr',

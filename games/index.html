@@ -242,7 +242,7 @@ if (_gameName) {
   // are only loaded here so their globals never collide with a running game.
   loadScript("manifest.js", () => loadScript("home.js", () => buildHome()));
 
-  // line art follows the pointer a little (Artcraft design; harmless otherwise)
+  // line art follows the pointer a little (Brutal design; harmless otherwise)
   const _home = document.getElementById("home");
   if (matchMedia("(hover: hover) and (prefers-reduced-motion: no-preference)").matches) {
     addEventListener("pointermove", (e) => {

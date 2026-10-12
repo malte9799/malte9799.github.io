@@ -266,27 +266,27 @@ html[data-theme="paper"] .tag,
 html[data-theme="paper"] .info-text { font-size: 16px; }
 html[data-theme="paper"] #home .card-title { font-family: var(--font-display); font-size: 28px; }
 
-/* ---- Artcraft: fine line art on quiet paper — hairlines, drawn-on frames, scroll + hover motion ---- */
-html[data-theme="artcraft"] {
-  --bg: #f6f5f1;
-  --board: #faf9f6;
-  --panel: #faf9f6;
-  --panel-2: #efeee9;
-  --panel-edge: rgba(24, 24, 27, 0.2);
-  --edge-hover: #18181b;
-  --grid-line: #d6d4cc;
-  --hairline: rgba(24, 24, 27, 0.16);
-  --ink: #18181b;
-  --muted: #706f6a;
-  --dim: #bab8b0;
-  --sun: #18181b;
-  --mint: #18181b;
-  --rose: #18181b;
-  --sky: #18181b;
-  --lilac: #18181b;
-  --accent: #18181b;
-  --toggle: #18181b;
-  --toggle-fg: #18181b;
+/* ---- Brutal: dark, fine line art — hairlines, drawn-on frames, scroll + hover motion ---- */
+html[data-theme="brutal"] {
+  --bg: #0c0c0e;
+  --board: #111114;
+  --panel: #131316;
+  --panel-2: #1c1c20;
+  --panel-edge: rgba(242, 241, 236, 0.2);
+  --edge-hover: #f2f1ec;
+  --grid-line: #2c2c31;
+  --hairline: rgba(242, 241, 236, 0.16);
+  --ink: #f2f1ec;
+  --muted: #8d8c86;
+  --dim: #4a4a4f;
+  --sun: #f2f1ec;
+  --mint: #f2f1ec;
+  --rose: #f2f1ec;
+  --sky: #f2f1ec;
+  --lilac: #f2f1ec;
+  --accent: #f2f1ec;
+  --toggle: #f2f1ec;
+  --toggle-fg: #f2f1ec;
 
   --font: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: var(--font);
@@ -296,7 +296,7 @@ html[data-theme="artcraft"] {
   --title-tracking: -0.02em;
   --title-transform: none;
   /* hero title is an outline that fills with ink on hover (see #home h1 below) */
-  --hero-fill: linear-gradient(#18181b, #18181b) no-repeat 0 100% / 100% 0%;
+  --hero-fill: linear-gradient(#f2f1ec, #f2f1ec) no-repeat 0 100% / 100% 0%;
   --hero-size: clamp(64px, 14vw, 140px);
 
   --r-sm: 4px;
@@ -310,25 +310,25 @@ html[data-theme="artcraft"] {
   --btn-shadow: none;
   --btn-shadow-press: none;
   --btn-press: scale(0.98);
-  --primary-bg: #18181b;
-  --primary-hover: #18181b;
-  --primary-fg: #faf9f6;
-  --primary-border: #18181b;
+  --primary-bg: #f2f1ec;
+  --primary-hover: #f2f1ec;
+  --primary-fg: #0c0c0e;
+  --primary-border: #f2f1ec;
   --primary-shadow: none;
   --card-bg: transparent;
   --card-shadow: none;
   --card-hover-shadow: none;
   --card-hover-lift: none;
-  --modal-bg: #faf9f6;
-  --modal-shadow: 0 0 0 1px rgba(24, 24, 27, 0.2), 0 24px 60px -24px rgba(24, 24, 27, 0.35);
-  --backdrop: rgba(246, 245, 241, 0.8);
-  --bar-bg: rgba(246, 245, 241, 0.9);
-  --chip-bg: rgba(250, 249, 246, 0.9);
-  color-scheme: light;
+  --modal-bg: #131316;
+  --modal-shadow: 0 0 0 1px rgba(242, 241, 236, 0.2), 0 24px 60px -24px rgba(0, 0, 0, 0.8);
+  --backdrop: rgba(8, 8, 10, 0.8);
+  --bar-bg: rgba(12, 12, 14, 0.9);
+  --chip-bg: rgba(17, 17, 20, 0.9);
+  color-scheme: dark;
 }
 
 /* vertical guide lines run down the page and draw themselves in on load */
-html[data-theme="artcraft"] body::before {
+html[data-theme="brutal"] body::before {
   content: "";
   position: fixed;
   inset: 0 0 0 50%;
@@ -337,49 +337,49 @@ html[data-theme="artcraft"] body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    linear-gradient(rgba(24, 24, 27, 0.09), rgba(24, 24, 27, 0.09)) 0 0 / 1px 100% no-repeat,
-    linear-gradient(rgba(24, 24, 27, 0.09), rgba(24, 24, 27, 0.09)) 33.333% 0 / 1px 100% no-repeat,
-    linear-gradient(rgba(24, 24, 27, 0.09), rgba(24, 24, 27, 0.09)) 66.666% 0 / 1px 100% no-repeat,
-    linear-gradient(rgba(24, 24, 27, 0.09), rgba(24, 24, 27, 0.09)) 100% 0 / 1px 100% no-repeat;
+    linear-gradient(rgba(242, 241, 236, 0.09), rgba(242, 241, 236, 0.09)) 0 0 / 1px 100% no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.09), rgba(242, 241, 236, 0.09)) 33.333% 0 / 1px 100% no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.09), rgba(242, 241, 236, 0.09)) 66.666% 0 / 1px 100% no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.09), rgba(242, 241, 236, 0.09)) 100% 0 / 1px 100% no-repeat;
   animation: art-guides 1.6s var(--ease) both;
 }
 @keyframes art-guides { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
-html[data-theme="artcraft"] #home,
-html[data-theme="artcraft"] #app { position: relative; z-index: 1; }
+html[data-theme="brutal"] #home,
+html[data-theme="brutal"] #app { position: relative; z-index: 1; }
 
 /* buttons: outline, ink fills in from the left on hover */
-html[data-theme="artcraft"] button,
-html[data-theme="artcraft"] .preset-row select {
+html[data-theme="brutal"] button,
+html[data-theme="brutal"] .preset-row select {
   background-color: transparent;
   font-weight: 500;
 }
-html[data-theme="artcraft"] button {
+html[data-theme="brutal"] button {
   background-image: linear-gradient(var(--ink), var(--ink));
   background-repeat: no-repeat;
   background-position: 0 50%;
   background-size: 0% 100%;
   transition: background-size 0.45s var(--ease), color 0.3s, border-color 0.2s, transform 0.08s;
 }
-html[data-theme="artcraft"] button:hover {
+html[data-theme="brutal"] button:hover {
   background-color: transparent;
   background-size: 100% 100%;
   color: var(--bg);
   border-color: var(--ink);
 }
-html[data-theme="artcraft"] button.primary { background-color: var(--ink); background-image: linear-gradient(var(--bg), var(--bg)); }
-html[data-theme="artcraft"] button.primary:hover { background-color: var(--ink); color: var(--ink); }
-html[data-theme="artcraft"] button.active,
-html[data-theme="artcraft"] button.hint-confirm { background-color: var(--panel-2); border-color: var(--ink); color: var(--ink); }
-html[data-theme="artcraft"] button.active:hover,
-html[data-theme="artcraft"] button.hint-confirm:hover { color: var(--bg); background-color: var(--panel-2); }
-html[data-theme="artcraft"] .preset-row select:hover { background-color: transparent; border-color: var(--ink); }
-html[data-theme="artcraft"] .status .dot { box-shadow: none !important; }
+html[data-theme="brutal"] button.primary { background-color: var(--ink); background-image: linear-gradient(var(--bg), var(--bg)); }
+html[data-theme="brutal"] button.primary:hover { background-color: var(--ink); color: var(--ink); }
+html[data-theme="brutal"] button.active,
+html[data-theme="brutal"] button.hint-confirm { background-color: var(--panel-2); border-color: var(--ink); color: var(--ink); }
+html[data-theme="brutal"] button.active:hover,
+html[data-theme="brutal"] button.hint-confirm:hover { color: var(--bg); background-color: var(--panel-2); }
+html[data-theme="brutal"] .preset-row select:hover { background-color: transparent; border-color: var(--ink); }
+html[data-theme="brutal"] .status .dot { box-shadow: none !important; }
 
 /* game board: hairline frame with corner brackets that tighten on hover */
-html[data-theme="artcraft"] #canvas-wrap { overflow: visible; border-color: var(--hairline); transition: border-color 0.3s; }
-html[data-theme="artcraft"] #canvas-wrap.fs { overflow: hidden; }
-html[data-theme="artcraft"] #canvas-wrap:not(.fs)::after,
-html[data-theme="artcraft"] #home .card .preview::after {
+html[data-theme="brutal"] #canvas-wrap { overflow: visible; border-color: var(--hairline); transition: border-color 0.3s; }
+html[data-theme="brutal"] #canvas-wrap.fs { overflow: hidden; }
+html[data-theme="brutal"] #canvas-wrap:not(.fs)::after,
+html[data-theme="brutal"] #home .card .preview::after {
   content: "";
   position: absolute;
   inset: 10px;
@@ -397,11 +397,11 @@ html[data-theme="artcraft"] #home .card .preview::after {
   opacity: 0.5;
   transition: inset 0.45s var(--ease), opacity 0.3s;
 }
-html[data-theme="artcraft"] #canvas-wrap:not(.fs):hover::after { inset: 6px; opacity: 0.8; }
+html[data-theme="brutal"] #canvas-wrap:not(.fs):hover::after { inset: 6px; opacity: 0.8; }
 
 /* home: header */
-html[data-theme="artcraft"] #home .hero { position: relative; margin-bottom: 64px; padding-top: 12px; }
-html[data-theme="artcraft"] #home .hero::after {
+html[data-theme="brutal"] #home .hero { position: relative; margin-bottom: 64px; padding-top: 12px; }
+html[data-theme="brutal"] #home .hero::after {
   /* rule under the header, drawn left to right */
   content: "";
   display: block;
@@ -413,7 +413,7 @@ html[data-theme="artcraft"] #home .hero::after {
   animation: art-rule 1.4s 0.3s var(--ease) both;
 }
 @keyframes art-rule { from { transform: scaleX(0); } }
-html[data-theme="artcraft"] #home h1 {
+html[data-theme="brutal"] #home h1 {
   position: relative;
   display: inline-block;
   font-weight: 500;
@@ -422,13 +422,13 @@ html[data-theme="artcraft"] #home h1 {
   transition: background-size 0.7s var(--ease);
   cursor: default;
 }
-html[data-theme="artcraft"] #home h1:hover { background-size: 100% 100%; }
-html[data-theme="artcraft"] #home .subtitle { position: relative; letter-spacing: 0.01em; }
-html[data-theme="artcraft"] #home .site-link { position: relative; z-index: 2; }
+html[data-theme="brutal"] #home h1:hover { background-size: 100% 100%; }
+html[data-theme="brutal"] #home .subtitle { position: relative; letter-spacing: 0.01em; }
+html[data-theme="brutal"] #home .site-link { position: relative; z-index: 2; }
 
 /* line-art drawing behind the title: strokes draw in, then react to hover + scroll */
 #home .art-lines { display: none; }
-html[data-theme="artcraft"] #home .art-lines {
+html[data-theme="brutal"] #home .art-lines {
   display: block;
   position: absolute;
   left: 50%;
@@ -446,9 +446,9 @@ html[data-theme="artcraft"] #home .art-lines {
   pointer-events: none;
   z-index: 0;
 }
-html[data-theme="artcraft"] #home .art-lines path,
-html[data-theme="artcraft"] #home .art-lines rect,
-html[data-theme="artcraft"] #home .art-lines circle {
+html[data-theme="brutal"] #home .art-lines path,
+html[data-theme="brutal"] #home .art-lines rect,
+html[data-theme="brutal"] #home .art-lines circle {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   animation: art-draw 2.2s var(--ease) forwards;
@@ -456,16 +456,16 @@ html[data-theme="artcraft"] #home .art-lines circle {
   transition: stroke-width 0.3s;
 }
 @keyframes art-draw { to { stroke-dashoffset: 0; } }
-html[data-theme="artcraft"] #home .hero:hover .art-lines { opacity: 0.6; }
-html[data-theme="artcraft"] #home .art-lines .spin {
+html[data-theme="brutal"] #home .hero:hover .art-lines { opacity: 0.6; }
+html[data-theme="brutal"] #home .art-lines .spin {
   transform-box: fill-box;
   transform-origin: center;
   transition: transform 0.9s var(--ease);
 }
-html[data-theme="artcraft"] #home .hero:hover .art-lines .spin { transform: rotate(90deg); }
-html[data-theme="artcraft"] #home .hero:hover .art-lines .spin-r { transform: rotate(-90deg); }
+html[data-theme="brutal"] #home .hero:hover .art-lines .spin { transform: rotate(90deg); }
+html[data-theme="brutal"] #home .hero:hover .art-lines .spin-r { transform: rotate(-90deg); }
 @supports (animation-timeline: scroll()) {
-  html[data-theme="artcraft"] #home .art-lines {
+  html[data-theme="brutal"] #home .art-lines {
     animation: art-scroll linear both;
     animation-timeline: scroll(root);
     animation-range: 0 420px;
@@ -474,15 +474,15 @@ html[data-theme="artcraft"] #home .hero:hover .art-lines .spin-r { transform: ro
 }
 
 /* home: cards are open frames — hairline border, ink line draws along the top on hover */
-html[data-theme="artcraft"] #home .grid { gap: 28px; }
-html[data-theme="artcraft"] #home .card {
+html[data-theme="brutal"] #home .grid { gap: 28px; }
+html[data-theme="brutal"] #home .card {
   overflow: hidden;
   background: transparent;
   border: 1px solid var(--hairline);
   border-radius: 4px;
   transition: border-color 0.35s, background-color 0.35s;
 }
-html[data-theme="artcraft"] #home .card::before {
+html[data-theme="brutal"] #home .card::before {
   content: "";
   position: absolute;
   left: 0; right: 0; top: 0;
@@ -493,14 +493,14 @@ html[data-theme="artcraft"] #home .card::before {
   transform-origin: 0 50%;
   transition: transform 0.7s var(--ease);
 }
-html[data-theme="artcraft"] #home .card:hover::before,
-html[data-theme="artcraft"] #home .card:focus-visible::before { transform: scaleX(1); }
-html[data-theme="artcraft"] #home .card:hover { border-color: var(--ink); background-color: var(--board); }
-html[data-theme="artcraft"] #home .card .preview { background: transparent; border-bottom: 1px solid var(--hairline); }
-html[data-theme="artcraft"] #home .card canvas { transition: transform 0.9s var(--ease), opacity 0.4s; opacity: 0.9; }
-html[data-theme="artcraft"] #home .card:hover canvas { transform: scale(1.05); opacity: 1; }
-html[data-theme="artcraft"] #home .card .card-text { border-top: 0; padding: 16px 18px 18px; position: relative; }
-html[data-theme="artcraft"] #home .card-title {
+html[data-theme="brutal"] #home .card:hover::before,
+html[data-theme="brutal"] #home .card:focus-visible::before { transform: scaleX(1); }
+html[data-theme="brutal"] #home .card:hover { border-color: var(--ink); background-color: var(--board); }
+html[data-theme="brutal"] #home .card .preview { background: transparent; border-bottom: 1px solid var(--hairline); }
+html[data-theme="brutal"] #home .card canvas { transition: transform 0.9s var(--ease), opacity 0.4s; opacity: 0.9; }
+html[data-theme="brutal"] #home .card:hover canvas { transform: scale(1.05); opacity: 1; }
+html[data-theme="brutal"] #home .card .card-text { border-top: 0; padding: 16px 18px 18px; position: relative; }
+html[data-theme="brutal"] #home .card-title {
   display: inline;
   font-weight: 500;
   font-size: 19px;
@@ -508,8 +508,8 @@ html[data-theme="artcraft"] #home .card-title {
   background: linear-gradient(var(--ink), var(--ink)) 0 100% / 0% 1px no-repeat;
   transition: background-size 0.5s var(--ease);
 }
-html[data-theme="artcraft"] #home .card:hover .card-title { background-size: 100% 1px; }
-html[data-theme="artcraft"] #home .card-text::after {
+html[data-theme="brutal"] #home .card:hover .card-title { background-size: 100% 1px; }
+html[data-theme="brutal"] #home .card-text::after {
   /* arrow drawn from lines, slides in on hover */
   content: "";
   position: absolute;
@@ -521,31 +521,31 @@ html[data-theme="artcraft"] #home .card-text::after {
   transform: translate(-8px, 8px);
   transition: opacity 0.3s, transform 0.5s var(--ease);
 }
-html[data-theme="artcraft"] #home .card:hover .card-text::after { opacity: 1; transform: translate(0, 0); }
-html[data-theme="artcraft"] #home .star-btn { border-radius: 50%; background: var(--chip-bg); border-color: var(--hairline); }
-html[data-theme="artcraft"] #home .star-btn .star-icon { stroke-width: 1.5; }
-html[data-theme="artcraft"] #home .star-btn.starred .star-icon { fill: var(--ink); }
+html[data-theme="brutal"] #home .card:hover .card-text::after { opacity: 1; transform: translate(0, 0); }
+html[data-theme="brutal"] #home .star-btn { border-radius: 50%; background: var(--chip-bg); border-color: var(--hairline); }
+html[data-theme="brutal"] #home .star-btn .star-icon { stroke-width: 1.5; }
+html[data-theme="brutal"] #home .star-btn.starred .star-icon { fill: var(--ink); }
 
 /* scroll reveal: cards rise in while their frame fades up (class set by home.js) */
 @media (prefers-reduced-motion: no-preference) {
-  html[data-theme="artcraft"] #home .card.reveal {
+  html[data-theme="brutal"] #home .card.reveal {
     opacity: 0;
     transform: translateY(36px);
     transition: opacity 0.9s var(--ease), transform 0.9s var(--ease), border-color 0.35s, background-color 0.35s;
     transition-delay: calc(var(--i, 0) * 90ms), calc(var(--i, 0) * 90ms), 0s, 0s;
   }
-  html[data-theme="artcraft"] #home .card.reveal.in { opacity: 1; transform: none; }
-  html[data-theme="artcraft"] #home .card.reveal.in canvas { animation: art-preview-in 1.2s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 150ms); }
+  html[data-theme="brutal"] #home .card.reveal.in { opacity: 1; transform: none; }
+  html[data-theme="brutal"] #home .card.reveal.in canvas { animation: art-preview-in 1.2s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 150ms); }
   @keyframes art-preview-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
 }
 @media (prefers-reduced-motion: reduce) {
-  html[data-theme="artcraft"] body::before,
-  html[data-theme="artcraft"] #home .hero::after { animation: none; }
-  html[data-theme="artcraft"] #home .art-lines * { animation: none !important; stroke-dashoffset: 0 !important; }
+  html[data-theme="brutal"] body::before,
+  html[data-theme="brutal"] #home .hero::after { animation: none; }
+  html[data-theme="brutal"] #home .art-lines * { animation: none !important; stroke-dashoffset: 0 !important; }
 }
 
-/* ---- Brutal: neo-brutalism, thick black outlines and hard shadows ---- */
-html[data-theme="brutal"] {
+/* ---- Pop: neo-brutalism, thick black outlines and hard shadows ---- */
+html[data-theme="pop"] {
   --bg: #fff3d6;
   --board: #ffffff;
   --panel: #ffffff;
@@ -601,14 +601,69 @@ html[data-theme="brutal"] {
   --chip-bg: #ffffff;
   color-scheme: light;
 }
-html[data-theme="brutal"] button.active,
-html[data-theme="brutal"] button.hint-confirm { background: var(--rose); color: #000; border-color: #000; }
-html[data-theme="brutal"] #home .card .card-text { border-top: 3px solid #000; }
-html[data-theme="brutal"] #home .card:nth-child(4n+1) .card-text { background: #ffc800; }
-html[data-theme="brutal"] #home .card:nth-child(4n+2) .card-text { background: #ff9ecf; }
-html[data-theme="brutal"] #home .card:nth-child(4n+3) .card-text { background: #8fd3ff; }
-html[data-theme="brutal"] #home .card:nth-child(4n+4) .card-text { background: #a6f0c6; }
-html[data-theme="brutal"] #home .card-desc { color: #000; }
+html[data-theme="pop"] button.active,
+html[data-theme="pop"] button.hint-confirm { background: var(--rose); color: #000; border-color: #000; }
+html[data-theme="pop"] #home .card .card-text { border-top: 3px solid #000; }
+html[data-theme="pop"] #home .card:nth-child(4n+1) .card-text { background: #ffc800; }
+html[data-theme="pop"] #home .card:nth-child(4n+2) .card-text { background: #ff9ecf; }
+html[data-theme="pop"] #home .card:nth-child(4n+3) .card-text { background: #8fd3ff; }
+html[data-theme="pop"] #home .card:nth-child(4n+4) .card-text { background: #a6f0c6; }
+html[data-theme="pop"] #home .card-desc { color: #000; }
+
+/* ---- motion: every design animates a little, some more than others ----
+   Cards fade/rise in on scroll (.reveal/.in set by home.js), game boards ease
+   in on load. Each design tunes the vars (and adds its own hover touches). */
+:root { --reveal-from: translateY(18px); --reveal-dur: 0.7s; --reveal-ease: var(--ease); --wrap-from: translateY(10px); --wrap-dur: 0.5s; --wrap-ease: var(--ease); }
+@keyframes wrap-in { from { opacity: 0; transform: var(--wrap-from); } }
+#canvas-wrap:not(.fs) { animation: wrap-in var(--wrap-dur) var(--wrap-ease) both; }
+@media (prefers-reduced-motion: no-preference) {
+  #home .card.reveal {
+    opacity: 0;
+    transform: var(--reveal-from);
+    transition: opacity var(--reveal-dur) var(--reveal-ease), transform var(--reveal-dur) var(--reveal-ease), border-color 0.35s, background-color 0.35s;
+    transition-delay: calc(var(--i, 0) * 70ms), calc(var(--i, 0) * 70ms), 0s, 0s;
+  }
+  #home .card.reveal.in { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { #canvas-wrap:not(.fs) { animation: none; } }
+
+/* Midnight: slow colour drift on the title, preview floats on hover */
+html[data-theme="midnight"] #home h1 { background-size: 220% 100%; animation: midnight-shimmer 10s ease-in-out infinite alternate; }
+@keyframes midnight-shimmer { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+html[data-theme="midnight"] #home .card:hover canvas { transform: scale(1.035) translateY(-2px); }
+html[data-theme="midnight"] #home .card-title { transition: transform 0.3s var(--ease); }
+html[data-theme="midnight"] #home .card:hover .card-title { transform: translateX(3px); }
+
+/* Classic: barely moves, just a quick fade and tracking on hover */
+html[data-theme="classic"] { --reveal-from: translateY(8px); --reveal-dur: 0.4s; --wrap-from: translateY(4px); --wrap-dur: 0.3s; }
+html[data-theme="classic"] #home .card-title { transition: letter-spacing 0.3s var(--ease); }
+html[data-theme="classic"] #home .card:hover .card-title { letter-spacing: 0.17em; }
+
+/* Studio: springy lifts */
+html[data-theme="studio"] { --reveal-from: translateY(26px) scale(0.97); --reveal-ease: cubic-bezier(0.34, 1.4, 0.64, 1); --wrap-from: translateY(14px) scale(0.98); --wrap-ease: cubic-bezier(0.34, 1.4, 0.64, 1); }
+html[data-theme="studio"] #home .card { transition: transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1), border-color 0.2s, box-shadow 0.3s; }
+html[data-theme="studio"] button { transition: background 0.15s, border-color 0.15s, transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 0.2s, color 0.15s; }
+html[data-theme="studio"] button:hover { transform: translateY(-2px); box-shadow: 0 6px 14px -8px rgba(20, 22, 40, 0.35); }
+html[data-theme="studio"] button:active { transform: scale(0.97); box-shadow: none; }
+html[data-theme="studio"] #home .card:hover canvas { transform: scale(1.05); }
+
+/* Paper: tilts in like a pinned sheet, wobbles on hover */
+html[data-theme="paper"] { --reveal-from: translateY(22px) rotate(-1.6deg); --reveal-dur: 0.8s; --wrap-from: translateY(10px) rotate(-0.8deg); }
+@keyframes paper-wobble { 25% { transform: rotate(-1.4deg); } 75% { transform: rotate(1.2deg); } }
+html[data-theme="paper"] #home h1:hover { animation: paper-wobble 0.6s ease-in-out; }
+html[data-theme="paper"] button:hover { transform: rotate(-1deg) translateY(-1px); }
+html[data-theme="paper"] button:active { transform: var(--btn-press); }
+html[data-theme="paper"] #home .card-title { background: linear-gradient(var(--sky), var(--sky)) 0 100% / 0% 2px no-repeat; transition: background-size 0.45s var(--ease); display: inline; }
+html[data-theme="paper"] #home .card:hover .card-title { background-size: 100% 2px; }
+
+/* Pop: bouncy, chunky */
+html[data-theme="pop"] { --reveal-from: translateY(34px) scale(0.86); --reveal-dur: 0.55s; --reveal-ease: cubic-bezier(0.34, 1.7, 0.5, 1); --wrap-from: scale(0.92) translateY(14px); --wrap-dur: 0.45s; --wrap-ease: cubic-bezier(0.34, 1.7, 0.5, 1); }
+@keyframes pop-bounce { 30% { transform: translateY(-8px) rotate(-1deg); } 60% { transform: translateY(2px); } }
+html[data-theme="pop"] #home h1:hover { animation: pop-bounce 0.5s ease-out; }
+html[data-theme="pop"] button:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #000; }
+html[data-theme="pop"] button:active { transform: var(--btn-press); box-shadow: var(--btn-shadow-press); }
+html[data-theme="pop"] #home .card:hover .star-icon { animation: pop-bounce 0.4s ease-out; }
+html[data-theme="pop"] #home .card { transition: transform 0.2s cubic-bezier(0.34, 1.7, 0.5, 1), box-shadow 0.2s; }
 
 /* ---- theme picker ---- */
 .theme-picker { position: relative; z-index: 120; }
@@ -627,7 +682,7 @@ html[data-theme="brutal"] #home .card-desc { color: #000; }
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  width: 250px;
+  width: 272px;
   max-height: min(70vh, 560px);
   overflow-y: auto;
   padding: 6px;
@@ -652,16 +707,22 @@ html[data-theme="brutal"] #home .card-desc { color: #000; }
 }
 .theme-opt:hover, .theme-opt:focus-visible { background: var(--panel-2); }
 .theme-opt[aria-checked="true"] { outline: 2px solid var(--accent); outline-offset: -2px; }
-.theme-swatch {
+.theme-prev {
   flex: none;
-  width: 44px;
-  height: 30px;
-  border-radius: 6px;
-  border: 1px solid rgba(127, 127, 127, 0.35);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  overflow: hidden;
+  width: 76px;
+  height: 52px;
+  padding: 5px;
+  display: flex;
+  gap: 5px;
+  box-sizing: border-box;
+  transition: transform 0.25s var(--ease);
 }
-.theme-swatch span { display: block; }
+.theme-opt:hover .theme-prev, .theme-opt:focus-visible .theme-prev { transform: scale(1.06) rotate(-1deg); }
+.tp-board { flex: none; width: 34px; padding: 2px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; box-sizing: border-box; }
+.tp-board i { display: block; }
+.tp-side { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+.tp-side b { font-size: 14px; line-height: 1; font-weight: 700; letter-spacing: 0; }
+.tp-side em { display: block; height: 7px; width: 100%; }
+.tp-side u { display: block; height: 2px; width: 70%; opacity: 0.8; }
 .theme-name { font-size: 15px; font-weight: 600; line-height: 1.15; }
 .theme-sub { font-size: 12px; color: var(--muted); }

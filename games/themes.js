@@ -88,24 +88,24 @@ const THEMES = [
     },
   },
   {
-    id: "artcraft", name: "Artcraft", sub: "fine line art, quiet paper",
+    id: "brutal", name: "Brutal", sub: "dark, fine line art",
     font: "Instrument Sans", fonts: ["Instrument+Sans:wght@400;500;600;700"],
     fx: { corners: 0.3 },
     pal: {
-      bg: [246, 245, 241], board: [250, 249, 246], well: [240, 239, 234], panel: [250, 249, 246], panelHi: [232, 230, 223],
-      line: [214, 212, 204], lineHi: [28, 28, 30], ink: [24, 24, 27], muted: [112, 111, 106], dim: [186, 184, 176],
-      sun: [24, 24, 27], mint: [24, 24, 27], rose: [24, 24, 27], sky: [24, 24, 27],
-      lilac: [24, 24, 27], peach: [24, 24, 27], aqua: [24, 24, 27],
-      mintHi: [232, 230, 223], skyHi: [232, 230, 223], sunHi: [232, 230, 223], aquaHi: [232, 230, 223],
-      fillInk: [24, 24, 27], mine: [24, 24, 27], mineHi: [112, 111, 106], onLight: [24, 24, 27], onDark: [250, 249, 246],
-      tiles: [[240, 239, 234], [232, 230, 223], [222, 220, 212], [208, 206, 197], [190, 188, 178], [168, 166, 156],
-              [140, 138, 130], [108, 107, 100], [76, 75, 70], [48, 48, 46], [24, 24, 27]],
-      tilesNeg: [[236, 226, 224], [226, 208, 205], [214, 188, 184], [200, 166, 160], [184, 140, 132]],
-      flood: [[24, 24, 27], [96, 95, 90], [168, 166, 156], [214, 212, 204], [60, 60, 58], [132, 130, 122], [190, 188, 178], [232, 230, 223]],
+      bg: [12, 12, 14], board: [17, 17, 20], well: [24, 24, 28], panel: [26, 26, 30], panelHi: [40, 40, 46],
+      line: [50, 50, 56], lineHi: [236, 235, 230], ink: [236, 235, 230], muted: [141, 140, 134], dim: [84, 84, 90],
+      sun: [236, 235, 230], mint: [236, 235, 230], rose: [236, 235, 230], sky: [236, 235, 230],
+      lilac: [236, 235, 230], peach: [236, 235, 230], aqua: [236, 235, 230],
+      mintHi: [70, 70, 76], skyHi: [70, 70, 76], sunHi: [70, 70, 76], aquaHi: [70, 70, 76],
+      fillInk: [236, 235, 230], mine: [236, 235, 230], mineHi: [141, 140, 134], onLight: [12, 12, 14], onDark: [236, 235, 230],
+      tiles: [[26, 26, 30], [36, 36, 42], [50, 50, 56], [68, 68, 75], [92, 92, 100], [120, 120, 128],
+              [150, 149, 154], [180, 179, 182], [206, 205, 205], [226, 225, 221], [244, 243, 238]],
+      tilesNeg: [[46, 30, 30], [64, 38, 38], [84, 46, 46], [106, 54, 54], [130, 62, 62]],
+      flood: [[236, 235, 230], [150, 149, 154], [92, 92, 100], [50, 50, 56], [196, 195, 194], [120, 120, 128], [68, 68, 75], [226, 225, 221]],
     },
   },
   {
-    id: "brutal", name: "Brutal", sub: "bold outlines, hard shadows",
+    id: "pop", name: "Pop", sub: "bold outlines, hard shadows",
     font: "Space Grotesk", fonts: ["Space+Grotesk:wght@400;500;600;700"],
     fx: { corners: 0.4 },
     pal: {
@@ -216,6 +216,26 @@ function themeSketch(p) {
 
 function _rgb(c) { return "rgb(" + c.join(",") + ")"; }
 
+// A miniature of the design: a framed board with a few tiles, a title bar and
+// a button in the theme's own colours, font and corner radius.
+function _themePreview(t, P) {
+  const c = (k) => _rgb(P[k]);
+  const r = Math.round(7 * (t.fx.corners ?? 1));
+  const cells = ["well", "panel", "mint", "panel", "sun", "well", "mint", "well", "panel"];
+  const hard = t.id === "pop" ? `box-shadow:2px 2px 0 ${c("ink")};` : "";
+  const edge = t.id === "pop" ? c("ink") : c(t.id === "brutal" ? "dim" : "line");
+  return `<span class="theme-prev" style="background:${c("bg")};border:1px solid ${edge};border-radius:${r}px;${hard}font-family:'${t.font}'">
+    <span class="tp-board" style="background:${c("board")};border:1px solid ${edge};border-radius:${Math.round(r / 2)}px">
+      ${cells.map(k => `<i style="background:${c(k)};border-radius:${Math.round(r / 4)}px"></i>`).join("")}
+    </span>
+    <span class="tp-side">
+      <b style="color:${c("ink")}">Aa</b>
+      <em style="background:${c("mint")};border-radius:${Math.round(r / 2)}px"></em>
+      <u style="background:${c("dim")}"></u>
+    </span>
+  </span>`;
+}
+
 function mountThemePicker(container) {
   if (!container || container.querySelector(".theme-picker")) return;
   const wrap = document.createElement("div");
@@ -232,10 +252,7 @@ function mountThemePicker(container) {
       ${THEMES.map(t => {
         const P = { ..._BASE, ...t.pal };
         return `<button class="theme-opt" type="button" role="menuitemradio" data-theme="${t.id}" aria-checked="${t.id === THEME.id}">
-          <span class="theme-swatch" style="background:${_rgb(P.bg)}">
-            <span style="background:${_rgb(P.board)}"></span><span style="background:${_rgb(P.sun)}"></span>
-            <span style="background:${_rgb(P.mint)}"></span><span style="background:${_rgb(P.lilac === P.ink ? P.sky : P.rose)}"></span>
-          </span>
+          ${_themePreview(t, P)}
           <span><span class="theme-name" style="font-family:'${t.font}'">${t.name}</span><br><span class="theme-sub">${t.sub}</span></span>
         </button>`;
       }).join("")}

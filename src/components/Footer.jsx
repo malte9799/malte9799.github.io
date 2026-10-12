@@ -1,5 +1,5 @@
 import { GITHUB_URL } from '../data/projects';
-import { localePath, useLang, useT } from '../i18n';
+import { localePath, useLang, useT, withBase } from '../i18n';
 
 export default function Footer() {
   const lang = useLang();
@@ -13,7 +13,7 @@ export default function Footer() {
         </p>
         <div className="footer-links">
           <a href={localePath(lang, '/projects/')}>{t.nav.projects}</a>
-          <a href="/games/">{t.nav.games}</a>
+          <a href={withBase('/games/')}>{t.nav.games}</a>
           <a href={GITHUB_URL}>GitHub</a>
         </div>
       </div>
