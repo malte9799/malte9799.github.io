@@ -15,29 +15,37 @@ initGame({
     { id: "btn-undo", label: "Undo",                     onClick: () => undo() },
   ],
   sliders: [
-    { id: "s-size",   label: "Grid size", min: 6,  max: 24, step: 1 },
+    { id: "s-size",   label: "Grid size", min: 6,  max: 24, step: 1, fmt: v => v + "×" + v },
     { id: "s-colors", label: "Colors",    min: 3,  max: 8,  step: 1 },
   ],
-  onPreset: ([n, k]) => { SIZE = n; NCOLORS = k; newGame(); },
+  onPreset: ([n, k]) => { SIZE = n; NCOLORS = k; saveSettings("flood_state", { SIZE, NCOLORS }); syncSliderUI(); newGame(); },
   onSlider: (id, v) => { if (id === "s-size") SIZE = v; else NCOLORS = v; },
   onClamp: () => {},
   getSliderValues: () => ({ "s-size": SIZE, "s-colors": NCOLORS }),
   info: {
     anim: infoAnim,
     title: "How to play",
-    text: "You own the top-left corner. Picking a color (swatches, number keys, or clicking any cell) recolors your whole territory, absorbing every touching region of that color. Flood the entire board before the move counter runs out.",
+    text: [
+      "You own the top-left corner. Picking a color (swatches, number keys, or clicking any cell) recolors your whole territory, absorbing every touching region of that color. Flood the entire board before the move counter runs out.",
+      "Keys: 1–8 pick a color · U undo · N new board.",
+    ],
   },
 });
 
 let SIZE = 14;
 let NCOLORS = 6;
+{
+  const d = loadSettings("flood_state");
+  if (typeof d.SIZE === "number" && d.SIZE >= 6 && d.SIZE <= 24) SIZE = d.SIZE;
+  if (typeof d.NCOLORS === "number" && d.NCOLORS >= 3 && d.NCOLORS <= 8) NCOLORS = d.NCOLORS;
+}
+syncSliderUI();
 let grid = [];
 let moves = 0;
 let moveLimit = 0;
 let gameOver = false;
 let won = false;
-let prevGrid = null;
-let prevMoves = null;
+let history = []; // undo stack of { grid, moves }
 
 // ripple animation: cells flip to their new color in waves spreading from
 // the top-left origin, instead of all at once
@@ -45,16 +53,9 @@ let ripple = null; // { cells: [{r,c,delay,color}], startFrame, maxDelay }
 const RIPPLE_STEP = 3; // frames of delay per unit of (r+c) distance
 const RIPPLE_FLIP_DUR = 10; // frames for a single cell's flip-scale animation
 
-const PALETTE = [
-  [200, 50, 63],   // red
-  [230, 180, 34],  // gold
-  [127, 176, 105], // green
-  [90, 160, 210],  // blue
-  [180, 110, 200], // purple
-  [220, 140, 60],  // orange
-  [90, 200, 190],  // teal
-  [230, 110, 160], // pink
-];
+// Each design defines PAL.flood: 8 hues spread around the wheel, since in a
+// colour-matching game every colour must be clearly distinct.
+const PALETTE = PAL.flood;
 
 function colorAt(v) {
   return PALETTE[v % PALETTE.length];
@@ -78,7 +79,7 @@ function loadBest() {
 }
 function maybeSaveBest() {
   try {
-    if (best === null || moves < best) {
+    if (best === null || moves <= best) {
       localStorage.setItem(bestKey(), String(moves));
       best = moves;
     }
@@ -183,8 +184,9 @@ function newGame() {
   moveLimit = computeMoveLimit(grid);
   gameOver = false;
   won = false;
-  prevGrid = null;
-  prevMoves = null;
+  history = [];
+  ripple = null;
+  clearParticles();
   loadBest();
   updateStatus();
 }
@@ -221,12 +223,12 @@ function isFullyFlooded() {
 }
 
 function pickColor(col) {
-  if (gameOver || ripple) return;
+  if (ripple) finishPick(); // a quick second pick skips the rest of the animation
+  if (gameOver) return;
   const current = grid[0][0];
   if (col === current) return; // no-op move, don't waste a turn
 
-  prevGrid = grid.map(row => [...row]);
-  prevMoves = moves;
+  history.push({ grid: grid.map(row => [...row]), moves });
 
   const region = regionFrom(grid, 0, 0);
   const cells = region.map(([r, c]) => ({ r, c, delay: (r + c) * RIPPLE_STEP, color: col }));
@@ -257,25 +259,21 @@ function finishPick() {
 }
 
 function undo() {
-  if (!prevGrid) {
-    flashNote("Nothing to undo!");
+  if (ripple) finishPick();
+  if (won || !history.length) {
+    flashNote(won ? "Board is flooded — start a new one." : "Nothing to undo.");
     return;
   }
-  ripple = null;
-  grid = prevGrid;
-  moves = prevMoves;
+  ({ grid, moves } = history.pop());
   gameOver = false;
-  won = false;
-  prevGrid = null;
-  prevMoves = null;
   updateStatus();
 }
 
 function updateStatus() {
   if (gameOver) {
-    setStatus(won ? "flooded in " + moves + " moves!" : "out of moves — board not flooded", won ? "solved" : "dead");
+    setStatus(won ? "flooded in " + moves + " moves" + (best === moves ? " · new best!" : "") : "out of moves — undo or try a new board", won ? "solved" : "dead");
   } else {
-    setStatus("moves: " + moves + " / " + moveLimit + (best !== null ? "   best: " + best : ""), null);
+    setStatus(moves + " / " + moveLimit + " moves" + (best !== null ? " · best " + best : ""), null);
   }
 }
 
@@ -369,7 +367,7 @@ function infoAnim(p, w, h, frame) {
     }
   }
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
   p.noStroke();
 
   for (let r = 0; r < INFO_N; r++) {
@@ -379,7 +377,7 @@ function infoAnim(p, w, h, frame) {
       if (t === undefined) {
         const col = colorAt(_infoGrid[r][c]);
         p.fill(col[0], col[1], col[2]);
-        p.rect(x, y, cs - 1, cs - 1, 1.5);
+        p.rect(x + 1, y + 1, cs - 2, cs - 2, 6);
       } else {
         const oldCol = colorAt(_infoGrid[r][c]);
         const newCol = colorAt(rippleCol);
@@ -390,7 +388,7 @@ function infoAnim(p, w, h, frame) {
         p.fill(col[0], col[1], col[2]);
         const sz = (cs - 1) * scale;
         const off = (cs - 1 - sz) / 2;
-        p.rect(x + off, y + off, sz, sz, 1.5);
+        p.rect(x + off, y + off, sz, sz, 6);
       }
     }
   }
@@ -402,7 +400,7 @@ function infoAnim(p, w, h, frame) {
   if (rippleState) {
     for (const [key, t] of rippleState) if (t >= 0.5) ownedSet.add(key);
   }
-  p.stroke(243, 237, 224, 200);
+  p.stroke(...PAL.ink, 200);
   p.strokeWeight(2);
   for (const key of ownedSet) {
     const [r, c] = key.split(",").map(Number);
@@ -427,18 +425,21 @@ function setup() {
   newGame();
 }
 
+function drawCell(x, y, sz, col) {
+  fill(col[0], col[1], col[2]);
+  rect(x, y, sz, sz, Math.min(4, sz * 0.18));
+}
+
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
 
-  const availW = width;
   const boardAreaH = height - 64;
-
-  const maxBoardW = min(availW * 0.92, boardAreaH * 0.92, 420);
-  cellSize = floor(maxBoardW / SIZE);
+  cellSize = floor(min(width - 28, boardAreaH - 20) / SIZE);
   const boardW = cellSize * SIZE;
+  const gap = cellSize >= 20 ? 2 : 1;
 
-  ox = floor((availW - boardW) / 2);
-  oy = floor((boardAreaH - boardW) / 2);
+  ox = floor((width - boardW) / 2);
+  oy = floor((boardAreaH - boardW) / 2) + 6;
 
   // build a lookup of ripple flip progress per cell, if a ripple is active
   let rippleState = null; // Map "r,c" -> t (0..1, 1 = fully flipped)
@@ -458,7 +459,7 @@ function draw() {
         rippleState.set(cell.r + "," + cell.c, t);
       }
     }
-    if (allDone) finishPick();
+    if (allDone) { finishPick(); rippleState = null; }
   }
 
   noStroke();
@@ -466,22 +467,16 @@ function draw() {
     for (let c = 0; c < SIZE; c++) {
       const x = ox + c * cellSize, y = oy + r * cellSize;
       const t = rippleState ? rippleState.get(r + "," + c) : undefined;
+      const sz = cellSize - gap;
       if (t === undefined) {
-        const col = colorAt(grid[r][c]);
-        fill(col[0], col[1], col[2]);
-        rect(x, y, cellSize - 1, cellSize - 1, 1.5);
+        drawCell(x, y, sz, colorAt(grid[r][c]));
       } else {
         // flip animation: shrink out the old color, pop in the new one
-        const oldCol = colorAt(grid[r][c]);
-        const newCol = colorAt(rippleCol);
         const shrink = t < 0.5;
         const localT = shrink ? t / 0.5 : (t - 0.5) / 0.5;
         const scale = shrink ? 1 - localT : localT;
-        const col = shrink ? oldCol : newCol;
-        fill(col[0], col[1], col[2]);
-        const sz = (cellSize - 1) * scale;
-        const off = (cellSize - 1 - sz) / 2;
-        rect(x + off, y + off, sz, sz, 1.5);
+        const k = sz * scale;
+        drawCell(x + (sz - k) / 2, y + (sz - k) / 2, k, colorAt(shrink ? grid[r][c] : rippleCol));
       }
     }
   }
@@ -494,63 +489,78 @@ function draw() {
   if (rippleState) {
     for (const [key, t] of rippleState) if (t >= 0.5) ownedSet.add(key);
   }
-  stroke(243, 237, 224, 200);
+  stroke(...PAL.ink, 230);
   strokeWeight(2);
+  strokeCap(ROUND);
+  const g2 = gap / 2;
   for (const key of ownedSet) {
     const [r, c] = key.split(",").map(Number);
-    const x = ox + c * cellSize, y = oy + r * cellSize;
+    const x = ox + c * cellSize - g2, y = oy + r * cellSize - g2;
     if (r === 0 || !ownedSet.has((r - 1) + "," + c)) line(x, y, x + cellSize, y);
     if (r === SIZE - 1 || !ownedSet.has((r + 1) + "," + c)) line(x, y + cellSize, x + cellSize, y + cellSize);
     if (c === 0 || !ownedSet.has(r + "," + (c - 1))) line(x, y, x, y + cellSize);
     if (c === SIZE - 1 || !ownedSet.has(r + "," + (c + 1))) line(x + cellSize, y, x + cellSize, y + cellSize);
   }
 
-  // color swatches
-  swatchH = 44;
-  swatchY = boardAreaH + 10;
-  const sw = width / NCOLORS;
+  // color swatches, with their number key
+  swatchH = 42;
+  swatchY = boardAreaH + 8;
+  const sw = (width - 20) / NCOLORS;
+  let anyHover = false;
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(14);
   for (let i = 0; i < NCOLORS; i++) {
     const col = colorAt(i);
-    const x = i * sw;
+    const x = 10 + i * sw;
     const hovering = !gameOver && mouseX >= x && mouseX < x + sw && mouseY >= swatchY && mouseY < swatchY + swatchH;
-    fill(col[0], col[1], col[2]);
+    const current = grid[0][0] === i;
+    anyHover = anyHover || hovering;
+    const lift = hovering && !current ? 3 : 0;
     noStroke();
-    const padY = hovering ? 0 : 4;
-    rect(x + 4, swatchY + padY, sw - 8, swatchH - padY, 6);
-    if (grid[0][0] === i) {
+    fill(col[0], col[1], col[2], current ? 110 : 255);
+    rect(x + 4, swatchY + 4 - lift, sw - 8, swatchH - 8, 10);
+    if (current) {
       noFill();
-      stroke(243, 237, 224, 200);
+      stroke(...PAL.ink, 230);
       strokeWeight(2);
-      rect(x + 4, swatchY + padY, sw - 8, swatchH - padY, 6);
+      rect(x + 4, swatchY + 4, sw - 8, swatchH - 8, 10);
     }
+    noStroke();
+    fill(0, 0, 0, current ? 90 : 110);
+    text(i + 1, x + sw / 2, swatchY + swatchH / 2 - lift);
   }
+  const overBoard = !gameOver && mouseX >= ox && mouseY >= oy && mouseX < ox + boardW && mouseY < oy + boardW;
+  cursor(anyHover || overBoard ? HAND : ARROW);
+
+  drawParticles();
 
   // game over overlay
   if (gameOver) {
     drawBoardOverlay(
       ox, oy, boardW, boardW,
-      won ? "BOARD FLOODED" : "OUT OF MOVES",
-      won ? "Solved in " + moves + " moves" : "Press New board to retry",
-      won ? [127, 176, 105] : [200, 50, 63],
+      won ? "Flooded!" : "Out of moves",
+      won ? "solved in " + moves + " moves" : "undo, or press N for a new board",
+      won ? PAL.mint : PAL.rose,
     );
   }
 }
 
 function mousePressed() {
-  if (gameOver) return;
+  if (gameOver || mouseX < 0 || mouseX > width || mouseY < 0 || mouseY > height) return;
   if (mouseY >= swatchY && mouseY < swatchY + swatchH) {
-    const sw = width / NCOLORS;
-    const i = Math.floor(mouseX / sw);
+    const i = Math.floor((mouseX - 10) / ((width - 20) / NCOLORS));
     if (i >= 0 && i < NCOLORS) pickColor(i);
-    return;
+    return false;
   }
   const c = Math.floor((mouseX - ox) / cellSize);
   const r = Math.floor((mouseY - oy) / cellSize);
-  if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) pickColor(grid[r][c]);
+  if (r >= 0 && r < SIZE && c >= 0 && c < SIZE) { pickColor(grid[r][c]); return false; }
 }
 
 function keyPressed() {
-  if (keyCode === 78) { newGame(); return false; } // N
+  if (key === "n" || key === "N") { newGame(); return false; }
+  if (key === "u" || key === "U") { undo(); return false; }
   if (key >= "1" && key <= "8") {
     const i = parseInt(key) - 1;
     if (i < NCOLORS) pickColor(i);

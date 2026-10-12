@@ -1,17 +1,18 @@
-// Nonogram — paint cells to match clues.
-// Translucent helper alignment guides, glowing ink cells, sketchy hand-drawn crosses, and particle celebrations.
+// Nonogram — paint cells to match the row and column clues.
+// Every generated puzzle is solvable by line logic alone (see genSolution).
 
 initGame({
   title: "Nonogram",
-  tag: "paint grid · neon guide lines",
+  tag: "paint the hidden picture",
   presets: [
     { label: "10×10 (standard)", values: [10, 10] },
     { label: "5×5 (easy)",       values: [5,  5]  },
     { label: "15×15 (hard)",     values: [15, 15] },
   ],
   buttons: [
-    { id: "btn-reset", label: "Reset view", onClick: () => resetView() },
     { id: "btn-new",   label: "New puzzle", primary: true, onClick: () => newGame() },
+    { id: "btn-cross", label: "Cross mode", onClick: () => { crossMode = !crossMode; setButtonActive("btn-cross", crossMode); } },
+    { id: "btn-undo",  label: "Undo",       onClick: () => undo() },
     { id: "btn-hint",  label: "Hint",       onClick: () => confirmHint(hintStep) },
   ],
   sliders: [
@@ -25,7 +26,10 @@ initGame({
   info: {
     anim: infoAnim,
     title: "How to play",
-    text: "Each clue lists the runs of filled cells in that row or column, in order, with at least one gap between runs. Left-drag paints, right-drag (or Ctrl) crosses out cells you've ruled out. Clues turn green when their line is correct. Every puzzle has exactly one solution, reachable by pure logic — no guessing needed.",
+    text: [
+      "Each clue lists the runs of filled cells in that row or column, in order, with at least one gap between runs. Every puzzle has exactly one solution, reachable by pure logic — no guessing needed.",
+      "Left-drag paints, right-drag (or Ctrl, or Cross mode on touch) crosses out cells you've ruled out. Clues turn green when their line is right. Scroll to zoom, Shift-drag to pan, R resets the view. U / Ctrl+Z undo.",
+    ],
   },
 });
 
@@ -38,6 +42,12 @@ let cluesC = [];   // column clues
 let cluesR = [];   // row clues
 let solved = false;
 let seed = 0;
+
+let crossMode = false;
+let history = [];  // undo stack: one entry per stroke, [{ i, j, prev }]
+let stroke_ = null; // the stroke being painted
+let hintCell = null; // { i, j, t } flash on the cell a hint changed
+let L = null;       // layout, see computeLayout()
 
 // Drag state
 let dragFill = null;
@@ -54,7 +64,6 @@ let panOrigin = null;
 const _view = { x: 0, y: 0, z: 1 };
 
 const CANVAS = 440;
-const CLUE_FRAC = 0.28;
 
 function makeGrid() {
   board = [];
@@ -247,8 +256,12 @@ function newGame() {
   buildClues();
   makeGrid();
   solved = false;
+  history = [];
+  stroke_ = null;
+  hintCell = null;
   dragFill = null; dragAxis = null; dragOrigin = null; dragLast = null;
   panActive = false; panStart = null; panOrigin = null;
+  L = null;
   resetView();
   resetHint();
   flashNote("");
@@ -261,72 +274,114 @@ function celebrateNonogram() {
   celebrate(1 + Math.round(frac * 2));
 }
 
-function toggleCell(i, j, mode) {
-  if (solved) return;
-  const current = board[i][j];
-  if (mode === 1) { // fill
-    board[i][j] = current === 1 ? 0 : 1;
-    if (board[i][j] === 1) spawnInkDust(i, j, [230, 225, 210]);
-  } else if (mode === 2) { // cross
-    board[i][j] = current === 2 ? 0 : 2;
-    if (board[i][j] === 2) spawnInkDust(i, j, [80, 72, 64]);
-  }
+// Sets one cell, recording it in the current stroke for undo.
+function setCellState(i, j, v) {
+  if (solved || board[i][j] === v) return;
+  (stroke_ || (stroke_ = [])).push({ i, j, prev: board[i][j] });
+  board[i][j] = v;
+  if (v === 1) spawnInkDust(i, j, PAL.lilac);
   if (checkSolved()) {
     solved = true;
     celebrateNonogram();
   }
 }
 
+function endStroke() {
+  if (stroke_ && stroke_.length) history.push(stroke_);
+  stroke_ = null;
+}
+
+function undo() {
+  endStroke();
+  if (!history.length) { flashNote("Nothing to undo."); return; }
+  for (const { i, j, prev } of history.pop().reverse()) board[i][j] = prev;
+  solved = false;
+}
+
+// Hint: first fix a mistake if there is one; otherwise find a cell that line
+// logic can deduce from what's on the board and fill or cross it.
 function hintStep() {
-  if (solved) { flashNote("already solved"); return; }
+  if (solved) return;
+  endStroke();
   const wrong = [];
-  for (let i = 0; i < cols; i++) {
+  for (let i = 0; i < cols; i++)
     for (let j = 0; j < rows; j++) {
-      const correct = solution[i][j];
-      const current = board[i][j] === 1;
-      if (current !== correct) wrong.push({ i, j, target: correct ? 1 : 0 });
+      if (board[i][j] === 1 && !solution[i][j]) wrong.push([i, j, 2]);
+      if (board[i][j] === 2 && solution[i][j]) wrong.push([i, j, 1]);
+    }
+  let pick = null, msg = "";
+  if (wrong.length) {
+    pick = wrong[floor(random() * wrong.length)];
+    msg = "That cell was wrong — fixed it.";
+  } else {
+    const st = (i, j) => board[i][j];
+    outer:
+    for (let pass = 0; pass < 2; pass++) {
+      const n = pass === 0 ? rows : cols;
+      for (let k = 0; k < n; k++) {
+        const line = pass === 0 ? Array.from({ length: cols }, (_, i) => st(i, k)) : Array.from({ length: rows }, (_, j) => st(k, j));
+        const res = lineDeduce(line, pass === 0 ? cluesR[k] : cluesC[k]);
+        if (!res) continue;
+        for (let m = 0; m < line.length; m++) {
+          if (line[m] !== 0) continue;
+          const v = res.canFill[m] && !res.canEmpty[m] ? 1 : !res.canFill[m] && res.canEmpty[m] ? 2 : 0;
+          if (v) {
+            pick = pass === 0 ? [m, k, v] : [k, m, v];
+            msg = "Look at " + (pass === 0 ? "row " + (k + 1) : "column " + (k + 1)) + " — this cell is forced.";
+            break outer;
+          }
+        }
+      }
     }
   }
-  if (!wrong.length) return;
-  const c = wrong[floor(random() * wrong.length)];
-  
-  // Set target and spawn sparks
-  board[c.i][c.j] = c.target;
-  spawnInkDust(c.i, c.j, c.target === 1 ? [127, 176, 105] : [200, 50, 63]);
-
-  if (checkSolved()) {
-    solved = true;
-    celebrateNonogram();
-  }
-  flashNote("Hint applied: corrected one tile");
+  if (!pick) { flashNote("No hint available."); return; }
+  const [i, j, v] = pick;
+  setCellState(i, j, v);
+  endStroke();
+  hintCell = { i, j, t: frameCount };
+  flashNote(msg);
 }
 
 function saveState() {
-  saveJSON("nonogram_state", { cols, rows, seed });
+  saveSettings("nonogram_state", { cols, rows });
 }
 
 function loadState() {
-  const d = loadJSON("nonogram_state");
+  const d = loadSettings("nonogram_state");
   if (typeof d.cols === "number") cols = d.cols;
   if (typeof d.rows === "number") rows = d.rows;
-  if (typeof d.seed === "number") seed = d.seed;
 }
 
 function clamp() {
-  cols = Math.max(3, Math.min(cols, 20));
-  rows = Math.max(3, Math.min(rows, 20));
+  cols = Math.max(4, Math.min(cols, 20));
+  rows = Math.max(4, Math.min(rows, 20));
+}
+
+// Square cells sized so the clue gutters fit: clue numbers sit in slots of
+// CLUE_U cells, and the whole thing is centred in the canvas.
+const CLUE_U = 0.62;
+function computeLayout() {
+  const maxR = Math.max(...cluesR.map(c => c.length));
+  const maxC = Math.max(...cluesC.map(c => c.length));
+  const M = 12;
+  const cs = Math.floor(Math.min(
+    (width - 2 * M) / (cols + (maxR + 0.4) * CLUE_U),
+    (height - 2 * M) / (rows + (maxC + 0.4) * CLUE_U)));
+  const totW = cs * (cols + (maxR + 0.4) * CLUE_U), totH = cs * (rows + (maxC + 0.4) * CLUE_U);
+  const ox = (width - totW) / 2, oy = (height - totH) / 2;
+  L = { cs, gx: Math.round(ox + (maxR + 0.4) * CLUE_U * cs), gy: Math.round(oy + (maxC + 0.4) * CLUE_U * cs), u: cs * CLUE_U };
 }
 
 // Ink dust puffs where a cell was toggled (screen space, so view-transformed)
 function spawnInkDust(i, j, col) {
-  const gx = width * CLUE_FRAC, gy = height * CLUE_FRAC;
-  const cw = (width - gx) / cols, ch = (height - gy) / rows;
-  const cx = _view.x + (_view.z * (gx + i * cw + cw / 2));
-  const cy = _view.y + (_view.z * (gy + j * ch + ch / 2));
-  spawnBurst(cx, cy, { count: 8, speed: [0.2, 1.4], life: [100, 160], col });
+  if (!L) return;
+  const cx = _view.x + _view.z * (L.gx + i * L.cs + L.cs / 2);
+  const cy = _view.y + _view.z * (L.gy + j * L.cs + L.cs / 2);
+  spawnBurst(cx, cy, { count: 6, speed: [0.2, 1.2], life: [100, 150], col });
 }
 
 loadState();
+clamp();
 syncSliderUI();
 
 // Helper checkers
@@ -343,115 +398,107 @@ function _rowCorrect(j) {
   return true;
 }
 
+// ---- cell drawing (shared by the game and the info demo) ----
+
+// A filled cell's colour: soft ink while playing, a diagonal sun→rose→lilac
+// gradient once the picture is solved.
+function inkColor(p, i, j, total, done) {
+  if (!done) return p.color(...PAL.fillInk);
+  const t = total > 0 ? (i + j) / total : 0;
+  const a = p.color(...PAL.sun), b = p.color(...PAL.rose), c = p.color(...PAL.lilac);
+  return t < 0.5 ? p.lerpColor(a, b, t * 2) : p.lerpColor(b, c, (t - 0.5) * 2);
+}
+
+function drawCellAt(p, x, y, cs, v, col) {
+  const g = Math.max(1, cs * 0.06), r = Math.min(5, cs * 0.18);
+  p.noStroke();
+  if (v === 1) {
+    p.fill(col);
+    p.rect(x + g / 2, y + g / 2, cs - g, cs - g, r);
+  } else {
+    p.fill(...PAL.panel);
+    p.rect(x + g / 2, y + g / 2, cs - g, cs - g, r);
+    if (v === 2) {
+      p.stroke(...PAL.dim);
+      p.strokeWeight(Math.max(1.2, cs * 0.07));
+      p.strokeCap(p.ROUND);
+      const k = cs * 0.28;
+      p.line(x + k, y + k, x + cs - k, y + cs - k);
+      p.line(x + cs - k, y + k, x + k, y + cs - k);
+      p.noStroke();
+    }
+  }
+}
+
 // ---- info modal animation ----
-// A scripted 5×5 mini-board: read a row's clue, paint the run it describes,
-// cross out a cell that clue rules out, then show a completed line glow.
+// A scripted 5×5 board. Row 2's clue "5" fills the whole row; row 3's
+// "1 1 1" can only sit one way in five cells, so its gaps get crossed out.
+// Then the columns fall into place and the finished picture lights up.
+
+const INFO_SOL = [
+  [0, 1, 1, 1, 0],
+  [1, 1, 1, 1, 1],
+  [1, 0, 1, 0, 1],
+  [0, 0, 1, 0, 0],
+  [0, 1, 1, 1, 0],
+]; // [row][col]
 
 function infoAnim(p, w, h, frame) {
-  const C = 5, R = 5;
-  const CF = 0.22;
-  // fit a square board (clue margin + C×R grid) into the available space,
-  // centered, so it isn't stretched when the canvas itself isn't square
-  const side = Math.min(w, h) * 0.92;
-  const boardOx = (w - side) / 2, boardOy = (h - side) / 2;
-  const gx = boardOx + side * CF, gy = boardOy + side * CF;
-  const cw = (boardOx + side - gx) / C, ch = (boardOy + side - gy) / R;
+  const n = 5;
+  const rowClues = INFO_SOL.map(r => runs(i => r[i], n));
+  const colClues = Array.from({ length: n }, (_, c) => runs(j => INFO_SOL[j][c], n));
+  const cs = Math.floor(Math.min((w - 40) / (n + 2.2 * CLUE_U * 1.2), (h - 30) / (n + 2.4 * CLUE_U * 1.2)));
+  const u = cs * CLUE_U;
+  const totW = cs * n + 3.4 * u, totH = cs * n + 3.4 * u;
+  const gx = Math.round((w - totW) / 2 + 3.4 * u), gy = Math.round((h - totH) / 2 + 3.4 * u);
 
-  // solution: row 2 (0-indexed) is a single run of 3 starting at col 1
-  const sol = [
-    [0,0,1,0,0],
-    [0,1,1,0,0],
-    [0,1,1,1,0],
-    [0,0,1,1,0],
-    [0,0,0,1,0],
-  ]; // sol[col][row]
-
-  function runs(fn, len) {
-    const out = []; let cur = 0;
-    for (let k = 0; k < len; k++) { if (fn(k)) cur++; else if (cur) { out.push(cur); cur = 0; } }
-    if (cur) out.push(cur);
-    return out.length ? out : [0];
+  const CYCLE = 300;
+  const t = frame % CYCLE;
+  // what's on the board at time t: 0 unknown, 1 filled, 2 crossed
+  const st = Array.from({ length: n }, () => Array(n).fill(0));
+  let focusRow = -1;
+  if (t >= 20) { // row 1: "5"
+    focusRow = t < 90 ? 1 : focusRow;
+    const k = Math.min(n, Math.floor((t - 20) / 8));
+    for (let c = 0; c < k; c++) st[1][c] = 1;
   }
-  const cluesC = []; for (let i = 0; i < C; i++) cluesC.push(runs(j => sol[i][j], R));
-  const cluesR = []; for (let j = 0; j < R; j++) cluesR.push(runs(i => sol[i][j], C));
-
-  const PHASE_LEN = 65;
-  const t = frame % (PHASE_LEN * 3);
-  const phase = Math.floor(t / PHASE_LEN);
-
-  // target row = 2, clue "3" — phase 0: highlighted clue + empty row.
-  // phase 1: the 3-run gets painted in.
-  // phase 2: the two remaining cells in that row get crossed out, row glows.
-  const targetRow = 2;
-  const board = Array.from({ length: C }, () => Array(R).fill(0));
-  if (phase >= 1) { board[1][targetRow] = 1; board[2][targetRow] = 1; board[3][targetRow] = 1; }
-  if (phase >= 2) { board[0][targetRow] = 2; board[4][targetRow] = 2; }
-
-  p.background(20, 18, 15);
-  p.noStroke();
-
-  const rowComplete = phase === 2;
-
-  // column clues
-  p.textAlign(p.CENTER, p.BOTTOM);
-  p.textStyle(p.BOLD);
-  const fs = Math.min(cw, ch) * 0.5;
-  p.textSize(fs);
-  for (let i = 0; i < C; i++) {
-    const x = gx + i * cw;
-    p.fill(155, 145, 130);
-    for (let k = 0; k < cluesC[i].length; k++) {
-      const ty = gy - 5 - (cluesC[i].length - 1 - k) * ch;
-      p.text(cluesC[i][k], x + cw / 2, ty);
+  if (t >= 90) { // row 2: "1 1 1"
+    focusRow = t < 160 ? 2 : focusRow;
+    const k = Math.min(n, Math.floor((t - 90) / 8));
+    for (let c = 0; c < k; c++) st[2][c] = INFO_SOL[2][c] ? 1 : 2;
+  }
+  if (t >= 160) { // the rest of the picture
+    const k = Math.min(n * n, Math.floor((t - 160) / 3));
+    for (let idx = 0; idx < k; idx++) {
+      const r = [0, 3, 4][Math.floor(idx / n) % 3], c = idx % n;
+      if (idx < 3 * n) st[r][c] = INFO_SOL[r][c] ? 1 : 2;
     }
   }
+  const done = t >= 210;
 
-  // row clues — highlight target row's clue
-  p.textAlign(p.RIGHT, p.CENTER);
-  for (let j = 0; j < R; j++) {
-    const y = gy + j * ch;
-    const isTarget = j === targetRow;
-    p.fill(isTarget ? p.color(127, 176, 105) : p.color(155, 145, 130));
-    for (let k = 0; k < cluesR[j].length; k++) {
-      const tx = gx - 5 - (cluesR[j].length - 1 - k) * cw;
-      p.text(cluesR[j][k], tx, y + ch / 2);
-    }
-  }
+  p.background(...PAL.board);
   p.textAlign(p.CENTER, p.CENTER);
+  p.textStyle(p.BOLD);
+  p.textSize(u * 0.9);
 
-  // target row glow backdrop once solved
-  if (rowComplete) {
-    p.fill(127, 176, 105, 18); p.noStroke();
-    p.rect(boardOx, gy + targetRow * ch, gx + C * cw - boardOx, ch);
+  if (focusRow >= 0) {
+    p.noStroke();
+    p.fill(...PAL.lilac, 30);
+    p.rect(gx - 3.2 * u, gy + focusRow * cs, 3.2 * u + n * cs, cs, 6);
   }
-
-  // cells
-  for (let i = 0; i < C; i++) {
-    for (let j = 0; j < R; j++) {
-      const x = gx + i * cw, y = gy + j * ch;
-      const v = board[i][j];
-      if (v === 1) {
-        p.fill(230, 225, 210, 45); p.noStroke();
-        p.rect(x - 1, y - 1, cw + 2, ch + 2, 2);
-        p.fill(243, 237, 224);
-        p.rect(x + 1, y + 1, cw - 2, ch - 2, 2);
-      } else if (v === 2) {
-        p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
-        p.stroke(80, 72, 64); p.strokeWeight(1.8);
-        const padC = cw * 0.24;
-        p.line(x + padC, y + padC, x + cw - padC, y + ch - padC);
-        p.line(x + cw - padC, y + padC, x + padC, y + ch - padC);
-        p.noStroke();
-      } else {
-        p.fill(38, 35, 32); p.noStroke(); p.rect(x, y, cw, ch);
-      }
-    }
+  for (let r = 0; r < n; r++) {
+    const ok = st[r].every((v, c) => (v === 1) === !!INFO_SOL[r][c]);
+    p.fill(...(ok ? PAL.mint : r === focusRow ? PAL.ink : PAL.muted));
+    rowClues[r].forEach((v, k) => p.text(v, gx - 0.6 * u - (rowClues[r].length - 1 - k) * u, gy + r * cs + cs / 2));
   }
-
-  // grid lines
-  p.stroke(58, 53, 46); p.strokeWeight(1);
-  for (let i = 0; i <= C; i++) p.line(gx + i * cw, gy, gx + i * cw, gy + R * ch);
-  for (let j = 0; j <= R; j++) p.line(gx, gy + j * ch, gx + C * cw, gy + j * ch);
+  for (let c = 0; c < n; c++) {
+    const ok = st.every((row, r) => (row[c] === 1) === !!INFO_SOL[r][c]);
+    p.fill(...(ok ? PAL.mint : PAL.muted));
+    colClues[c].forEach((v, k) => p.text(v, gx + c * cs + cs / 2, gy - 0.6 * u - (colClues[c].length - 1 - k) * u));
+  }
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
+      drawCellAt(p, gx + c * cs, gy + r * cs, cs, st[r][c], inkColor(p, c, r, 2 * (n - 1), done));
 }
 
 // ---- p5 lifecycle ----
@@ -464,162 +511,93 @@ function setup() {
 }
 
 function draw() {
-  background(20, 18, 15);
-
-  const gx = width * CLUE_FRAC, gy = height * CLUE_FRAC;
-  const cw = (width - gx) / cols, ch = (height - gy) / rows;
+  background(...PAL.board);
+  if (!L) computeLayout();
+  const { cs, gx, gy, u } = L;
+  const bw = cols * cs, bh = rows * cs;
 
   push();
   translate(_view.x, _view.y);
   scale(_view.z);
 
-  // Guidelines helper
   let hoverCol = -1, hoverRow = -1;
-  const mx = (mouseX - _view.x) / _view.z;
-  const my = (mouseY - _view.y) / _view.z;
-  if (!solved && mx >= gx && mx < width && my >= gy && my < height) {
-    hoverCol = Math.floor((mx - gx) / cw);
-    hoverRow = Math.floor((my - gy) / ch);
+  const pos = _getGridPos();
+  if (!solved && pos) { hoverCol = pos.c; hoverRow = pos.r; }
+
+  // guide bands through the hovered cell, under everything else
+  noStroke();
+  if (hoverCol >= 0) {
+    fill(...PAL.lilac, 22);
+    rect(gx + hoverCol * cs, 4, cs, gy - 4 + bh, 6);
+    rect(4, gy + hoverRow * cs, gx - 4 + bw, cs, 6);
   }
 
-  // Draw alignment helper bands
-  if (hoverCol >= 0 && hoverRow >= 0) {
-    noStroke();
-    // Translucent guide bands
-    fill(127, 176, 105, 12);
-    rect(gx + hoverCol * cw, gy, cw, rows * ch);
-    rect(gx, gy + hoverRow * ch, cols * cw, ch);
-  }
-
-  // Draw clues
-  const fs = min(cw, ch) * 0.58;
-  textSize(fs);
+  // clues
+  textSize(Math.max(9, u * 0.88));
   textStyle(BOLD);
-
-  // Column clues stacks
-  textAlign(CENTER, BOTTOM);
-  for (let i = 0; i < cols; i++) {
-    const x = gx + i * cw;
-    const clue = cluesC[i];
-    const correct = _colCorrect(i);
-    const isHovered = i === hoverCol;
-    
-    let baseColor = correct ? [127, 176, 105] : [155, 145, 130];
-    if (isHovered && !correct) baseColor = [243, 237, 224]; // glow text when hovered
-
-    if (correct) {
-      fill(127, 176, 105, 18); noStroke();
-      rect(x, 0, cw, gy + rows * ch);
-    }
-
-    fill(baseColor[0], baseColor[1], baseColor[2]); noStroke();
-    for (let k = 0; k < clue.length; k++) {
-      const ty = gy - 6 - (clue.length - 1 - k) * ch;
-      text(clue[k], x + cw / 2, ty);
-    }
-  }
-
-  // Row clues stacks
-  textAlign(RIGHT, CENTER);
-  for (let j = 0; j < rows; j++) {
-    const y = gy + j * ch;
-    const clue = cluesR[j];
-    const correct = _rowCorrect(j);
-    const isHovered = j === hoverRow;
-    
-    let baseColor = correct ? [127, 176, 105] : [155, 145, 130];
-    if (isHovered && !correct) baseColor = [243, 237, 224];
-
-    if (correct) {
-      fill(127, 176, 105, 18); noStroke();
-      rect(0, y, gx + cols * cw, ch);
-    }
-
-    fill(baseColor[0], baseColor[1], baseColor[2]); noStroke();
-    for (let k = 0; k < clue.length; k++) {
-      const tx = gx - 6 - (clue.length - 1 - k) * cw;
-      text(clue[k], tx, y + ch / 2);
-    }
-  }
-
   textAlign(CENTER, CENTER);
-
-  // Draw Grid cells
   for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
-      const x = gx + i * cw, y = gy + j * ch;
-      const v = board[i][j];
-
-      if (v === 1) {
-        // Glowing filled cell
-        noStroke();
-        fill(230, 225, 210, 45); // glow backdrop
-        rect(x - 1, y - 1, cw + 2, ch + 2, 2);
-        fill(243, 237, 224);
-        rect(x + 1, y + 1, cw - 2, ch - 2, 2);
-      } else if (v === 2) {
-        // Crossed cell (Sketchy hand-drawn feel)
-        fill(38, 35, 32); noStroke(); rect(x, y, cw, ch);
-        
-        stroke(80, 72, 64); strokeWeight(1.8);
-        const pad = cw * 0.22;
-        
-        // Add tiny hand-drawn wiggles (randomized slightly but seed stable)
-        const w1 = sin((i + j) * 12.3) * 0.8;
-        const w2 = cos((i + j) * 8.4) * 0.8;
-
-        line(x + pad + w1, y + pad + w2, x + cw - pad - w1, y + ch - pad - w2);
-        line(x + cw - pad - w2, y + pad + w1, x + pad + w2, y + ch - pad - w1);
-      } else {
-        // Empty cell
-        fill(38, 35, 32); noStroke(); rect(x, y, cw, ch);
-      }
-    }
+    const correct = _colCorrect(i);
+    const clue = cluesC[i];
+    fill(...(correct ? PAL.mint : i === hoverCol ? PAL.ink : PAL.muted));
+    for (let k = 0; k < clue.length; k++)
+      text(clue[k], gx + i * cs + cs / 2, gy - 0.65 * u - (clue.length - 1 - k) * u);
+  }
+  for (let j = 0; j < rows; j++) {
+    const correct = _rowCorrect(j);
+    const clue = cluesR[j];
+    fill(...(correct ? PAL.mint : j === hoverRow ? PAL.ink : PAL.muted));
+    for (let k = 0; k < clue.length; k++)
+      text(clue[k], gx - 0.7 * u - (clue.length - 1 - k) * u, gy + j * cs + cs / 2);
   }
 
-  // Draw Grid lines
-  stroke(58, 53, 46); strokeWeight(1);
-  for (let i = 0; i <= cols; i++) line(gx + i * cw, gy, gx + i * cw, gy + rows * ch);
-  for (let j = 0; j <= rows; j++) line(gx, gy + j * ch, gx + cols * cw, gy + j * ch);
+  // cells
+  fill(...PAL.well);
+  rect(gx - 4, gy - 4, bw + 8, bh + 8, 8);
+  for (let i = 0; i < cols; i++)
+    for (let j = 0; j < rows; j++)
+      drawCellAt(window, gx + i * cs, gy + j * cs, cs, board[i][j], inkColor(window, i, j, cols + rows - 2, solved));
 
-  // Bold every 5th line
-  stroke(80, 72, 64); strokeWeight(2.2);
-  for (let i = 0; i <= cols; i += 5) line(gx + i * cw, gy, gx + i * cw, gy + rows * ch);
-  for (let j = 0; j <= rows; j += 5) line(gx, gy + j * ch, gx + cols * cw, gy + j * ch);
+  // every 5th line, for counting
+  stroke(...PAL.lineHi); strokeWeight(1.5);
+  for (let i = 5; i < cols; i += 5) line(gx + i * cs, gy - 2, gx + i * cs, gy + bh + 2);
+  for (let j = 5; j < rows; j += 5) line(gx - 2, gy + j * cs, gx + bw + 2, gy + j * cs);
 
-  // Hover frame
-  if (hoverCol >= 0 && hoverRow >= 0) {
-    const x = gx + hoverCol * cw, y = gy + hoverRow * ch;
-    noFill();
-    stroke(155, 145, 130, 160);
-    strokeWeight(1.5);
-    rect(x, y, cw, ch);
+  // hovered cell + hint flash
+  if (hoverCol >= 0) {
+    noFill(); stroke(...PAL.lilac, 220); strokeWeight(2);
+    rect(gx + hoverCol * cs + 1, gy + hoverRow * cs + 1, cs - 2, cs - 2, Math.min(5, cs * 0.18));
+  }
+  if (hintCell && frameCount - hintCell.t < 90) {
+    const k = 1 - (frameCount - hintCell.t) / 90;
+    noFill(); stroke(...PAL.mint, 255 * k); strokeWeight(3);
+    const grow = (1 - k) * 6;
+    rect(gx + hintCell.i * cs - grow, gy + hintCell.j * cs - grow, cs + grow * 2, cs + grow * 2, 6);
   }
 
   pop();
 
   drawParticles();
+  cursor(hoverCol >= 0 ? (crossMode ? CROSS : HAND) : ARROW);
 
-  // Victory solved overlay
   if (solved) {
-    setStatus("solved — Picross solved successfully", "solved");
-    drawBoardOverlay(gx, gy, width - gx, height - gy, "SOLVED", null, [127, 176, 105]);
+    setStatus("solved — nice picture!", "solved");
   } else {
-    setStatus("left drag = fill · right/ctrl drag = cross", null);
+    let done = 0;
+    for (let i = 0; i < cols; i++) if (_colCorrect(i)) done++;
+    for (let j = 0; j < rows; j++) if (_rowCorrect(j)) done++;
+    setStatus(done + " / " + (cols + rows) + " lines right" + (crossMode ? " · cross mode" : ""), null);
   }
 }
 
-// Drag logic coordinates helper
+// Board cell under the mouse (in view-transformed space), or null
 function _getGridPos() {
-  const gx = width * CLUE_FRAC, gy = height * CLUE_FRAC;
-  const cw = (width - gx) / cols, ch = (height - gy) / rows;
+  if (!L) return null;
   const mx = (mouseX - _view.x) / _view.z;
   const my = (mouseY - _view.y) / _view.z;
-  if (mx < gx || mx >= width || my < gy || my >= height) return null;
-  return {
-    c: Math.floor((mx - gx) / cw),
-    r: Math.floor((my - gy) / ch)
-  };
+  const c = Math.floor((mx - L.gx) / L.cs), r = Math.floor((my - L.gy) / L.cs);
+  if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) return null;
+  return c >= 0 && c < cols && r >= 0 && r < rows ? { c, r } : null;
 }
 
 function mousePressed() {
@@ -628,70 +606,82 @@ function mousePressed() {
     panActive = true;
     panStart = { x: mouseX, y: mouseY };
     panOrigin = { x: _view.x, y: _view.y };
-    return;
+    return false;
   }
 
   const pos = _getGridPos();
-  if (!pos) return;
+  if (!pos || solved) return;
 
   dragOrigin = pos;
   dragLast = pos;
   dragAxis = null; // lock axis on first move
 
-  // Set toggle mode based on clicked state
+  // the first cell decides what the whole stroke paints
   const state = board[pos.c][pos.r];
-  if (mouseButton === RIGHT || keyIsDown(CONTROL)) {
-    dragFill = state === 2 ? 0 : 2;
-  } else {
-    dragFill = state === 1 ? 0 : 1;
-  }
-  toggleCell(pos.c, pos.r, dragFill);
+  if (mouseButton === RIGHT || keyIsDown(CONTROL) || crossMode) dragFill = state === 2 ? 0 : 2;
+  else dragFill = state === 1 ? 0 : 1;
+  stroke_ = [];
+  setCellState(pos.c, pos.r, dragFill);
+  return false;
 }
 
 function mouseDragged() {
   if (panActive) {
     _view.x = panOrigin.x + (mouseX - panStart.x);
     _view.y = panOrigin.y + (mouseY - panStart.y);
-    return;
+    return false;
   }
   if (dragFill === null) return;
   const pos = _getGridPos();
-  if (!pos) return;
+  if (!pos) return false;
+  if (pos.c === dragLast.c && pos.r === dragLast.r) return false;
 
-  if (pos.c === dragLast.c && pos.r === dragLast.r) return;
-
-  // Locks drag along horizontal or vertical axis on first shift
+  // lock the stroke to the row or column it started moving along
   if (dragAxis === null) {
     const dc = Math.abs(pos.c - dragOrigin.c);
     const dr = Math.abs(pos.r - dragOrigin.r);
-    if (dc > 0 || dr > 0) {
-      dragAxis = dc >= dr ? "h" : "v";
-    }
+    if (dc > 0 || dr > 0) dragAxis = dc >= dr ? "h" : "v";
   }
+  const c = dragAxis === "v" ? dragOrigin.c : pos.c;
+  const r = dragAxis === "h" ? dragOrigin.r : pos.r;
 
-  if (dragAxis === "h" && pos.r !== dragOrigin.r) return;
-  if (dragAxis === "v" && pos.c !== dragOrigin.c) return;
-
-  toggleCell(pos.c, pos.r, dragFill);
-  dragLast = pos;
+  // fill every cell between the last one and this one, so fast drags don't skip
+  const from = dragAxis === "h" ? dragLast.c : dragLast.r, to = dragAxis === "h" ? c : r;
+  for (let k = Math.min(from, to); k <= Math.max(from, to); k++) {
+    const ci = dragAxis === "h" ? k : c, ri = dragAxis === "h" ? r : k;
+    // painting never overwrites a cross, and crossing never erases paint
+    const cur = board[ci][ri];
+    if (dragFill === 0 || cur === 0) setCellState(ci, ri, dragFill);
+  }
+  dragLast = { c, r };
+  return false;
 }
 
 function mouseReleased() {
+  endStroke();
   dragFill = null;
   dragAxis = null;
   panActive = false;
 }
 
+function keyPressed() {
+  if (key === "n" || key === "N") { newGame(); return false; }
+  if (key === "r" || key === "R") { resetView(); return false; }
+  if (key === "x" || key === "X") { crossMode = !crossMode; setButtonActive("btn-cross", crossMode); return false; }
+  if (key === "u" || key === "U" || ((key === "z" || key === "Z") && (keyIsDown(CONTROL) || keyIsDown(91)))) { undo(); return false; }
+}
+
 function mouseWheel(e) {
   if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) return;
-  const zoomFactor = e.delta < 0 ? 1.05 : 1 / 1.05;
+  const zoomFactor = e.delta < 0 ? 1.08 : 1 / 1.08;
   const mx = mouseX, my = mouseY;
 
   // Zoom relative to mouse cursor
   const wx = (mx - _view.x) / _view.z;
   const wy = (my - _view.y) / _view.z;
 
-  _view.z = Math.max(0.7, Math.min(_view.z * zoomFactor, 3.5));
+  _view.z = Math.max(1, Math.min(_view.z * zoomFactor, 3.5));
+  if (_view.z === 1) { resetView(); return false; }
   _view.x = mx - wx * _view.z;
   _view.y = my - wy * _view.z;
   return false;

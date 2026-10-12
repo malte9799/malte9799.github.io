@@ -1,4 +1,4 @@
-// Tic Tac Toe — local 2-player, with an optional Ultimate (Super) mode.
+// Tic Tac Toe — vs the computer or local 2-player, with an optional Ultimate (Super) mode.
 // Normal mode is just a single 3x3 board. Super mode nests nine of them: the
 // cell you play in a small board sends your opponent to the matching big-board
 // cell next turn — unless that target is already decided/full, in which case
@@ -12,7 +12,9 @@ initGame({
     { label: "Super",  values: [1] },
   ],
   buttons: [
-    { id: "btn-new", label: "New game", primary: true, onClick: () => newGame() },
+    { id: "btn-new",  label: "New game", primary: true, onClick: () => newGame() },
+    { id: "btn-undo", label: "Undo",     onClick: () => undo() },
+    { id: "btn-cpu",  label: "vs Computer", onClick: () => { vsCpu = !vsCpu; setButtonActive("btn-cpu", vsCpu); saveState(); newGame(); } },
   ],
   sliders: [],
   onPreset: ([m]) => { superMode = m === 1; saveState(); newGame(); },
@@ -22,7 +24,10 @@ initGame({
   info: {
     anim: infoAnim,
     title: "How to play (Super mode)",
-    text: "Nine boards in one: the cell you pick inside a small board sends your opponent to the matching big-board position for their turn. Win three small boards in a row to win the game — if your target board is already decided, you may play anywhere open.",
+    text: [
+      "Nine boards in one: the cell you pick inside a small board sends your opponent to the matching big-board position for their turn. Win three small boards in a row to win the game — if your target board is already decided, you may play anywhere open.",
+      "“vs Computer” makes O a bot; turn it off to pass the device back and forth. Keys: N new game · U undo.",
+    ],
   },
 });
 
@@ -33,10 +38,13 @@ const LINES = [
 ];
 
 const X = 1, O = 2;
-const MARK_COLOR = { [X]: [127, 176, 105], [O]: [90, 160, 210] };
-const MARK_GLOW   = { [X]: [190, 240, 150], [O]: [150, 210, 255] };
+const MARK_COLOR = { [X]: PAL.mint, [O]: PAL.sky };
+const MARK_GLOW   = { [X]: PAL.mintHi, [O]: PAL.skyHi };
 
 let superMode = false;
+let vsCpu = true;      // O is played by the computer
+let cpuAt = 0;         // frameCount at which the computer moves (0 = not pending)
+let history = [];      // undo stack of state snapshots
 
 // cells[b][i] = 0 empty, X or O — small-board b (0-8), position i (0-8).
 // In Normal mode only cells[0] is used.
@@ -62,7 +70,25 @@ function newGame() {
   winner = 0;
   winLine = null;
   lastMove = null;
+  history = [];
+  cpuAt = 0;
   clearParticles();
+  flashNote("");
+  updateStatus();
+}
+
+function snapshot() {
+  return { cells: cells.map(b => b.slice()), cellWinner: cellWinner.slice(), activeCell, turn, winner, winLine };
+}
+
+function undo() {
+  // vs the computer, step back to the last position where it was X's turn
+  let snap = history.pop();
+  while (snap && vsCpu && snap.turn !== X && history.length) snap = history.pop();
+  if (!snap || (vsCpu && snap.turn !== X)) { flashNote("Nothing to undo."); return; }
+  ({ cells, cellWinner, activeCell, turn, winner, winLine } = snap);
+  lastMove = null;
+  cpuAt = 0;
   updateStatus();
 }
 
@@ -100,7 +126,7 @@ function legalBoard() {
 }
 
 function canPlay(b, i) {
-  if (winner) return false;
+  if (winner || cpuAt) return false;
   if (cells[b][i] !== 0) return false;
   if (isBoardLocked(b)) return false;
   const required = legalBoard();
@@ -108,8 +134,9 @@ function canPlay(b, i) {
   return true;
 }
 
-function playMove(b, i) {
-  if (!canPlay(b, i)) return;
+function playMove(b, i, byCpu) {
+  if (!canPlay(b, i) && !(byCpu && !winner && cells[b][i] === 0)) return;
+  history.push(snapshot());
 
   cells[b][i] = turn;
   lastMove = { b, i, frame: frameCount };
@@ -134,23 +161,26 @@ function playMove(b, i) {
     turn = turn === X ? O : X;
   }
 
+  // give the human's mark a moment to land before the computer answers
+  if (vsCpu && !winner && turn === O) cpuAt = frameCount + 14;
   updateStatus();
 }
 
 function updateStatus() {
   if (winner === X || winner === O) {
-    setStatus((winner === X ? "X" : "O") + " wins!", "solved");
+    if (vsCpu) setStatus(winner === X ? "you win!" : "the computer wins", winner === X ? "solved" : "dead");
+    else setStatus((winner === X ? "X" : "O") + " wins!", "solved");
   } else if (winner === 3) {
     setStatus("draw", null);
   } else {
-    const who = turn === X ? "X" : "O";
+    const who = vsCpu ? (turn === X ? "Your" : "Computer's") : (turn === X ? "X" : "O") + "'s";
     if (superMode) {
       const where = activeCell === null || isBoardLocked(activeCell)
         ? "any open board"
         : "the highlighted board";
-      setStatus(who + "'s turn · play in " + where, null);
+      setStatus(who + " turn · " + (vsCpu && turn === O ? "thinking…" : "play in " + where), null);
     } else {
-      setStatus(who + "'s turn", null);
+      setStatus(who + " turn" + (vsCpu && turn === O ? " · thinking…" : ""), null);
     }
   }
   updateWrapBorder();
@@ -163,11 +193,11 @@ function updateWrapBorder() {
   const wrap = document.getElementById("canvas-wrap");
   if (!wrap) return;
   if (winner === X || winner === O) {
-    wrap.style.borderColor = `rgb(${MARK_GLOW[winner].join(",")})`;
+    wrap.style.borderColor = `rgba(${MARK_GLOW[winner].join(",")}, 0.8)`;
   } else if (winner === 3) {
     wrap.style.borderColor = "";
   } else {
-    wrap.style.borderColor = `rgb(${MARK_COLOR[turn].join(",")})`;
+    wrap.style.borderColor = `rgba(${MARK_COLOR[turn].join(",")}, 0.55)`;
   }
 }
 
@@ -181,16 +211,12 @@ function spawnMoveSparks(b, i, mark) {
 // ---- layout / geometry ----
 // Normal mode: one 3x3 board fills the canvas.
 // Super mode: a 3x3 grid of 3x3 boards, with gaps between the big cells.
-// A header band above the board carries the big "X's turn" / "O's turn" indicator.
 
-let BOARD = 0, PAD = 0, PAD_TOP = 0, BIG_GAP = 0, BIG_CELL = 0, SMALL_CELL = 0;
-const HEADER_H_FRAC = 0.14;
+let BOARD = 0, PAD = 0, BIG_GAP = 0, BIG_CELL = 0, SMALL_CELL = 0;
 
 function computeLayout() {
-  const headerH = height * HEADER_H_FRAC;
-  BOARD = Math.min(width * 0.86, (height - headerH) * 0.94);
+  BOARD = Math.min(width, height) * (superMode ? 0.9 : 0.82);
   PAD = (width - BOARD) / 2;
-  PAD_TOP = headerH + (height - headerH - BOARD) / 2;
   if (superMode) {
     BIG_GAP = BOARD * 0.035;
     BIG_CELL = (BOARD - BIG_GAP * 2) / 3;
@@ -228,6 +254,7 @@ function setup() {
   c.parent("canvas-wrap");
   loadState();
   syncPresetFromState();
+  setButtonActive("btn-cpu", vsCpu);
   newGame();
 }
 
@@ -255,7 +282,7 @@ function drawMark(cx, cy, s, mark, alpha, scale) {
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
   computeLayout();
 
   // In Normal mode there's only ever one board (b=0); Super mode has all nine.
@@ -268,9 +295,11 @@ function draw() {
       const isLegal = required === null ? cellIsOpen(b) : b === required;
       if (!isLegal) continue;
       const { x, y } = bigCellOrigin(b);
-      noStroke();
-      fill(230, 180, 34, 22);
-      rect(x, y, BIG_CELL, BIG_CELL, BIG_CELL * 0.06);
+      const pulse = 0.75 + 0.25 * sin(frameCount * 0.08);
+      fill(...MARK_COLOR[turn], 18);
+      stroke(...MARK_COLOR[turn], 110 * pulse);
+      strokeWeight(1.5);
+      rect(x - 2, y - 2, BIG_CELL + 4, BIG_CELL + 4, BIG_CELL * 0.08);
     }
   }
 
@@ -281,16 +310,18 @@ function draw() {
     // Decided sub-board backdrop tint
     if (superMode && cellWinner[b]) {
       noStroke();
-      if (cellWinner[b] === 3) fill(58, 53, 46, 90);
+      if (cellWinner[b] === 3) fill(...PAL.line, 90);
       else fill(...MARK_COLOR[cellWinner[b]], 26);
       rect(x, y, BIG_CELL, BIG_CELL, BIG_CELL * 0.06);
     }
 
-    stroke(58, 53, 46);
-    strokeWeight(Math.max(1, SMALL_CELL * 0.02));
+    stroke(...(superMode ? PAL.line : PAL.lineHi));
+    strokeWeight(superMode ? Math.max(1, SMALL_CELL * 0.03) : 5);
+    strokeCap(ROUND);
+    const inset = superMode ? SMALL_CELL * 0.12 : 6;
     for (let g = 1; g < 3; g++) {
-      line(x + g * SMALL_CELL, y, x + g * SMALL_CELL, y + BIG_CELL);
-      line(x, y + g * SMALL_CELL, x + BIG_CELL, y + g * SMALL_CELL);
+      line(x + g * SMALL_CELL, y + inset, x + g * SMALL_CELL, y + BIG_CELL - inset);
+      line(x + inset, y + g * SMALL_CELL, x + BIG_CELL - inset, y + g * SMALL_CELL);
     }
 
     for (let i = 0; i < 9; i++) {
@@ -313,7 +344,7 @@ function draw() {
 
   // Bold separators between the 3 big cells.
   if (superMode) {
-    stroke(120, 110, 95);
+    stroke(...PAL.lineHi);
     strokeWeight(Math.max(2, BOARD * 0.012));
     for (let g = 1; g < 3; g++) {
       const off = PAD + g * BIG_CELL + (g - 0.5) * BIG_GAP;
@@ -327,10 +358,13 @@ function draw() {
     const hit = hitTest(mouseX, mouseY);
     if (hit && canPlay(hit.b, hit.i)) {
       const { cx, cy } = cellCenter(hit.b, hit.i);
-      noFill();
-      stroke(155, 145, 130, 110);
-      strokeWeight(1.5);
-      rect(cx - SMALL_CELL * 0.4, cy - SMALL_CELL * 0.4, SMALL_CELL * 0.8, SMALL_CELL * 0.8, 4);
+      noStroke();
+      fill(255, 255, 255, 10);
+      rect(cx - SMALL_CELL * 0.44, cy - SMALL_CELL * 0.44, SMALL_CELL * 0.88, SMALL_CELL * 0.88, SMALL_CELL * 0.16);
+      drawMark(cx, cy, SMALL_CELL, turn, 80);
+      cursor(HAND);
+    } else {
+      cursor(ARROW);
     }
   }
 
@@ -346,11 +380,129 @@ function draw() {
 
   drawParticles();
 
-  if (winner) {
-    const col = winner === 3 ? [155, 145, 130] : MARK_GLOW[winner];
-    const title = winner === 3 ? "DRAW" : (winner === X ? "X WINS" : "O WINS");
-    drawBoardOverlay(0, 0, width, height, title, "press N or New game to play again", col);
+  if (cpuAt && frameCount >= cpuAt) {
+    cpuAt = 0;
+    const m = cpuChooseMove();
+    if (m !== null) playMove(Math.floor(m / 9), m % 9, true);
   }
+
+  if (winner) {
+    const col = winner === 3 ? PAL.muted : MARK_GLOW[winner];
+    const title = winner === 3 ? "Draw" : vsCpu ? (winner === X ? "You win!" : "Computer wins") : (winner === X ? "X wins!" : "O wins!");
+    drawBoardOverlay(PAD, PAD, BOARD, BOARD, title, "press N for a new game", col);
+  }
+}
+
+// ---- computer opponent ----
+// Works on plain state objects so it can simulate without touching the game.
+// Moves are encoded as b * 9 + i.
+
+function simState() {
+  return { cells: cells.map(b => b.slice()), cw: cellWinner.slice(), active: activeCell, turn, winner };
+}
+
+function simMoves(st) {
+  const out = [];
+  if (!superMode) {
+    for (let i = 0; i < 9; i++) if (st.cells[0][i] === 0) out.push(i);
+    return out;
+  }
+  const req = st.active !== null && st.cw[st.active] === 0 ? st.active : null;
+  for (let b = 0; b < 9; b++) {
+    if ((req !== null && b !== req) || st.cw[b] !== 0) continue;
+    for (let i = 0; i < 9; i++) if (st.cells[b][i] === 0) out.push(b * 9 + i);
+  }
+  return out;
+}
+
+function simPlay(st, m) {
+  const b = Math.floor(m / 9), i = m % 9, t = st.turn;
+  st.cells[b][i] = t;
+  const bd = st.cells[b];
+  if (checkLines(bd, t)) st.cw[b] = t;
+  else if (boardFull(bd)) st.cw[b] = 3;
+  if (superMode) st.active = st.cw[i] === 0 ? i : null;
+  const big = superMode ? st.cw : st.cells[0];
+  if (checkLines(big, t)) st.winner = t;
+  else if (big.every(v => v !== 0)) st.winner = 3;
+  else st.turn = t === X ? O : X;
+}
+
+function cloneSim(st) {
+  return { cells: st.cells.map(b => b.slice()), cw: st.cw.slice(), active: st.active, turn: st.turn, winner: st.winner };
+}
+
+function cpuChooseMove() {
+  const root = simState();
+  const moves = simMoves(root);
+  if (!moves.length) return null;
+  return superMode ? mctsMove(root) : minimaxMove(root, moves);
+}
+
+// Normal mode: perfect play, with an occasional slip so it can be beaten.
+function minimaxMove(root, moves) {
+  if (Math.random() < 0.15) return moves[Math.floor(Math.random() * moves.length)];
+  const me = root.turn;
+  function score(st, depth) {
+    if (st.winner) return st.winner === 3 ? 0 : (st.winner === me ? 10 - depth : depth - 10);
+    const vals = simMoves(st).map(m => { const n = cloneSim(st); simPlay(n, m); return score(n, depth + 1); });
+    return st.turn === me ? Math.max(...vals) : Math.min(...vals);
+  }
+  let best = -Infinity, bestMoves = [];
+  for (const m of moves) {
+    const n = cloneSim(root); simPlay(n, m);
+    const v = score(n, 1);
+    if (v > best) { best = v; bestMoves = [m]; } else if (v === best) bestMoves.push(m);
+  }
+  return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+}
+
+// Super mode: Monte Carlo tree search with a small time budget.
+function mctsMove(root) {
+  const me = root.turn;
+  const node = (parent, move, st) => ({ parent, move, kids: [], untried: simMoves(st), n: 0, w: 0, mover: parent ? parent.turnAfter : null, turnAfter: st.turn });
+  const top = node(null, null, root);
+  const deadline = performance.now() + 350;
+  let iters = 0;
+  while (performance.now() < deadline || iters < 200) {
+    iters++;
+    let nd = top;
+    const st = cloneSim(root);
+    // selection
+    while (!nd.untried.length && nd.kids.length) {
+      let best = null, bv = -Infinity;
+      for (const k of nd.kids) {
+        const v = k.w / k.n + 1.2 * Math.sqrt(Math.log(nd.n) / k.n);
+        if (v > bv) { bv = v; best = k; }
+      }
+      nd = best;
+      simPlay(st, nd.move);
+    }
+    // expansion
+    if (nd.untried.length && !st.winner) {
+      const m = nd.untried.splice(Math.floor(Math.random() * nd.untried.length), 1)[0];
+      const mover = st.turn;
+      simPlay(st, m);
+      const kid = node(nd, m, st);
+      kid.mover = mover;
+      nd.kids.push(kid);
+      nd = kid;
+    }
+    // rollout
+    while (!st.winner) {
+      const ms = simMoves(st);
+      simPlay(st, ms[Math.floor(Math.random() * ms.length)]);
+    }
+    // backprop — each node scores from the view of the player who moved into it
+    for (let k = nd; k; k = k.parent) {
+      k.n++;
+      if (st.winner === 3) k.w += 0.5;
+      else if (k.mover !== null && st.winner === k.mover) k.w += 1;
+    }
+  }
+  let best = top.kids[0];
+  for (const k of top.kids) if (k.n > best.n) best = k;
+  return best.move;
 }
 
 function bigCellCenter(b) {
@@ -359,6 +511,7 @@ function bigCellCenter(b) {
 }
 
 function hitTest(mx, my) {
+  computeLayout();
   if (mx < PAD || mx >= PAD + BOARD || my < PAD || my >= PAD + BOARD) return null;
   const boardCount = superMode ? 9 : 1;
   for (let b = 0; b < boardCount; b++) {
@@ -374,22 +527,24 @@ function hitTest(mx, my) {
 
 function mousePressed() {
   const hit = hitTest(mouseX, mouseY);
-  if (hit) playMove(hit.b, hit.i);
+  if (hit && (!vsCpu || turn === X)) { playMove(hit.b, hit.i); return false; }
 }
 
 function keyPressed() {
-  if (key === "n" || key === "N") newGame();
+  if (key === "n" || key === "N") { newGame(); return false; }
+  if (key === "u" || key === "U") { undo(); return false; }
 }
 
 // ---- state persistence ----
 
 function saveState() {
-  saveJSON("tictactoe_state", { superMode });
+  saveSettings("tictactoe_state", { superMode, vsCpu });
 }
 
 function loadState() {
-  const d = loadJSON("tictactoe_state");
+  const d = loadSettings("tictactoe_state");
   if (typeof d.superMode === "boolean") superMode = d.superMode;
+  if (typeof d.vsCpu === "boolean") vsCpu = d.vsCpu;
 }
 
 // ---- info modal animation ----
@@ -434,14 +589,14 @@ function infoAnim(p, w, h, frame) {
   const localT = (t % PHASE_LEN) / PHASE_LEN;
   const move = MOVES[phase];
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
 
   // draw a mark with a draw-in progress 0..1 (X = two strokes, O = arc sweep)
   function mark(cx, cy, s, m, progress, alpha) {
     const a = alpha ?? 255;
     p.noFill();
     if (m === 1) {
-      p.stroke(127, 176, 105, a);
+      p.stroke(...PAL.mint, a);
       p.strokeWeight(Math.max(2, s * 0.14));
       p.strokeCap(p.ROUND);
       const k = s * 0.28;
@@ -450,7 +605,7 @@ function infoAnim(p, w, h, frame) {
       if (p1 > 0) p.line(cx - k, cy - k, cx - k + 2 * k * p1, cy - k + 2 * k * p1);
       if (p2 > 0) p.line(cx + k, cy - k, cx + k - 2 * k * p2, cy - k + 2 * k * p2);
     } else {
-      p.stroke(90, 160, 210, a);
+      p.stroke(...PAL.sky, a);
       p.strokeWeight(Math.max(2, s * 0.12));
       if (progress > 0) p.arc(cx, cy, s * 0.56, s * 0.56, -p.HALF_PI, -p.HALF_PI + p.TWO_PI * progress);
     }
@@ -465,16 +620,16 @@ function infoAnim(p, w, h, frame) {
     const { x, y } = bigOrigin(b);
     if (b === activeBoard && localT < DRAW_END) {
       // board the current player must play in
-      p.noStroke();
-      p.fill(230, 180, 34, 22);
-      p.rect(x, y, big, big, big * 0.06);
+      const c = move.mark === 1 ? PAL.mint : PAL.sky;
+      p.fill(...c, 18); p.stroke(...c, 110); p.strokeWeight(1.5);
+      p.rect(x - 2, y - 2, big + 4, big + 4, big * 0.08);
     }
     if (b === move.routed && highlightAlpha > 0) {
-      p.noStroke();
-      p.fill(230, 180, 34, highlightAlpha);
-      p.rect(x, y, big, big, big * 0.06);
+      const c = move.mark === 1 ? PAL.sky : PAL.mint; // the other player plays there next
+      p.fill(...c, highlightAlpha * 0.6); p.stroke(...c, highlightAlpha * 3.6); p.strokeWeight(1.5);
+      p.rect(x - 2, y - 2, big + 4, big + 4, big * 0.08);
     }
-    p.stroke(58, 53, 46);
+    p.stroke(...PAL.line);
     p.strokeWeight(1);
     for (let g = 1; g < 3; g++) {
       p.line(x + g * small, y, x + g * small, y + big);
@@ -494,9 +649,9 @@ function infoAnim(p, w, h, frame) {
     // pulse ring on the cell about to be played
     const pulse = 1.0 + 0.15 * p.sin(frame * 0.3);
     p.noFill();
-    p.stroke(243, 237, 224, 200);
+    p.stroke(...PAL.lilac, 230);
     p.strokeWeight(2);
-    p.circle(mcx, mcy, small * 0.55 * pulse);
+    p.circle(mcx, mcy, small * 0.6 * pulse);
   } else {
     // mark draws itself in, then stays
     const drawT = Math.min(1, (localT - PULSE_END) / (DRAW_END - PULSE_END));
@@ -509,11 +664,11 @@ function infoAnim(p, w, h, frame) {
     const tx = x + big / 2, ty = y + big / 2;
     const e = easeInOutQuad(routeT);
     p.noStroke();
-    p.fill(230, 180, 34, 230);
+    p.fill(...PAL.lilac, 230);
     p.circle(p.lerp(mcx, tx, e), p.lerp(mcy, ty, e), small * 0.2);
   }
 
-  p.stroke(120, 110, 95);
+  p.stroke(...PAL.lineHi);
   p.strokeWeight(2);
   for (let g = 1; g < 3; g++) {
     const off1 = ox + g * big + (g - 0.5) * gap;

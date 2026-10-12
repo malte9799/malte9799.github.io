@@ -11,20 +11,23 @@ initGame({
     { label: "10×10 (hard)",   values: [10] },
   ],
   buttons: [
-    { id: "btn-reset", label: "New Board", primary: true, onClick: () => newGame() },
+    { id: "btn-reset", label: "New board", primary: true, onClick: () => newGame() },
     { id: "btn-hint",  label: "Hint",                      onClick: () => confirmHint(getHint) },
   ],
   sliders: [
-    { id: "s-size", label: "Size", min: 4, max: 14, step: 1 },
+    { id: "s-size", label: "Size", min: 4, max: 14, step: 1, fmt: v => v + "×" + v },
   ],
-  onPreset: ([n]) => { SIZE = n; newGame(); },
+  onPreset: ([n]) => { SIZE = n; saveSettings("netwalk_state", { SIZE }); syncSliderUI(); newGame(); },
   onSlider: (id, v) => { if (id === "s-size") SIZE = v; },
   onClamp: () => {},
   getSliderValues: () => ({ "s-size": SIZE }),
   info: {
     anim: infoAnim,
     title: "How to play",
-    text: "Left-click rotates a pipe clockwise, right-click counter-clockwise. Power flows out from the gold source through pipes that line up — light every endpoint ring to bring the network online.",
+    text: [
+      "Left-click rotates a pipe clockwise, right-click counter-clockwise. Power flows out from the gold source through pipes that line up — light every endpoint ring to bring the network online.",
+      "Keys: N new board · H hint.",
+    ],
   },
 });
 
@@ -36,6 +39,12 @@ const OPP = { [N]: S, [E]: W, [S]: N, [W]: E };
 const ALL_DIRS = [N, E, S, W];
 
 let SIZE = 7;
+{
+  const d = loadSettings("netwalk_state");
+  if (typeof d.SIZE === "number" && d.SIZE >= 4 && d.SIZE <= 14) SIZE = d.SIZE;
+}
+syncSliderUI();
+let moves = 0;
 let cells = [];        // cells[r][c] = { conns: bitmask (solved orientation), rot: current rotation steps (0-3) }
 let sourceR = 0, sourceC = 0;
 let gameOver = false;
@@ -159,8 +168,11 @@ function countBits(m) {
 const shuffle = shuffleArray; // from game.js
 
 function newGame() {
-  makeGame();
+  // a scramble that happens to leave everything connected is no puzzle
+  do { makeGame(); connectedSet = new Set(); updateConnectivity(); } while (checkSolved());
+  connectedSet = new Set();
   gameOver = false;
+  moves = 0;
   fillLevel = new Map();
   waveStart = new Map();
   waveOrigin = new Map();
@@ -269,10 +281,10 @@ function checkSolved() {
 
 function updateStatus() {
   if (gameOver) {
-    setStatus("network online!", "solved");
+    setStatus("network online in " + moves + (moves === 1 ? " turn" : " turns"), "solved");
   } else {
     const total = countNonEmpty();
-    setStatus(connectedSet.size - 1 + " / " + (total - 1) + " nodes lit", null);
+    setStatus((connectedSet.size - 1) + " / " + (total - 1) + " pipes powered · " + moves + (moves === 1 ? " turn" : " turns"), null);
   }
 }
 
@@ -287,6 +299,7 @@ function rotateCell(r, c, dirSteps) {
   const cell = cells[r][c];
   if (cell.conns === 0) return;
   cell.rot = (cell.rot + dirSteps + 4) % 4;
+  moves++;
   const key = r + "," + c;
   // Always start a fresh single-turn spin, ignoring any leftover from a
   // still-decaying previous click — otherwise rapid clicks stack or nearly
@@ -364,7 +377,7 @@ function infoAnim(p, w, h, frame) {
   const ox = Math.floor((w - bw) / 2);
   const oy = Math.floor((h - bh) / 2);
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
 
   const PHASE_LEN = 70;
   const t = frame % (PHASE_LEN * 2);
@@ -378,14 +391,14 @@ function infoAnim(p, w, h, frame) {
 
   function drawPipe(cx, cy, mask, glow) {
     p.strokeWeight(cs * 0.16);
-    p.stroke(glow ? p.color(127, 200, 230) : p.color(70, 64, 56));
+    p.stroke(glow ? p.color(...PAL.aqua) : p.color(...PAL.dim));
     for (const d of ALL_DIRS) {
       if (!(mask & d)) continue;
       const ex = cx + DX[d] * cs / 2, ey = cy + DY[d] * cs / 2;
       p.line(cx, cy, ex, ey);
     }
     p.noStroke();
-    p.fill(glow ? p.color(190, 230, 245) : p.color(90, 84, 74));
+    p.fill(glow ? p.color(...PAL.aquaHi) : p.color(...PAL.dim));
     p.circle(cx, cy, cs * 0.22);
   }
 
@@ -399,20 +412,20 @@ function infoAnim(p, w, h, frame) {
 
   // source glyph
   p.noStroke();
-  p.fill(230, 180, 34);
+  p.fill(...PAL.sun);
   p.circle(c0.x, c0.y, cs * 0.34);
 
   // pulse traveling when connected
   if (midConnected) {
     const px = p.lerp(c0.x, c2.x, localT);
-    p.fill(243, 237, 224, 220);
+    p.fill(...PAL.ink, 220);
     p.circle(px, c1.y, cs * 0.14);
   }
 }
 
 // ---- p5 Sketch Lifecycle ----
 
-const CANVAS = 460;
+const CANVAS = 440;
 
 function setup() {
   const cnv = createCanvas(CANVAS, CANVAS);
@@ -421,10 +434,10 @@ function setup() {
   newGame();
 }
 
-const EMPTY_COL = [70, 64, 56];
-const FILL_COL = [127, 210, 230];
-const EMPTY_HUB_COL = [90, 84, 74];
-const FILL_HUB_COL = [200, 235, 245];
+const EMPTY_COL = PAL.dim;
+const FILL_COL = PAL.aqua;
+const EMPTY_HUB_COL = PAL.dim;
+const FILL_HUB_COL = PAL.aquaHi;
 
 // Draws a pipe piece. `mask` = open arms (bitmask). `touchMask` = arms whose
 // neighbor's pipe meets ours flush at the cell edge (drawn square-tipped so
@@ -469,7 +482,7 @@ function drawPipeShape(cx, cy, size, cellSize, mask, touchMask, glowAmt, enterDi
       const fy = isEntry ? lerp(ey, cy, armFill) : lerp(cy, ey, armFill);
       const [lx1, ly1, lx2, ly2] = isEntry ? [ex, ey, fx, fy] : [cx, cy, fx, fy];
       strokeWeight(thick * 1.9);
-      stroke(90, 190, 210, 40 * glowAmt);
+      stroke(...PAL.aqua, 45 * glowAmt);
       line(lx1, ly1, lx2, ly2);
       // filled liquid core
       strokeWeight(thick);
@@ -494,9 +507,9 @@ function clampFrac(v) {
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
 
-  const maxBoardW = min(width * 0.92, height * 0.92, 440);
+  const maxBoardW = min(width, height) - 24;
   cellSize = floor(maxBoardW / SIZE);
   const boardW = cellSize * SIZE;
   ox = floor((width - boardW) / 2);
@@ -505,10 +518,14 @@ function draw() {
   updateFillLevels();
   updateSpinOffsets();
 
-  // grid backdrop
+  // grid backdrop: one faint rounded tile per cell
   noStroke();
-  fill(28, 25, 22);
-  rect(ox, oy, boardW, boardW, 6);
+  fill(...PAL.well);
+  rect(ox - 6, oy - 6, boardW + 12, boardW + 12, 12);
+  fill(255, 255, 255, 6);
+  for (let r = 0; r < SIZE; r++)
+    for (let c = 0; c < SIZE; c++)
+      rect(ox + c * cellSize + 2, oy + r * cellSize + 2, cellSize - 4, cellSize - 4, Math.min(8, cellSize * 0.18));
 
   // draw pipes
   for (let r = 0; r < SIZE; r++) {
@@ -550,9 +567,9 @@ function draw() {
     const cx = ox + sourceC * cellSize + cellSize / 2;
     const cy = oy + sourceR * cellSize + cellSize / 2;
     noStroke();
-    fill(230, 180, 34, 35);
+    fill(...PAL.sun, 35);
     circle(cx, cy, cellSize * 0.66);
-    fill(230, 180, 34);
+    fill(...PAL.sun);
     circle(cx, cy, cellSize * 0.4);
   }
 
@@ -565,7 +582,7 @@ function draw() {
       const cy = oy + r * cellSize + cellSize / 2;
       const glowAmt = fillLevel.get(r + "," + c) ?? 0;
       noFill();
-      stroke(lerpColor(color(90, 84, 74), color(190, 235, 245), glowAmt));
+      stroke(lerpColor(color(...PAL.dim), color(...PAL.aquaHi), glowAmt));
       strokeWeight(2);
       circle(cx, cy, cellSize * 0.5);
     }
@@ -580,16 +597,17 @@ function draw() {
         const cx = ox + c * cellSize + cellSize / 2;
         const cy = oy + r * cellSize + cellSize / 2;
         noFill();
-        stroke(155, 145, 130, 110);
+        stroke(...PAL.lilac, 170);
         strokeWeight(1.5);
-        rect(ox + c * cellSize + 2, oy + r * cellSize + 2, cellSize - 4, cellSize - 4, 6);
-      }
-    }
+        rect(ox + c * cellSize + 2, oy + r * cellSize + 2, cellSize - 4, cellSize - 4, Math.min(8, cellSize * 0.18));
+        cursor(HAND);
+      } else cursor(ARROW);
+    } else cursor(ARROW);
   }
 
   // solved overlay
   if (gameOver) {
-    drawBoardOverlay(ox, oy, boardW, boardW, "NETWORK ONLINE", "Every node is powered", [127, 176, 105]);
+    drawBoardOverlay(ox, oy, boardW, boardW, "Network online", "every pipe powered in " + moves + " turns", PAL.mint);
   }
 }
 
@@ -610,4 +628,9 @@ function mousePressed() {
   const [r, c] = hc;
   rotateCell(r, c, mouseButton === RIGHT ? -1 : 1);
   return false;
+}
+
+function keyPressed() {
+  if (key === "n" || key === "N") { newGame(); return false; }
+  if (key === "h" || key === "H") { confirmHint(getHint); return false; }
 }

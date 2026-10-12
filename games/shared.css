@@ -1,80 +1,90 @@
-:root {
-  --bg: #1c1a17;
-  --panel: #262320;
-  --panel-edge: #38332d;
-  --ink: #f3ede0;
-  --muted: #9b9182;
-  --home: #e6b422;
-  --bug: #c8323f;
-  --accent: #7fb069;
-  --accent-ink: #14210d;
-  --grid-line: #3a352e;
-}
+/* Layout + components. All colours, radii, shadows and fonts come from the
+   theme variables in themes.css, so every design shares this one stylesheet. */
 * { box-sizing: border-box; }
 html, body {
   margin: 0;
-  background: var(--bg);
+  min-height: 100%;
   color: var(--ink);
-  font-family: "Inconsolata", ui-monospace, "SF Mono", Menlo, monospace;
+  font-family: var(--font);
+  letter-spacing: var(--ui-tracking);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+html { background: var(--bg); }
+body {
+  background: var(--page-bg);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
 #app {
-  max-width: 460px;
+  max-width: 480px;
   margin: 0 auto;
-  /* padding-top leaves room for the fixed .back-link (top:18px + ~22px tall) */
-  padding: 56px 18px 48px;
+  /* padding-top leaves room for the fixed .back-link */
+  padding: 64px 18px 56px;
 }
 header {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 16px;
 }
 h1 {
-  font-size: 20px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--title-size);
+  letter-spacing: var(--title-tracking);
+  text-transform: var(--title-transform);
+  font-weight: var(--title-weight);
   margin: 0;
+  line-height: 1.1;
 }
 .tag {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
-  letter-spacing: 0.08em;
+  text-align: right;
 }
 #canvas-wrap {
   position: relative;
-  border: 2px solid var(--panel-edge);
-  border-radius: 10px;
+  border: var(--border-w) solid var(--hairline);
+  border-radius: var(--r-lg);
   overflow: hidden;
-  background: #14120f;
+  background: var(--board);
   line-height: 0;
+  box-shadow: var(--wrap-shadow);
+  touch-action: manipulation;
 }
+/* fullscreen games (Snake, Conway): the canvas is the whole screen */
+#canvas-wrap.fs { border: 0; border-radius: 0; box-shadow: none; }
 canvas {
   width: 100% !important;
   height: auto !important;
   display: block;
 }
 .status {
-  height: 26px;
+  min-height: 26px;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--muted);
-  margin: 10px 2px 14px;
+  margin: 12px 4px 14px;
+  font-variant-numeric: tabular-nums;
 }
 .status .dot {
   width: 8px; height: 8px; border-radius: 50%;
-  background: var(--muted);
+  background: var(--dim);
+  flex-shrink: 0;
+  transition: background 0.2s, box-shadow 0.2s;
 }
-.status.solved { color: var(--accent); }
-.status.solved .dot { background: var(--accent); }
-.status.dead { color: var(--bug); }
-.status.dead .dot { background: var(--bug); }
+.status.solved { color: var(--mint); }
+.status.solved .dot { background: var(--mint); box-shadow: 0 0 0 4px color-mix(in srgb, var(--mint) 20%, transparent); }
+.status.dead { color: var(--rose); }
+.status.dead .dot { background: var(--rose); box-shadow: 0 0 0 4px color-mix(in srgb, var(--rose) 20%, transparent); }
 .row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 18px;
 }
@@ -82,87 +92,102 @@ canvas {
 button {
   flex: 1;
   appearance: none;
-  border: 1px solid var(--panel-edge);
+  border: var(--border-w) solid var(--panel-edge);
   background: var(--panel);
   color: var(--ink);
   font: inherit;
-  font-size: 13px;
-  letter-spacing: 0.05em;
-  padding: 9px 6px;
-  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 8px;
+  border-radius: var(--r-sm);
+  box-shadow: var(--btn-shadow);
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, transform 0.05s;
+  transition: background 0.15s, border-color 0.15s, transform 0.08s, box-shadow 0.15s, color 0.15s;
   white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
 }
-button:hover { background: #2f2b26; border-color: #4a443c; }
-button:active { transform: translateY(1px); }
+button:hover { background: var(--panel-2); border-color: var(--edge-hover); }
+button:active { transform: var(--btn-press); box-shadow: var(--btn-shadow-press); }
 button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 button.primary {
-  background: #4a7a38;
-  color: #c8dfc0;
-  border-color: #3d6630;
+  background: var(--primary-bg);
+  color: var(--primary-fg);
+  border-color: var(--primary-border);
   font-weight: 700;
+  box-shadow: var(--primary-shadow);
 }
-button.primary:hover { background: #537f40; border-color: #456e35; }
-button.active {
-  background: #5a4a18;
-  color: #d4b96a;
-  border-color: #4a3d14;
-  font-weight: 700;
-}
-button.active:hover { background: #635220; border-color: #52431a; }
+button.primary:hover { background: var(--primary-hover); border-color: var(--primary-border); }
+button.active,
 button.hint-confirm {
-  background: #5a4a18;
-  color: #d4b96a;
-  border-color: #4a3d14;
+  background: color-mix(in srgb, var(--toggle) 15%, var(--panel));
+  color: var(--toggle-fg);
+  border-color: color-mix(in srgb, var(--toggle) 50%, transparent);
   font-weight: 700;
 }
-button.hint-confirm:hover { background: #635220; border-color: #52431a; }
+button.active:hover,
+button.hint-confirm:hover { background: color-mix(in srgb, var(--toggle) 22%, var(--panel)); border-color: color-mix(in srgb, var(--toggle) 65%, transparent); }
 .preset-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 .preset-row label {
-  font-size: 12px;
-  letter-spacing: 0.05em;
+  font-size: 13px;
   color: var(--muted);
   flex-shrink: 0;
 }
 .preset-row select {
   flex: 1;
+  min-width: 0;
   appearance: none;
-  border: 1px solid var(--panel-edge);
-  background: var(--panel) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239b9182'/%3E%3C/svg%3E") no-repeat right 10px center;
+  border: var(--border-w) solid var(--panel-edge);
+  background: var(--panel);
+  box-shadow: var(--btn-shadow);
   color: var(--ink);
   font: inherit;
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  padding: 9px 28px 9px 12px;
-  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 36px 10px 14px;
+  border-radius: var(--r-sm);
   cursor: pointer;
-  transition: border-color 0.12s;
+  transition: border-color 0.15s, background-color 0.15s;
 }
-.preset-row select:hover { border-color: #4a443c; }
+.preset-row { position: relative; }
+.preset-row::after {
+  /* dropdown chevron, drawn in the theme's muted colour */
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -6px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.preset-row select:hover { border-color: var(--edge-hover); background-color: var(--panel-2); }
 .preset-row select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.preset-row select option { background: var(--panel); color: var(--ink); }
 .controls {
   background: var(--panel);
-  border: 1px solid var(--panel-edge);
-  border-radius: 10px;
-  padding: 14px 16px;
+  border: var(--border-w) solid var(--panel-edge);
+  border-radius: var(--r-md);
+  box-shadow: var(--btn-shadow);
+  padding: 12px 16px 16px;
 }
 .ctl {
   display: grid;
-  grid-template-columns: 96px 1fr 44px;
+  grid-template-columns: 96px 1fr 52px;
   align-items: center;
   gap: 12px;
-  padding: 7px 0;
+  padding: 8px 0;
 }
 .ctl + .ctl { border-top: 1px solid var(--grid-line); }
 .ctl label {
-  font-size: 12px;
-  letter-spacing: 0.05em;
+  font-size: 13px;
   color: var(--muted);
 }
 .ctl input[type="range"] {
@@ -170,19 +195,19 @@ button.hint-confirm:hover { background: #635220; border-color: #52431a; }
   accent-color: var(--accent);
 }
 .ctl .val {
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
-.ctl .val.bad { color: var(--bug); }
+.ctl .val.bad { color: var(--rose); }
 .apply-row { margin-top: 12px; }
 .hint-note {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
-  margin: 8px 2px 0;
-  min-height: 14px;
-  letter-spacing: 0.04em;
+  margin: 4px 4px 12px;
+  min-height: 16px;
 }
 /* Padding enlarges the clickable area without a visible background/border;
    negative margin compensates so the link still lines up the same as plain text. */
@@ -190,34 +215,34 @@ button.hint-confirm:hover { background: #635220; border-color: #52431a; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--muted);
   text-decoration: none;
-  letter-spacing: 0.05em;
   margin: -10px;
   padding: 10px;
-  transition: color 0.12s;
+  transition: color 0.15s;
 }
 .back-link:hover { color: var(--ink); }
+.back-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--r-sm); }
 
 /* Normal layout has no top bar, so pin the back-link fixed top-left there.
    The fullscreen overlay bars (Snake/Conway, Conway's custom bar) instead
    place it as a normal flex child so it vertically aligns with their buttons. */
 #app > a.back-link {
   position: fixed;
-  top: 18px;
-  left: 18px;
+  top: 20px;
+  left: 22px;
   z-index: 11;
 }
 
 /* ---- info modal ---- */
 .info-btn {
   flex: none !important;
-  width: 32px;
-  height: 32px;
+  width: 40px;
   padding: 0 !important;
-  border-radius: 50% !important;
-  font-size: 15px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
   line-height: 1;
   display: flex;
   align-items: center;
@@ -226,56 +251,77 @@ button.hint-confirm:hover { background: #635220; border-color: #52431a; }
 .info-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(20,18,15,0.82);
+  background: var(--backdrop);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  backdrop-filter: blur(2px);
+  padding: 20px;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: info-fade 0.2s ease;
 }
 .info-modal {
-  background: var(--panel);
-  border: 1px solid var(--panel-edge);
-  border-radius: 14px;
+  position: relative;
+  background: var(--modal-bg);
+  border: var(--border-w) solid var(--hairline);
+  border-radius: var(--r-xl);
   width: 100%;
   max-width: 480px;
-  padding: 22px 20px 18px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  padding: 22px 20px 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  box-shadow: var(--modal-shadow);
+  animation: info-pop 0.28s var(--ease);
 }
+@keyframes info-fade { from { opacity: 0; } }
+@keyframes info-pop { from { opacity: 0; transform: translateY(10px) scale(0.97); } }
 .info-title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  margin: 0 44px 0 2px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: var(--title-weight);
+  letter-spacing: var(--title-tracking);
+  text-transform: var(--title-transform);
   color: var(--ink);
 }
 .info-text {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.55;
+  margin: 0 2px;
+  font-size: 14px;
+  line-height: 1.6;
   color: var(--muted);
-  letter-spacing: 0.03em;
 }
 .info-modal canvas {
   width: 100% !important;
   height: auto !important;
   display: block;
-  border-radius: 8px;
-  border: 1px solid var(--panel-edge);
+  border-radius: var(--r-md);
+  border: var(--border-w) solid var(--hairline);
 }
 #info-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
   flex: none;
-  align-self: flex-end;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border-radius: 50%;
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@media (max-width: 420px) {
+  #app { padding: 60px 12px 40px; }
+  h1 { font-size: 22px; }
+  .tag { font-size: 12px; }
+  button { font-size: 13px; padding: 10px 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .info-backdrop, .info-modal { animation: none; }
 }

@@ -1,6 +1,6 @@
 // Conway's Game of Life
-// Infinite sparse grid via Map, smooth zoom/pan, preset library, tool palette
-// Cell age color mapping (Cyan -> Green -> Gold -> Orange), birth scaling, and fading death trails.
+// Infinite sparse grid via Map, smooth zoom/pan, preset library, tool palette.
+// Cells are coloured by age (aqua newborn → mint → sun → peach), dead cells fade out.
 
 // LEXICON_SHAPES (from conway-shapes.js, generated from lexicon.txt by parse-lexicon.py)
 // is loaded via a dynamically injected <script> tag below, same trick index.html uses to
@@ -34,7 +34,8 @@ initGame({
     title: "How it works",
     text: [
       "Every generation, a live cell survives with 2-3 live neighbors and an empty cell with exactly 3 comes alive — everything else dies. That's the whole rulebook; gliders, guns and oscillators all emerge from it.",
-      "Draw with the left mouse button, pan with the right, zoom with the wheel. Insert famous patterns from the Lexicon search box.",
+      "Draw with the left mouse button (or a finger), pan with the right button, zoom with the wheel. Insert famous patterns from the Lexicon search box.",
+      "Keys: Space play/pause · . step · D/E/R draw/erase/random brush · B/V brush size · +/− speed · C clear.",
     ],
   },
 });
@@ -229,6 +230,7 @@ new p5(function(p) {
     cnv.parent(wrap);
     p.frameRate(60);
     p.pixelDensity(Math.min(window.devicePixelRatio || 1, 2));
+    cnv.elt.style.touchAction = "none";
     centerView();
     updateStatus();
 
@@ -248,9 +250,10 @@ new p5(function(p) {
       };
     }
 
-    cnv.elt.addEventListener("mousedown", e => {
+    // pointer events: one code path for mouse, pen and touch
+    cnv.elt.addEventListener("pointerdown", e => {
       e.preventDefault();
-      const isRightBtn = e.button === 2;
+      const isRightBtn = e.button === 2 || e.button === 1;
       const { x: mx, y: my } = canvasMousePos(e);
 
       if (pendingPreset && !isRightBtn) {
@@ -273,7 +276,7 @@ new p5(function(p) {
       }
     });
 
-    window.addEventListener("mousemove", e => {
+    window.addEventListener("pointermove", e => {
       if (!isDragging && !isPainting) return;
       const { x: mx, y: my } = canvasMousePos(e);
       if (isDragging) {
@@ -286,7 +289,7 @@ new p5(function(p) {
       }
     });
 
-    window.addEventListener("mouseup", () => {
+    window.addEventListener("pointerup", () => {
       isDragging = false;
       isPainting = false;
       paintedCells.clear();
@@ -337,7 +340,7 @@ new p5(function(p) {
   // ── render ──────────────────────────────────────────────────────────────────
 
   function drawWorld(p) {
-    p.background(20, 18, 15);
+    p.background(...PAL.board);
 
     const cx = p.width / 2, cy = p.height / 2;
     const left  = Math.floor(camX - cx / zoom) - 1;
@@ -347,7 +350,7 @@ new p5(function(p) {
 
     // grid lines (only when zoomed in enough)
     if (zoom >= 6) {
-      p.stroke(30, 27, 24);
+      p.stroke(...PAL.well);
       p.strokeWeight(1);
       for (let x = left; x <= right; x++) {
         const sx = (x - camX) * zoom + cx;
@@ -372,7 +375,7 @@ new p5(function(p) {
       const alpha = (fade / 4) * 85;
       const scaleVal = 0.5 + (fade / 4) * 0.42; // shrink as it dies
       
-      p.fill(127, 176, 105, alpha); // fade green
+      p.fill(...PAL.mint, alpha); // fade green
       
       const sizeC = (zoom - pad * 2) * scaleVal;
       const offsetC = (zoom - sizeC) / 2;
@@ -388,20 +391,20 @@ new p5(function(p) {
       const pad = zoom > 5 ? Math.min(zoom * 0.08, 1.5) : 0;
       
       // Theme colors matching the style
-      // Age 1: born cyan [90, 180, 190]
-      // Age 2-5: standard green [127, 176, 105]
-      // Age 6-15: gold [230, 180, 34]
-      // Age > 15: deep orange [220, 120, 60]
-      let col = [127, 176, 105];
+      // Age 1: born cyan PAL.aqua
+      // Age 2-5: standard green PAL.mint
+      // Age 6-15: gold PAL.sun
+      // Age > 15: deep orange PAL.peach
+      let col = PAL.mint;
       let scaleVal = 0.95;
 
       if (age === 1) {
-        col = [90, 180, 190]; // newborn cyan
+        col = PAL.aqua; // newborn cyan
         scaleVal = 0.78; // small pop scale
       } else if (age >= 16) {
-        col = [220, 120, 60]; // mature orange
+        col = PAL.peach; // mature orange
       } else if (age >= 6) {
-        col = [230, 180, 34]; // stable gold
+        col = PAL.sun; // stable gold
       }
 
       p.fill(col[0], col[1], col[2]);
@@ -414,7 +417,7 @@ new p5(function(p) {
     // origin cross (tiny)
     if (zoom > 8) {
       const { x: o0x, y: o0y } = worldToScreen(0, 0, p);
-      p.stroke(50, 45, 40);
+      p.stroke(...PAL.line);
       p.strokeWeight(1);
       p.line(o0x - 6, o0y, o0x + 6, o0y);
       p.line(o0x, o0y - 6, o0x, o0y + 6);
@@ -439,7 +442,7 @@ new p5(function(p) {
 
     const cx = p.width / 2, cy = p.height / 2;
     p.noStroke();
-    p.fill(90, 180, 190, 100); // cyan ghost template
+    p.fill(...PAL.aqua, 100); // cyan ghost template
     for (const [dx, dy] of cells) {
       const sx = (ghostX + dx - camX) * zoom + cx;
       const sy = (ghostY + dy - camY) * zoom + cy;
@@ -457,9 +460,9 @@ new p5(function(p) {
 
     const eraseMode = activeTool === "erase";
     p.noStroke();
-    if (eraseMode) p.fill(200, 50, 63, 60);
-    else if (activeTool === "random") p.fill(230, 180, 34, 55);
-    else p.fill(90, 180, 190, 55); // Cyan brush preview
+    if (eraseMode) p.fill(...PAL.rose, 60);
+    else if (activeTool === "random") p.fill(...PAL.sun, 55);
+    else p.fill(...PAL.aqua, 55); // Cyan brush preview
 
     for (let dy = -r; dy <= r; dy++) {
       for (let dx = -r; dx <= r; dx++) {
@@ -551,7 +554,7 @@ function randomFill() {
 (function buildUI() {
   const overlay = document.getElementById("ui-overlay");
   overlay.innerHTML = `
-    <div id="gol-bar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px 12px">
+    <div id="gol-bar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px 10px">
       <a class="back-link" href="index.html" style="flex-shrink:0">← Games</a>
       <div style="width:1px;height:20px;background:var(--panel-edge);flex-shrink:0"></div>
  
@@ -559,9 +562,9 @@ function randomFill() {
       <button id="btn-play" style="flex:none;min-width:80px"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="12" height="12" fill="currentColor" style="margin-right:5px"><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80L0 432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg>Play</button>
       <button id="btn-step" style="flex:none">Step</button>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <span style="font-size:11px;color:var(--muted);letter-spacing:0.05em">Speed</span>
-        <input type="range" id="sl-speed" min="1" max="40" step="1" value="8" style="width:80px;accent-color:var(--accent)">
-        <span id="v-speed" style="font-size:12px;color:var(--ink);min-width:32px;font-variant-numeric:tabular-nums">8/s</span>
+        <span style="font-size:13px;color:var(--muted)">Speed</span>
+        <input type="range" id="sl-speed" min="1" max="40" step="1" value="8" style="width:80px;accent-color:var(--lilac)">
+        <span id="v-speed" style="font-size:13px;font-weight:600;color:var(--ink);min-width:32px;font-variant-numeric:tabular-nums">8/s</span>
       </div>
  
       <div style="width:1px;height:20px;background:var(--panel-edge);flex-shrink:0"></div>
@@ -573,20 +576,20 @@ function randomFill() {
         <button id="tool-random" title="Random brush (R)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="13" height="13" fill="currentColor" style="margin-right:4px"><path d="M205.4 66.3C167 56 127.5 78.8 117.3 117.2L66.5 306.7C56.2 345.1 79 384.6 117.4 394.9L306.9 445.7C345.3 456 384.8 433.2 395.1 394.8L445.9 205.3C456.2 166.9 433.4 127.4 395 117.1L205.4 66.3zM228.4 272C222.3 262.1 222.1 249.6 227.8 239.5C233.5 229.4 244.3 223.2 256 223.3C267.6 223.4 278.2 229.8 283.8 240C289.9 249.9 290.1 262.4 284.4 272.5C278.7 282.6 267.9 288.8 256.2 288.7C244.6 288.6 234 282.2 228.4 272zM143.2 284.3C153.1 278.2 165.6 278 175.7 283.7C185.8 289.4 192 300.2 191.9 311.9C191.8 323.5 185.4 334.1 175.2 339.7C165.3 345.8 152.8 346 142.7 340.3C132.6 334.6 126.4 323.8 126.5 312.1C126.6 300.5 133 289.9 143.2 284.3zM328.2 380.7C318.3 386.8 305.8 387 295.7 381.3C285.6 375.6 279.4 364.8 279.5 353.1C279.6 341.5 286 330.9 296.2 325.3C306.1 319.2 318.6 319 328.7 324.7C338.8 330.4 345 341.2 344.9 352.9C344.8 364.5 338.4 375.1 328.2 380.7zM337.2 172.3C347.1 166.2 359.6 166 369.7 171.7C379.8 177.4 386 188.2 385.9 199.9C385.8 211.5 379.4 222.1 369.2 227.7C359.3 233.8 346.8 234 336.7 228.3C326.6 222.6 320.4 211.8 320.5 200.1C320.6 188.5 327 177.9 337.2 172.3zM216.2 186.7C206.3 192.8 193.8 193 183.7 187.3C173.6 181.6 167.4 170.8 167.5 159.1C167.6 147.5 174 136.9 184.2 131.3C194.1 125.2 206.6 125 216.7 130.7C226.8 136.4 233 147.2 232.9 158.9C232.8 170.5 226.4 181.1 216.2 186.7zM482 256L441.4 407.2C424.2 471.2 358.4 509.2 294.4 492.1L256.1 481.8L256.1 512C256.1 547.3 284.8 576 320.1 576L512.1 576C547.4 576 576.1 547.3 576.1 512L576.1 320C576.1 284.7 547.4 256 512.1 256L482 256z"/></svg>Random</button>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <span style="font-size:11px;color:var(--muted);letter-spacing:0.05em">Brush</span>
-        <input type="range" id="sl-brush" min="1" max="12" step="1" value="1" style="width:60px;accent-color:var(--accent)">
-        <span id="v-brush" style="font-size:12px;color:var(--ink);min-width:18px;font-variant-numeric:tabular-nums">1</span>
+        <span style="font-size:13px;color:var(--muted)">Brush</span>
+        <input type="range" id="sl-brush" min="1" max="12" step="1" value="1" style="width:60px;accent-color:var(--lilac)">
+        <span id="v-brush" style="font-size:13px;font-weight:600;color:var(--ink);min-width:18px;font-variant-numeric:tabular-nums">1</span>
       </div>
  
       <div style="width:1px;height:20px;background:var(--panel-edge);flex-shrink:0"></div>
  
       <!-- preset insert: search + select with shape preview thumbnails -->
       <div style="position:relative;display:flex;align-items:center;gap:8px;flex-shrink:0" id="shape-picker">
-        <span style="font-size:11px;color:var(--muted);letter-spacing:0.05em">Insert</span>
+        <span style="font-size:13px;color:var(--muted)">Insert</span>
         <input id="shape-search" type="text" autocomplete="off" placeholder="Loading shapes…" disabled
-          style="width:150px;border:1px solid var(--panel-edge);background:var(--panel);color:var(--ink);font:inherit;font-size:12px;padding:6px 10px;border-radius:7px" />
-        <div id="shape-panel" style="display:none;position:absolute;top:calc(100% + 6px);left:0;width:300px;max-height:360px;overflow-y:auto;background:var(--panel);border:1px solid var(--panel-edge);border-radius:9px;box-shadow:0 16px 32px rgba(0,0,0,0.45);z-index:20;padding:4px"></div>
-        <span id="preset-hint" style="font-size:11px;color:var(--muted);letter-spacing:0.04em;min-width:120px"></span>
+          style="width:160px;border:1px solid var(--panel-edge);background:var(--panel);color:var(--ink);font:inherit;font-size:13px;padding:9px 12px;border-radius:12px;outline-color:var(--lilac)" />
+        <div id="shape-panel" style="display:none;position:absolute;top:calc(100% + 8px);left:0;width:300px;max-height:360px;overflow-y:auto;background:var(--panel);border:1px solid var(--panel-edge);border-radius:14px;box-shadow:0 20px 50px -10px rgba(0,0,0,0.7);z-index:20;padding:6px"></div>
+        <span id="preset-hint" style="font-size:13px;color:var(--muted);min-width:120px"></span>
       </div>
 
       <div style="width:1px;height:20px;background:var(--panel-edge);flex-shrink:0"></div>
@@ -594,12 +597,12 @@ function randomFill() {
       <!-- grid ops -->
       <button id="btn-rand-fill" style="flex:none">Random</button>
       <button id="btn-clear"     style="flex:none">Clear</button>
-      <button id="btn-info"      class="info-btn" style="flex:none">?</button>
+      <button id="btn-info"      class="info-btn" style="flex:none;height:38px" title="How it works" aria-label="How it works">?</button>
 
       <!-- status right -->
-      <span id="status-text" style="font-size:11px;color:var(--muted);letter-spacing:0.05em;margin-left:auto;white-space:nowrap"></span>
+      <span id="status-text" style="font-size:13px;font-weight:500;color:var(--muted);margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums"></span>
     </div>
-    <div id="gol-hint" style="font-size:11px;color:var(--muted);padding:0 16px 8px;letter-spacing:0.04em;min-height:1em">
+    <div id="gol-hint" style="font-size:12px;color:var(--muted);padding:0 16px 8px;min-height:1em">
       Left-click/drag: draw · Right-drag: pan · Scroll: zoom · Space: play/pause · .: step
     </div>
   `;
@@ -663,6 +666,8 @@ function randomFill() {
     if (e.key === "c" || e.key === "C") { clearGrid(); cancelPreset(); }
   });
 
+  mountThemePicker(document.getElementById("gol-bar"));
+
   if (shapesReady) buildShapeSearch();
 
   updateStatus();
@@ -682,7 +687,7 @@ function infoAnim(p, w, h, frame) {
   const phase = Math.floor(t / PHASE_LEN);
   const sub = Math.floor((t % PHASE_LEN) / (PHASE_LEN / 2)) % 2; // 0/1 within phase
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
   p.noStroke();
 
   function drawCells(cells, col) {
@@ -697,7 +702,7 @@ function infoAnim(p, w, h, frame) {
     // blinker: horizontal <-> vertical every half-phase
     const horiz = [[-1,0],[0,0],[1,0]];
     const vert  = [[0,-1],[0,0],[0,1]];
-    drawCells(sub === 0 ? horiz : vert, [127, 176, 105]);
+    drawCells(sub === 0 ? horiz : vert, PAL.mint);
   } else {
     // glider crawling one step diagonally per sub-tick, across 4 sub-steps total
     const step = Math.floor((t % PHASE_LEN) / (PHASE_LEN / 4));
@@ -707,7 +712,7 @@ function infoAnim(p, w, h, frame) {
       [[0,-1],[1,0],[-1,1],[0,1],[1,1]].map(([x,y]) => [x+1,y+1]),
       [[-1,0],[1,0],[0,1],[1,1],[1,-1]].map(([x,y]) => [x+1,y+1]),
     ];
-    drawCells(gliderFrames[step % 4], [90, 180, 190]);
+    drawCells(gliderFrames[step % 4], PAL.aqua);
   }
 }
 
@@ -726,7 +731,7 @@ function drawShapeThumb(canvas, shape) {
   const cell = Math.max(1, Math.min((w - pad * 2) / shape.w, (h - pad * 2) / shape.h));
   const offX = (w - shape.w * cell) / 2;
   const offY = (h - shape.h * cell) / 2;
-  ctx.fillStyle = "#7fb069";
+  ctx.fillStyle = "rgb(" + PAL.mint.join(",") + ")";
   for (const [x, y] of shape.cells) {
     ctx.fillRect(offX + x * cell, offY + y * cell, Math.max(1, cell - 0.5), Math.max(1, cell - 0.5));
   }
@@ -766,9 +771,9 @@ function buildShapeSearch() {
     }
 
     panel.innerHTML = list.map((s, i) =>
-      `<div class="shape-row" data-i="${i}" style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:6px;cursor:pointer">
-        <canvas width="40" height="40" style="flex-shrink:0;width:40px!important;height:40px!important;background:#14120f;border-radius:4px"></canvas>
-        <span style="font-size:12px;letter-spacing:0.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${s.name}</span>
+      `<div class="shape-row" data-i="${i}" style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;cursor:pointer">
+        <canvas width="40" height="40" style="flex-shrink:0;width:40px!important;height:40px!important;background:var(--board);border-radius:8px"></canvas>
+        <span style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${s.name}</span>
       </div>`
     ).join("");
 
@@ -784,7 +789,7 @@ function buildShapeSearch() {
     const rows = panel.querySelectorAll(".shape-row");
     rows.forEach(r => r.style.background = "");
     activeIndex = i;
-    if (rows[i]) rows[i].style.background = "#3a352e";
+    if (rows[i]) rows[i].style.background = "var(--panel-2)";
   }
 
   function chooseShape(shape) {

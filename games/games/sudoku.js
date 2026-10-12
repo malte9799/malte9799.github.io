@@ -5,32 +5,40 @@ initGame({
   title: "Sudoku",
   tag: "fill every row · column · box",
   presets: [
-    { label: "9×9 (classic)", values: [9, 3, 3] },
-    { label: "6×6 (3×2 boxes)", values: [6, 3, 2] },
-    { label: "4×4 (easy)", values: [4, 2, 2] },
+    { label: "9×9 · medium",    values: [9, 3, 3, 50] },
+    { label: "9×9 · easy",      values: [9, 3, 3, 40] },
+    { label: "9×9 · hard",      values: [9, 3, 3, 81] },
+    { label: "6×6 (3×2 boxes)", values: [6, 3, 2, 20] },
+    { label: "4×4 (tiny)",      values: [4, 2, 2, 9] },
   ],
   buttons: [
-    { id: "btn-new",    label: "New game",   primary: true, onClick: () => newGame() },
-    { id: "btn-erase",  label: "Erase",                      onClick: () => eraseSelected() },
-    { id: "btn-undo",   label: "Undo",                       onClick: () => undo() },
-    { id: "btn-hint",   label: "Hint",                       onClick: () => confirmHint(giveHint) },
-    { id: "btn-errors", label: "Show errors",                onClick: () => toggleShowErrors() },
+    { id: "btn-new",    label: "New game", primary: true, onClick: () => newGame() },
+    { id: "btn-notes",  label: "Notes",                    onClick: () => toggleNotesMode() },
+    { id: "btn-undo",   label: "Undo",                     onClick: () => undo() },
+    { id: "btn-hint",   label: "Hint",                     onClick: () => confirmHint(giveHint) },
+    { id: "btn-errors", label: "Errors",                   onClick: () => toggleShowErrors() },
   ],
   sliders: [],
-  onPreset: ([n, bw, bh]) => { N = n; BW = bw; BH = bh; saveState(); newGame(); },
+  onPreset: ([n, bw, bh, rm]) => { N = n; BW = bw; BH = bh; REMOVE = rm; saveState(); newGame(); },
   onSlider: () => {},
   onClamp: () => {},
   getSliderValues: () => ({}),
   info: {
     anim: infoAnim,
     title: "How to play",
-    text: "Every row, column and box must contain each digit exactly once. Click a cell (or arrow-key around) and type a digit; Shift+digit pencils in a note. Each puzzle has exactly one solution.",
+    text: [
+      "Every row, column and box must contain each digit exactly once. Click a cell (or arrow-key around) and type a digit, or use the number pad. Each puzzle has exactly one solution.",
+      "Notes: toggle the Notes button (or Space), or hold Shift while typing, to pencil in candidates. “Errors” highlights clashing digits. Backspace erases.",
+    ],
   },
 });
 
 let N = 9;    // grid size
 let BW = 3;   // box width (columns per box)
 let BH = 3;   // box height (rows per box)
+let REMOVE = 50; // clues to try removing (capped by uniqueness)
+let notesMode = false;
+let startMs = 0, endMs = 0;
 
 let solution = [];   // [r][c] full solution 1..N
 let givens = [];      // [r][c] boolean — prefilled clue cells (locked)
@@ -99,25 +107,46 @@ function fillGrid(grid) {
   return false;
 }
 
+// Counts solutions up to `cap`, using bitmasks per row/column/box and always
+// branching on the empty cell with the fewest candidates — fast enough to
+// run once per removal attempt even on sparse "hard" boards.
 function countSolutions(grid, cap) {
-  let r = -1, c = -1;
-  outer:
-  for (let i = 0; i < N; i++) {
-    for (let j = 0; j < N; j++) {
-      if (grid[i][j] === 0) { r = i; c = j; break outer; }
+  const rows = new Array(N).fill(0), cols = new Array(N).fill(0), boxes = new Array(N).fill(0);
+  const boxOf = (r, c) => Math.floor(r / BH) * (N / BW) + Math.floor(c / BW);
+  const empties = [];
+  for (let r = 0; r < N; r++)
+    for (let c = 0; c < N; c++) {
+      const v = grid[r][c];
+      if (v) { const bit = 1 << v; rows[r] |= bit; cols[c] |= bit; boxes[boxOf(r, c)] |= bit; }
+      else empties.push([r, c, boxOf(r, c)]);
     }
-  }
-  if (r === -1) return 1;
-
+  const FULL = ((1 << (N + 1)) - 1) & ~1;
   let count = 0;
-  for (let v = 1; v <= N; v++) {
-    if (valid(grid, r, c, v)) {
-      grid[r][c] = v;
-      count += countSolutions(grid, cap);
-      grid[r][c] = 0;
-      if (count >= cap) break;
+  const filled = new Array(empties.length).fill(false);
+
+  function rec(left) {
+    if (left === 0) { count++; return; }
+    let best = -1, bestMask = 0, bestN = 99;
+    for (let k = 0; k < empties.length; k++) {
+      if (filled[k]) continue;
+      const [r, c, b] = empties[k];
+      const mask = FULL & ~(rows[r] | cols[c] | boxes[b]);
+      let n = 0;
+      for (let m = mask; m; m &= m - 1) n++;
+      if (n < bestN) { bestN = n; best = k; bestMask = mask; if (n <= 1) break; }
     }
+    if (bestN === 0) return;
+    const [r, c, b] = empties[best];
+    filled[best] = true;
+    for (let m = bestMask; m && count < cap; m &= m - 1) {
+      const bit = m & -m;
+      rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit;
+      rec(left - 1);
+      rows[r] &= ~bit; cols[c] &= ~bit; boxes[b] &= ~bit;
+    }
+    filled[best] = false;
   }
+  rec(empties.length);
   return count;
 }
 
@@ -128,8 +157,9 @@ function genPuzzle() {
   givens = Array.from({ length: N }, () => Array(N).fill(true));
   board = solution.map(row => [...row]);
 
-  // difficulty: how many cells to try to remove, cap by grid size
-  const targetRemove = N === 9 ? 46 : N === 6 ? 20 : 9;
+  // difficulty: how many cells to try to remove (stops early wherever a
+  // removal would break uniqueness)
+  const targetRemove = REMOVE;
 
   // Build removal order row-by-row (each row's cells shuffled), then
   // interleave rows round-robin. This spreads attempts evenly across the
@@ -179,6 +209,7 @@ function newGame() {
   notes = Array.from({ length: N }, () => Array.from({ length: N }, () => new Set()));
   selR = -1; selC = -1;
   solved = false;
+  startMs = millis(); endMs = 0;
   history = [];
   conflictCells = new Set();
   resetHint();
@@ -187,13 +218,23 @@ function newGame() {
 }
 
 function saveState() {
-  saveJSON("sudoku_size", { N, BW, BH });
+  saveSettings("sudoku_size", { N, BW, BH, REMOVE });
 }
 function loadState() {
-  const d = loadJSON("sudoku_size");
-  if (typeof d.N === "number") N = d.N;
-  if (typeof d.BW === "number") BW = d.BW;
-  if (typeof d.BH === "number") BH = d.BH;
+  const d = loadSettings("sudoku_size");
+  if ([4, 6, 9].includes(d.N) && typeof d.BW === "number" && typeof d.BH === "number" && d.BW * d.BH === d.N) {
+    N = d.N; BW = d.BW; BH = d.BH;
+  }
+  if (typeof d.REMOVE === "number") REMOVE = d.REMOVE;
+  // show the saved choice in the dropdown
+  const sel = document.getElementById("preset-select");
+  const key = [N, BW, BH, REMOVE].join(",");
+  if (sel) for (let i = 0; i < sel.options.length; i++) if (sel.options[i].value === key) sel.selectedIndex = i;
+}
+
+function toggleNotesMode() {
+  notesMode = !notesMode;
+  setButtonActive("btn-notes", notesMode);
 }
 
 function saveShowErrors() {
@@ -251,22 +292,37 @@ function checkSolved() {
 
 function updateStatus() {
   if (solved) {
-    setStatus("solved!", "solved");
+    setStatus("solved in " + fmtTime(endMs - startMs), "solved");
   } else if (showErrors && conflictCells.size > 0) {
-    setStatus("conflicts on the board", "dead");
+    setStatus("clashing digits on the board", "dead");
   } else {
     let filled = 0;
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) if (board[r][c] !== 0) filled++;
-    setStatus(filled + " / " + (N * N) + " filled", null);
+    setStatus(filled + " / " + (N * N) + " filled · " + fmtTime(millis() - startMs), null);
   }
+}
+
+function fmtTime(ms) {
+  const sec = Math.max(0, Math.floor(ms / 1000));
+  return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0");
 }
 
 function setCell(r, c, v) {
   if (solved || givens[r][c]) return;
-  history.push({ type: "value", r, c, prev: board[r][c] });
+  // placing a digit clears it from the notes of every peer (undone together)
+  const cleared = [];
+  if (v) {
+    const { br, bc } = boxOrigin(r, c);
+    for (let i = 0; i < N; i++)
+      for (let j = 0; j < N; j++) {
+        const peer = i === r || j === c || (i >= br && i < br + BH && j >= bc && j < bc + BW);
+        if (peer && notes[i][j].has(v)) { notes[i][j].delete(v); cleared.push([i, j]); }
+      }
+  }
+  history.push({ type: "value", r, c, prev: board[r][c], cleared, v });
   board[r][c] = v;
   recomputeConflicts();
-  if (!solved && checkSolved()) { solved = true; celebrateSudoku(); }
+  if (!solved && checkSolved()) { solved = true; endMs = millis(); celebrateSudoku(); }
   updateStatus();
 }
 
@@ -300,8 +356,9 @@ function undo() {
     else notes[r][c].delete(v);
     return;
   }
-  const { r, c, prev } = entry;
+  const { r, c, prev, cleared, v } = entry;
   board[r][c] = prev;
+  if (cleared) for (const [i, j] of cleared) notes[i][j].add(v);
   solved = false;
   recomputeConflicts();
   updateStatus();
@@ -314,14 +371,14 @@ function giveHint() {
     for (let c = 0; c < N; c++)
       if (board[r][c] === 0 || board[r][c] !== solution[r][c]) empties.push([r, c]);
   if (!empties.length) { flashNote("No hint available."); return; }
-  const [r, c] = empties[Math.floor(Math.random() * empties.length)];
-  history.push({ type: "value", r, c, prev: board[r][c] });
-  board[r][c] = solution[r][c];
+  // prefer fixing a wrong digit, otherwise the selected cell if it's empty
+  const wrong = empties.filter(([r, c]) => board[r][c] !== 0);
+  const [r, c] = wrong.length ? wrong[0]
+    : selR >= 0 && board[selR][selC] === 0 ? [selR, selC]
+    : empties[Math.floor(Math.random() * empties.length)];
   selR = r; selC = c;
-  recomputeConflicts();
-  if (!solved && checkSolved()) { solved = true; celebrateSudoku(); }
-  updateStatus();
-  flashNote("Filled one cell for you.");
+  setCell(r, c, solution[r][c]);
+  flashNote(wrong.length ? "Fixed a wrong digit." : "Filled one cell for you.");
 }
 
 // ---- input ----
@@ -330,7 +387,7 @@ function typeDigit(v, isNote) {
   if (selR < 0 || solved) return;
   if (v === 0) { eraseSelected(); return; }
   if (v > N) return;
-  if (isNote) { toggleNote(selR, selC, v); return; }
+  if (isNote || notesMode) { toggleNote(selR, selC, v); return; }
   if (board[selR][selC] === v) { eraseSelected(); return; }
   setCell(selR, selC, v);
 }
@@ -342,19 +399,24 @@ function keyPressed(e) {
   // instead of the digit, so relying on them misses those keys.
   const code = e && e.code;
   const digitMatch = code && code.match(/^(?:Digit|Numpad)([1-9])$/);
+  if (document.activeElement && /^(SELECT|INPUT)$/.test(document.activeElement.tagName)) return;
   if (digitMatch) {
     typeDigit(parseInt(digitMatch[1], 10), keyIsDown(SHIFT));
-    return;
+    return false;
   }
   if (key === "0" || keyCode === BACKSPACE || keyCode === DELETE) {
     typeDigit(0);
-    return;
+    return false;
   }
-  if (selR >= 0) {
+  if (key === " ") { toggleNotesMode(); return false; }
+  if ((key === "z" || key === "Z") && (keyIsDown(CONTROL) || keyIsDown(91))) { undo(); return false; }
+  if ([LEFT_ARROW, RIGHT_ARROW, UP_ARROW, DOWN_ARROW].includes(keyCode)) {
+    if (selR < 0) { selR = 0; selC = 0; return false; }
     if (keyCode === LEFT_ARROW) { selC = (selC - 1 + N) % N; }
     else if (keyCode === RIGHT_ARROW) { selC = (selC + 1) % N; }
     else if (keyCode === UP_ARROW) { selR = (selR - 1 + N) % N; }
     else if (keyCode === DOWN_ARROW) { selR = (selR + 1) % N; }
+    return false;
   }
 }
 
@@ -391,12 +453,12 @@ function infoAnim(p, w, h, frame) {
   const filled = t >= FILL_AT;
   const sinceFill = t - FILL_AT;
 
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
   p.noStroke();
 
   // row/column highlight fades in during the scan
   if (scanT > 0) {
-    p.fill(230, 180, 34, 12 * scanT);
+    p.fill(...PAL.lilac, 22 * scanT);
     p.rect(ox, oy + targetR * cs, boardW, cs);
     p.rect(ox + targetC * cs, oy, cs, boardW);
   }
@@ -407,9 +469,9 @@ function infoAnim(p, w, h, frame) {
       if (r === targetR && c === targetC && filled) {
         // green flash that settles into a soft tint
         const flash = Math.max(45, 110 - sinceFill * 2);
-        p.fill(127, 176, 105, flash);
+        p.fill(...PAL.mint, flash);
       } else {
-        p.fill(30, 27, 23);
+        p.fill(...PAL.well);
       }
       p.rect(x, y, cs, cs);
     }
@@ -425,7 +487,7 @@ function infoAnim(p, w, h, frame) {
       // digits in the target's row/col shift toward "taken" gold as the scan sweeps
       const inLine = (r === targetR || c === targetC);
       const dim = inLine ? scanT : 0;
-      p.fill(p.lerpColor(p.color(243, 237, 224), p.color(230, 190, 100), dim));
+      p.fill(p.lerpColor(p.color(...PAL.ink), p.color(...PAL.muted), dim));
       p.textSize(cs * 0.5);
       p.text(v, x, y + 1);
     }
@@ -435,17 +497,17 @@ function infoAnim(p, w, h, frame) {
   if (filled) {
     const popT = Math.min(1, sinceFill / POP_FRAMES);
     const scale = popT < 0.7 ? p.map(popT, 0, 0.7, 0.2, 1.15) : p.map(popT, 0.7, 1, 1.15, 1);
-    p.fill(150, 190, 230);
+    p.fill(...PAL.sky);
     p.textSize(cs * 0.5 * scale);
     p.text(3, ox + targetC * cs + cs / 2, oy + targetR * cs + cs / 2 + 1);
   }
 
-  p.stroke(58, 53, 46); p.strokeWeight(1);
+  p.stroke(...PAL.line); p.strokeWeight(1);
   for (let i = 0; i <= n; i++) {
     p.line(ox + i * cs, oy, ox + i * cs, oy + boardW);
     p.line(ox, oy + i * cs, ox + boardW, oy + i * cs);
   }
-  p.stroke(120, 110, 95); p.strokeWeight(2.2);
+  p.stroke(...PAL.lineHi); p.strokeWeight(2.2);
   for (let i = 0; i <= n; i += bw) p.line(ox + i * cs, oy, ox + i * cs, oy + boardW);
   for (let j = 0; j <= n; j += bh) p.line(ox, oy + j * cs, ox + boardW, oy + j * cs);
 
@@ -453,12 +515,12 @@ function infoAnim(p, w, h, frame) {
   p.noFill();
   if (!filled) {
     const pulse = t < SELECT_END ? 1.0 + 0.06 * p.sin(frame * 0.25) : 1.0;
-    p.stroke(230, 180, 34, 200);
-    p.strokeWeight(2);
+    p.stroke(...PAL.lilac, 230);
+    p.strokeWeight(2.5);
     const grow = (pulse - 1) * cs;
     p.rect(ox + targetC * cs - grow / 2, oy + targetR * cs - grow / 2, cs + grow, cs + grow);
   } else {
-    p.stroke(127, 176, 105, 200);
+    p.stroke(...PAL.mint, 200);
     p.strokeWeight(2);
     p.rect(ox + targetC * cs, oy + targetR * cs, cs, cs);
   }
@@ -479,19 +541,19 @@ function setup() {
 }
 
 function layout() {
-  padY = 60;
-  const availW = width;
+  padY = 64;
   const availH = height - padY;
-  boardPx = Math.floor(Math.min(availW * 0.94, availH * 0.94));
+  boardPx = Math.floor(Math.min(width, availH) - 20);
   cellSize = Math.floor(boardPx / N);
   boardPx = cellSize * N;
-  ox = Math.floor((availW - boardPx) / 2);
-  oy = Math.floor((availH - boardPx) / 2);
+  ox = Math.floor((width - boardPx) / 2);
+  oy = Math.floor((availH - boardPx) / 2) + 4;
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
   layout();
+  if (!solved && frameCount % 30 === 0) updateStatus(); // tick the timer
 
   // hovered cell (for subtle feedback)
   let hr = -1, hc = -1;
@@ -500,20 +562,24 @@ function draw() {
     hr = Math.floor((mouseY - oy) / cellSize);
   }
 
+  noStroke();
+  fill(...PAL.well);
+  rect(ox, oy, boardPx, boardPx, 10);
+
   // selection row/col/box highlight
   if (selR >= 0) {
-    noStroke();
-    fill(230, 180, 34, 14);
+    fill(...PAL.lilac, 16);
     rect(ox, oy + selR * cellSize, boardPx, cellSize);
     rect(ox + selC * cellSize, oy, cellSize, boardPx);
     const { br, bc } = boxOrigin(selR, selC);
-    fill(230, 180, 34, 10);
+    fill(...PAL.lilac, 12);
     rect(ox + bc * cellSize, oy + br * cellSize, cellSize * BW, cellSize * BH);
   }
 
   // cells
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
+  const selVal = selR >= 0 ? board[selR][selC] : 0;
   for (let r = 0; r < N; r++) {
     for (let c = 0; c < N; c++) {
       const x = ox + c * cellSize, y = oy + r * cellSize;
@@ -521,113 +587,123 @@ function draw() {
       const isGiven = givens[r][c];
       const isSel = r === selR && c === selC;
       const isConflict = showErrors && conflictCells.has(r + "," + c);
-      const sameVal = v !== 0 && selR >= 0 && board[selR][selC] === v;
+      const sameVal = v !== 0 && selVal === v;
 
+      noStroke();
       if (isSel) {
-        fill(230, 180, 34, 55);
-        noStroke();
-        rect(x, y, cellSize, cellSize);
+        fill(...PAL.lilac, 70);
+        rect(x + 1, y + 1, cellSize - 2, cellSize - 2, 4);
       } else if (isConflict) {
-        fill(200, 50, 63, 40);
-        noStroke();
-        rect(x, y, cellSize, cellSize);
+        fill(...PAL.rose, 50);
+        rect(x + 1, y + 1, cellSize - 2, cellSize - 2, 4);
       } else if (sameVal) {
-        fill(243, 237, 224, 18);
-        noStroke();
-        rect(x, y, cellSize, cellSize);
+        fill(...PAL.lilac, 34);
+        rect(x + 1, y + 1, cellSize - 2, cellSize - 2, 4);
       } else if (r === hr && c === hc && !solved) {
-        fill(243, 237, 224, 8);
-        noStroke();
-        rect(x, y, cellSize, cellSize);
+        fill(255, 255, 255, 10);
+        rect(x + 1, y + 1, cellSize - 2, cellSize - 2, 4);
       }
 
       if (v !== 0) {
-        if (isConflict) fill(230, 110, 120);
-        else if (isGiven) fill(243, 237, 224);
-        else fill(150, 190, 230);
-        noStroke();
-        textSize(cellSize * 0.5);
+        if (isConflict) fill(...PAL.rose);
+        else if (isGiven) fill(...PAL.ink);
+        else fill(...PAL.sky);
+        textStyle(isGiven ? BOLD : NORMAL);
+        textSize(cellSize * (isGiven ? 0.52 : 0.56));
         text(v, x + cellSize / 2, y + cellSize / 2 + 1);
+        textStyle(BOLD);
       } else if (notes[r][c].size) {
-        drawNotes(x, y, notes[r][c]);
+        drawNotes(x, y, notes[r][c], selVal);
       }
     }
   }
 
   // grid lines
-  stroke(58, 53, 46); strokeWeight(1);
-  for (let i = 0; i <= N; i++) {
-    line(ox + i * cellSize, oy, ox + i * cellSize, oy + boardPx);
-    line(ox, oy + i * cellSize, ox + boardPx, oy + i * cellSize);
+  stroke(...PAL.line); strokeWeight(1);
+  for (let i = 1; i < N; i++) {
+    if (i % BW) line(ox + i * cellSize, oy + 4, ox + i * cellSize, oy + boardPx - 4);
+    if (i % BH) line(ox + 4, oy + i * cellSize, ox + boardPx - 4, oy + i * cellSize);
   }
   // box borders
-  stroke(155, 145, 130); strokeWeight(2.4);
-  for (let i = 0; i <= N; i += BW) line(ox + i * cellSize, oy, ox + i * cellSize, oy + boardPx);
-  for (let j = 0; j <= N; j += BH) line(ox, oy + j * cellSize, ox + boardPx, oy + j * cellSize);
+  stroke(...PAL.lineHi); strokeWeight(2.5); strokeCap(ROUND);
+  for (let i = BW; i < N; i += BW) line(ox + i * cellSize, oy + 2, ox + i * cellSize, oy + boardPx - 2);
+  for (let j = BH; j < N; j += BH) line(ox + 2, oy + j * cellSize, ox + boardPx - 2, oy + j * cellSize);
   noFill();
-  stroke(155, 145, 130); strokeWeight(2.4);
-  rect(ox, oy, boardPx, boardPx);
+  rect(ox, oy, boardPx, boardPx, 10);
 
-  // number pad
   drawNumberPad();
 
   if (solved) {
-    drawBoardOverlay(ox, oy, boardPx, boardPx, "SOLVED", null, [127, 176, 105]);
+    drawBoardOverlay(ox, oy, boardPx, boardPx, "Solved!", "in " + fmtTime(endMs - startMs), PAL.mint);
   }
 }
 
-function drawNotes(x, y, noteSet) {
+function drawNotes(x, y, noteSet, highlight) {
   const cols = Math.ceil(Math.sqrt(N));
   const rows = Math.ceil(N / cols);
   const subW = cellSize / cols, subH = cellSize / rows;
-  fill(180, 175, 165);
   noStroke();
   textStyle(NORMAL);
-  textSize(Math.min(subW, subH) * 0.55);
+  textSize(Math.min(subW, subH) * 0.62);
   textAlign(CENTER, CENTER);
   for (let v = 1; v <= N; v++) {
     if (!noteSet.has(v)) continue;
     const i = v - 1;
     const col = i % cols, row = Math.floor(i / cols);
-    const cx = x + col * subW + subW / 2;
-    const cy = y + row * subH + subH / 2;
-    text(v, cx, cy);
+    fill(...(v === highlight ? PAL.lilac : PAL.muted));
+    text(v, x + col * subW + subW / 2, y + row * subH + subH / 2);
   }
   textStyle(BOLD);
 }
 
+// N digit keys plus an erase key
 function padRects() {
-  const n = N;
-  const padW = Math.min(width * 0.94, n * 40);
+  const n = N + 1;
+  const padW = Math.min(width - 20, n * 46);
   const btnW = padW / n;
   const px = (width - padW) / 2;
-  const py = height - padY + 8;
-  const btnH = padY - 20;
+  const py = height - padY + 6;
+  const btnH = padY - 18;
   const rects = [];
   for (let i = 0; i < n; i++) {
-    rects.push({ v: i + 1, x: px + i * btnW, y: py, w: btnW - 4, h: btnH });
+    rects.push({ v: i < N ? i + 1 : 0, x: px + i * btnW + 2, y: py, w: btnW - 4, h: btnH });
   }
   return rects;
 }
 
 function drawNumberPad() {
   const rects = padRects();
-  const noteMode = keyIsDown(SHIFT);
+  const noteMode = notesMode || keyIsDown(SHIFT);
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
   for (const r of rects) {
     const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+    const hover = mouseX >= r.x && mouseX < r.x + r.w && mouseY >= r.y && mouseY < r.y + r.h;
+    noStroke();
+    if (r.v === 0) {
+      fill(...(hover ? PAL.panelHi : PAL.panel));
+      rect(r.x, r.y, r.w, r.h, 10);
+      // erase glyph: a little backspace key
+      stroke(...PAL.muted); strokeWeight(2); noFill(); strokeJoin(ROUND);
+      const k = Math.min(r.w, r.h) * 0.2;
+      beginShape();
+      vertex(cx - k * 1.6, cy); vertex(cx - k * 0.7, cy - k); vertex(cx + k * 1.4, cy - k);
+      vertex(cx + k * 1.4, cy + k); vertex(cx - k * 0.7, cy + k); endShape(CLOSE);
+      line(cx - k * 0.1, cy - k * 0.45, cx + k * 0.8, cy + k * 0.45);
+      line(cx + k * 0.8, cy - k * 0.45, cx - k * 0.1, cy + k * 0.45);
+      continue;
+    }
     let count = 0;
     for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) if (board[i][j] === r.v) count++;
     const complete = count >= N;
-
-    noStroke();
-    fill(complete ? color(58, 74, 48) : color(38, 35, 32));
-    rect(r.x, r.y, r.w, r.h, 6);
-    fill(complete ? color(120, 170, 100) : color(243, 237, 224));
-    textSize(r.h * (noteMode ? 0.28 : 0.5));
+    fill(...(complete ? [...PAL.mint, 30] : hover ? PAL.panelHi : PAL.panel));
+    rect(r.x, r.y, r.w, r.h, 10);
+    fill(...(complete ? PAL.mint : noteMode ? PAL.muted : PAL.ink));
+    textStyle(noteMode ? NORMAL : BOLD);
+    textSize(r.h * (noteMode ? 0.36 : 0.48));
     text(r.v, cx, cy + 1);
   }
+  textStyle(BOLD);
 }
 
 function selectCellAt(mx, my) {
@@ -644,20 +720,13 @@ function selectCellAt(mx, my) {
 
 function mousePressed() {
   if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) return;
-  if (selectCellAt(mouseX, mouseY)) return;
+  if (selectCellAt(mouseX, mouseY)) return false;
 
   const rects = padRects();
   for (const r of rects) {
     if (mouseX >= r.x && mouseX < r.x + r.w && mouseY >= r.y && mouseY < r.y + r.h) {
       typeDigit(r.v, keyIsDown(SHIFT));
-      return;
+      return false;
     }
-  }
-}
-
-function touchStarted() {
-  if (touches && touches.length) {
-    mousePressed();
-    return false;
   }
 }

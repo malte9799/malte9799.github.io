@@ -15,16 +15,20 @@ initGame({
     { id: "btn-undo", label: "Undo",                   onClick: () => undo() },
   ],
   sliders: [
-    { id: "s-size", label: "Size", min: 3, max: 8, step: 1 },
+    { id: "s-size", label: "Size", min: 3, max: 8, step: 1, fmt: v => v + "×" + v },
+    { id: "s-neg",  label: "Negative tiles", min: 0, max: 1, step: 1, fmt: v => (v ? "on" : "off") },
   ],
-  onPreset: ([n, cancel]) => { SIZE = n; cancelMode = cancel === 1; saveBest(); newGame(); },
-  onSlider: (id, v) => { if (id === "s-size") SIZE = v; },
+  onPreset: ([n, cancel]) => { SIZE = n; cancelMode = cancel === 1; saveSettings("2048_state", { SIZE, cancelMode }); syncSliderUI(); newGame(); },
+  onSlider: (id, v) => { if (id === "s-size") SIZE = v; else cancelMode = v === 1; },
   onClamp: () => {},
-  getSliderValues: () => ({ "s-size": SIZE }),
+  getSliderValues: () => ({ "s-size": SIZE, "s-neg": cancelMode ? 1 : 0 }),
   info: {
     anim: infoAnim,
     title: "How to play",
-    text: "Arrow keys, WASD or swipes slide every tile as far as it goes; equal tiles that collide merge into their sum, and a new tile spawns each move. Keep your biggest tile parked in a corner and build toward 2048.",
+    text: [
+      "Arrow keys, WASD or swipes slide every tile as far as it goes; equal tiles that collide merge into their sum, and a new tile spawns each move. Keep your biggest tile parked in a corner and build toward 2048.",
+      "Negative mode: red −tiles cancel out a matching +tile for a small bonus. Keys: U / Ctrl+Z undo · N new game.",
+    ],
   },
 });
 
@@ -36,52 +40,39 @@ let cancelMode = false; // negative tiles spawn; equal-magnitude +/- pairs annih
 let gameOver = false;
 let won = false;
 let wonAcked = false; // keep playing after win
-let prevGrid = null;
-let prevScore = 0;
-let canUndo = false;
-let prevAnim = []; // moves from the last move, for undo animation
+let history = [];     // undo stack of { grid, score, anim }
+let spawnCell = null; // [r, c] of the tile added by the last move (pops in after the slide)
+let mergeCells = new Set(); // "r,c" targets of the last move's merges (bounce after the slide)
+let floaters = [];    // "+N" score popups { x, y, text, life }
+{
+  const d = loadSettings("2048_state");
+  if (typeof d.SIZE === "number" && d.SIZE >= 3 && d.SIZE <= 8) SIZE = d.SIZE;
+  if (typeof d.cancelMode === "boolean") cancelMode = d.cancelMode;
+}
+syncSliderUI();
 
 // animation
 let anim = []; // [{fromR,fromC,toR,toC,value,merged}]
 let animT = 0;
 let animUndo = false; // true = playing undo (tiles move from to→from)
 const ANIM_DUR = 8; // frames
+const POP_DUR = 9;  // frames for the spawn / merge pop after the slide
 
-// tile color palette matching the site theme
-const TILE_COLORS = {
-  0:    [38, 35, 32],
-  2:    [58, 54, 48],
-  4:    [72, 66, 56],
-  8:    [180, 110, 48],
-  16:   [200, 90, 40],
-  32:   [210, 70, 55],
-  64:   [220, 50, 50],
-  128:  [200, 170, 50],
-  256:  [210, 180, 40],
-  512:  [220, 190, 30],
-  1024: [230, 200, 20],
-  2048: [230, 180, 34],
-};
-
-// negative (cancel-mode) tiles share the board's bug-red accent, darkening
-// with magnitude like the positive ramp does
-const NEG_TILE_COLORS = {
-  2:  [90, 40, 44],
-  4:  [120, 42, 48],
-  8:  [150, 44, 52],
-  16: [180, 46, 56],
-  32: [200, 50, 60],
-};
-
+// tile colours come from the active design: PAL.tiles is the ramp for
+// 2 … 2048, PAL.tilesNeg the −2 … −32 tiles of negative mode
 function tileColor(v) {
-  if (v < 0) return NEG_TILE_COLORS[-v] || [220, 50, 63];
-  if (TILE_COLORS[v]) return TILE_COLORS[v];
-  return [230, 180, 34]; // any higher value
+  if (v === 0) return PAL.panel;
+  const k = Math.log2(Math.abs(v)) - 1;
+  if (v < 0) return PAL.tilesNeg[Math.min(k, PAL.tilesNeg.length - 1)];
+  if (k < PAL.tiles.length) return PAL.tiles[k];
+  return PAL.ink; // beyond 2048
 }
 
+// dark text on bright tiles, light text on dark ones — works for light and
+// dark designs alike
 function tileFg(v) {
-  if (v < 0) return [243, 220, 222];
-  return v <= 4 ? [155, 145, 130] : [243, 237, 224];
+  const [r, g, b] = tileColor(v);
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6 ? PAL.onLight : PAL.onDark;
 }
 
 function makeGrid(n) {
@@ -101,6 +92,7 @@ function addTile(g) {
   const [r, c] = empty[Math.floor(Math.random() * empty.length)];
   const base = Math.random() < 0.9 ? 2 : 4;
   g[r][c] = cancelMode && Math.random() < 0.15 ? -base : base;
+  return [r, c];
 }
 
 function newGame() {
@@ -109,24 +101,26 @@ function newGame() {
   gameOver = false;
   won = false;
   wonAcked = false;
-  canUndo = false;
-  prevGrid = null;
-  prevAnim = [];
+  history = [];
+  floaters = [];
+  mergeCells = new Set();
   addTile(grid);
-  addTile(grid);
+  spawnCell = addTile(grid);
   anim = [];
-  animT = 0;
+  animT = ANIM_DUR; // straight to the spawn pop
   animUndo = false;
+  loadBest();
+  clearParticles();
   updateStatus();
 }
 
 function updateStatus() {
   if (gameOver) {
-    setStatus("game over · score " + score, "dead");
+    setStatus("game over · score " + score + (score >= best && score > 0 ? " · new best!" : ""), "dead");
   } else if (won && !wonAcked) {
     setStatus("you reached 2048! · score " + score, "solved");
   } else {
-    setStatus("score " + score + "  ·  best " + best, null);
+    setStatus("score " + score + " · best " + best, null);
   }
 }
 
@@ -247,19 +241,19 @@ function move(dir) {
 
   if (!anyMoved) return;
 
-  prevGrid = cloneGrid(grid);
-  prevScore = score;
-  canUndo = true;
+  history.push({ grid: cloneGrid(grid), score, anim: moves });
+  if (history.length > 200) history.shift();
 
   grid = result;
   score += totalGained;
   if (score > best) best = score;
 
   anim = moves;
-  prevAnim = moves;
   animT = 0;
+  mergeCells = new Set(moves.filter(m => m.merged).map(m => m.toR + "," + m.toC));
+  for (const m of moves) if (m.merged) floaters.push({ r: m.toR, c: m.toC, text: "+" + m.value, life: 1.25 });
 
-  addTile(grid);
+  spawnCell = addTile(grid);
 
   if (!won && grid.some(r => r.some(v => v >= 2048))) {
     won = true;
@@ -286,33 +280,41 @@ function canContinue() {
 }
 
 function undo() {
-  if (!canUndo || !prevGrid) return;
+  if (!history.length) { flashNote("Nothing to undo."); return; }
+  const prev = history.pop();
   // Restore state immediately; animation shows tiles sliding back
-  grid = cloneGrid(prevGrid);
-  score = prevScore;
-  canUndo = false;
-  prevGrid = null;
+  grid = prev.grid;
+  score = prev.score;
   gameOver = false;
-  // Play prevAnim in reverse: from=toPos, to=fromPos, skip merged duplicates
-  anim = prevAnim
-    .filter(m => !m.merged)
-    .map(m => ({ fromR: m.toR, fromC: m.toC, toR: m.fromR, toC: m.fromC, value: m.value, merged: false }));
+  if (won && !grid.some(r => r.some(v => v >= 2048))) { won = false; wonAcked = false; }
+  // play the move in reverse: from=toPos, to=fromPos, merged pairs split again
+  anim = prev.anim
+    .filter(m => !m.vanish)
+    .map(m => {
+      const split = prev.anim.some(n => n.merged && n.toR === m.toR && n.toC === m.toC);
+      return { fromR: m.toR, fromC: m.toC, toR: m.fromR, toC: m.fromC, value: split ? m.value / 2 : m.value, merged: false };
+    });
   animUndo = true;
   animT = 0;
-  prevAnim = [];
+  spawnCell = null;
+  mergeCells = new Set();
   updateStatus();
 }
 
+function bestKey() { return "2048_best_" + SIZE + (cancelMode ? "_neg" : ""); }
+
 function saveBest() {
-  try { localStorage.setItem("2048_best", String(best)); } catch {}
+  try { localStorage.setItem(bestKey(), String(best)); } catch {}
 }
 
 function loadBest() {
-  try { const v = parseInt(localStorage.getItem("2048_best") || "0"); if (v > 0) best = v; } catch {}
+  best = 0;
+  try {
+    // the classic board inherits the best score saved before scores were per-size
+    const v = parseInt(localStorage.getItem(bestKey()) || (SIZE === 4 && !cancelMode ? localStorage.getItem("2048_best") : "0") || "0");
+    if (v > 0) best = v;
+  } catch {}
 }
-
-// ---- touch swipe ----
-let touchStartX = 0, touchStartY = 0;
 
 // Scripted 3-move sequence showing the classic "corner stacking" strategy:
 // swipe right, then down twice, funneling four scattered tiles into a
@@ -400,16 +402,16 @@ function infoAnim(p, w, h, frame) {
     ? p.map(spawnPopT, 0, 0.7, 0, 1.1)
     : p.map(spawnPopT, 0.7, 1, 1.1, 1);
 
-  p.background(28, 25, 22);
+  p.background(...PAL.well);
 
   // board backdrop + empty cell grid, same styling as the real board
   const padBoard = pad * 0.6;
-  p.fill(38, 35, 32);
+  p.fill(...PAL.panel);
   p.noStroke();
   p.rect(ox - padBoard, oy - padBoard, bw + padBoard * 2, bh + padBoard * 2, (bw + padBoard * 2) * 0.03);
   for (let r = 0; r < N; r++) {
     for (let c = 0; c < N; c++) {
-      p.fill(28, 25, 22);
+      p.fill(...PAL.well);
       p.rect(cellX(c) - cs/2, cellY(r) - cs/2, cs, cs, cs * 0.1);
     }
   }
@@ -475,8 +477,6 @@ function infoAnim(p, w, h, frame) {
   }
 }
 
-loadBest();
-
 // ---- p5 ----
 
 const CANVAS = 440;
@@ -488,165 +488,160 @@ function setup() {
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
 
-  // In fullscreen the canvas wrap is already positioned below the navbar,
-  // so canvas coords start at 0,0 below it — no offset needed.
-  const availW = width;
-  const availH = height;
-
-  const GAP = max(4, floor(min(availW, availH) * 0.012));
+  const GAP = max(5, floor(min(width, height) * 0.016));
   const BOARD_PAD = GAP * 2;
-  const maxBoardW = min(availW * 0.9, availH * 0.9, 520);
+  const maxBoardW = min(width, height) - 24;
   const tileSize = floor((maxBoardW - BOARD_PAD * 2 - GAP * (SIZE - 1)) / SIZE);
   const boardW = tileSize * SIZE + GAP * (SIZE - 1) + BOARD_PAD * 2;
   const boardH = boardW;
-  const ox = floor((availW - boardW) / 2);
-  const oy = floor((availH - boardH) / 2);
+  const ox = floor((width - boardW) / 2);
+  const oy = floor((height - boardH) / 2);
+  const px = c => ox + BOARD_PAD + c * (tileSize + GAP);
+  const py = r => oy + BOARD_PAD + r * (tileSize + GAP);
 
-  // board background
-  fill(38, 35, 32);
+  // board background + empty cells
+  fill(...PAL.well);
   noStroke();
-  rect(ox, oy, boardW, boardH, boardW * 0.03);
-
-  // empty cells
-  for (let r = 0; r < SIZE; r++) {
+  rect(ox, oy, boardW, boardH, 16);
+  for (let r = 0; r < SIZE; r++)
     for (let c = 0; c < SIZE; c++) {
-      const x = ox + BOARD_PAD + c * (tileSize + GAP);
-      const y = oy + BOARD_PAD + r * (tileSize + GAP);
-      fill(28, 25, 22);
-      noStroke();
-      rect(x, y, tileSize, tileSize, tileSize * 0.1);
+      fill(...PAL.panel);
+      rect(px(c), py(r), tileSize, tileSize, tileSize * 0.14);
     }
-  }
 
-  // animation progress
-  const t = animT < ANIM_DUR ? animT / ANIM_DUR : 1;
-  const ease = easeInOutQuad(t);
+  const sliding = anim.length > 0 && animT < ANIM_DUR;
+  const ease = easeInOutQuad(Math.min(1, animT / ANIM_DUR));
 
-  if (anim.length > 0 && animT < ANIM_DUR) {
-    // Cells covered by an animation entry — skip drawing them statically
-    const animCovered = new Set(anim.map(m => m.toR + "," + m.toC));
-
-    // Draw static grid tiles not involved in the animation
-    for (let r = 0; r < SIZE; r++) {
+  if (sliding) {
+    // tiles not involved in the animation (and not the fresh spawn) stay put
+    const covered = new Set(anim.map(m => m.toR + "," + m.toC));
+    for (let r = 0; r < SIZE; r++)
       for (let c = 0; c < SIZE; c++) {
-        if (animCovered.has(r + "," + c)) continue;
         const v = grid[r][c];
-        if (v === 0) continue;
-        const x = ox + BOARD_PAD + c * (tileSize + GAP);
-        const y = oy + BOARD_PAD + r * (tileSize + GAP);
-        drawTile(x, y, tileSize, v, 1);
+        if (v === 0 || covered.has(r + "," + c) || (spawnCell && spawnCell[0] === r && spawnCell[1] === c)) continue;
+        drawTile(px(c), py(r), tileSize, v, 1, 1);
       }
-    }
-
-    // draw vanishing tiles (annihilated +/- pairs), fading out as they meet
     for (const m of anim) {
-      if (!m.vanish) continue;
-      const fx = ox + BOARD_PAD + m.fromC * (tileSize + GAP);
-      const fy = oy + BOARD_PAD + m.fromR * (tileSize + GAP);
-      const tx2 = ox + BOARD_PAD + m.toC * (tileSize + GAP);
-      const ty2 = oy + BOARD_PAD + m.toR * (tileSize + GAP);
-      const x = lerp(fx, tx2, ease);
-      const y = lerp(fy, ty2, ease);
-      drawTile(x, y, tileSize, m.value, 1 - ease);
+      const x = lerp(px(m.fromC), px(m.toC), ease);
+      const y = lerp(py(m.fromR), py(m.toR), ease);
+      if (m.vanish) { drawTile(x, y, tileSize, m.value, 1 - ease, 1); continue; }
+      // both halves of a merge travel at their pre-merge value
+      const half = anim.some(n => n.merged && n.toR === m.toR && n.toC === m.toC);
+      drawTile(x, y, tileSize, half ? m.value / 2 : m.value, 1, 1);
     }
-    // draw animating tiles
-    for (const m of anim) {
-      if (m.merged || m.vanish) continue;
-      const fx = ox + BOARD_PAD + m.fromC * (tileSize + GAP);
-      const fy = oy + BOARD_PAD + m.fromR * (tileSize + GAP);
-      const tx2 = ox + BOARD_PAD + m.toC * (tileSize + GAP);
-      const ty2 = oy + BOARD_PAD + m.toR * (tileSize + GAP);
-      const x = lerp(fx, tx2, ease);
-      const y = lerp(fy, ty2, ease);
-
-      // draw at pre-merge value (half of result)
-      const dispVal = anim.find(n => n.toR === m.toR && n.toC === m.toC && n.merged) ? m.value / 2 : m.value;
-      drawTile(x, y, tileSize, dispVal, 1);
-    }
-    // draw merging tiles moving toward target
-    for (const m of anim) {
-      if (!m.merged) continue;
-      const fx = ox + BOARD_PAD + m.fromC * (tileSize + GAP);
-      const fy = oy + BOARD_PAD + m.fromR * (tileSize + GAP);
-      const tx2 = ox + BOARD_PAD + m.toC * (tileSize + GAP);
-      const ty2 = oy + BOARD_PAD + m.toR * (tileSize + GAP);
-      const x = lerp(fx, tx2, ease);
-      const y = lerp(fy, ty2, ease);
-      drawTile(x, y, tileSize, m.value / 2, 1);
-    }
-    animT++;
-    if (animT >= ANIM_DUR) animUndo = false;
   } else {
-    // draw static grid
-    for (let r = 0; r < SIZE; r++) {
+    const k = Math.min(1, (animT - ANIM_DUR) / POP_DUR); // 0..1 through the pop
+    for (let r = 0; r < SIZE; r++)
       for (let c = 0; c < SIZE; c++) {
         const v = grid[r][c];
         if (v === 0) continue;
-        const x = ox + BOARD_PAD + c * (tileSize + GAP);
-        const y = oy + BOARD_PAD + r * (tileSize + GAP);
-        drawTile(x, y, tileSize, v, 1);
+        let scale = 1;
+        if (k < 1 && spawnCell && spawnCell[0] === r && spawnCell[1] === c) scale = easeOutBack(k);
+        else if (k < 1 && mergeCells.has(r + "," + c)) scale = 1 + 0.14 * sin(k * PI);
+        drawTile(px(c), py(r), tileSize, v, 1, scale);
       }
-    }
-    if (animT >= ANIM_DUR) anim = [];
+    if (k >= 1) anim = [];
+  }
+  animT++;
+  if (animT >= ANIM_DUR) animUndo = false;
+
+  // "+N" score popups drifting up from each merge, once the slide has landed
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const f = floaters[i];
+    f.life -= 0.025;
+    if (f.life <= 0) { floaters.splice(i, 1); continue; }
+    if (f.life > 1) continue;
+    const a = 255 * Math.min(1, f.life * 2.5);
+    textSize(Math.max(14, tileSize * 0.22));
+    fill(0, 0, 0, a * 0.5);
+    text(f.text, px(f.c) + tileSize / 2 + 1, py(f.r) - (1 - f.life) * tileSize * 0.6 + 1);
+    fill(255, 255, 255, a);
+    text(f.text, px(f.c) + tileSize / 2, py(f.r) - (1 - f.life) * tileSize * 0.6);
   }
 
-  // game over overlay
+  drawParticles();
+
   if (gameOver) {
-    drawBoardOverlay(ox, oy, boardW, boardH, "GAME OVER", "press N for new game", [200, 50, 63]);
+    drawBoardOverlay(ox, oy, boardW, boardH, "Game over", "score " + score + " · U to undo · N for a new game", PAL.rose);
   } else if (won && !wonAcked) {
-    drawBoardOverlay(ox, oy, boardW, boardH, "YOU WIN!", "press any key to keep playing", [230, 180, 34]);
+    drawBoardOverlay(ox, oy, boardW, boardH, "2048!", "press any key or tap to keep playing", PAL.sun);
   }
 }
 
-function drawTile(x, y, sz, v, alpha) {
+function easeOutBack(t) {
+  const c1 = 1.70158, c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+
+function drawTile(x, y, sz, v, alpha, scale) {
+  const s = sz * scale;
+  const ox = x + (sz - s) / 2, oy = y + (sz - s) / 2;
   const [tr, tg, tb] = tileColor(v);
-  fill(tr, tg, tb, alpha * 255);
   noStroke();
-  rect(x, y, sz, sz, sz * 0.1);
+  // big tiles glow
+  if (v >= 128) {
+    const glow = Math.min(1, Math.log2(v / 64) / 5);
+    fill(tr, tg, tb, 50 * glow * alpha);
+    rect(ox - 4, oy - 4, s + 8, s + 8, s * 0.2);
+  }
+  fill(tr, tg, tb, alpha * 255);
+  rect(ox, oy, s, s, s * 0.14);
+  // soft top sheen
+  fill(255, 255, 255, 16 * alpha);
+  rect(ox, oy, s, s * 0.5, s * 0.14, s * 0.14, 0, 0);
   if (v === 0) return;
   const [fr, fg, fb] = tileFg(v);
   fill(fr, fg, fb, alpha * 255);
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
-  const ts = v >= 1000 ? sz * 0.28 : v >= 100 ? sz * 0.34 : v >= 10 ? sz * 0.42 : sz * 0.5;
-  textSize(ts);
-  noStroke();
-  text(v, x + sz / 2, y + sz / 2 + sz * 0.02);
+  const label = v < 0 ? "−" + (-v) : String(v);
+  const len = label.length;
+  textSize(s * (len >= 5 ? 0.24 : len === 4 ? 0.3 : len === 3 ? 0.36 : 0.44));
+  text(label, ox + s / 2, oy + s / 2 + s * 0.02);
 }
 
 function keyPressed() {
   if (won && !wonAcked && keyCode !== 78) { wonAcked = true; updateStatus(); return false; }
-  if (gameOver && keyCode === 78) { newGame(); return false; }
+  if (keyCode === 78) { newGame(); return false; }
+  if (keyCode === 85 || (keyCode === 90 && (keyIsDown(91) || keyIsDown(17)))) { undo(); return false; }
   if (gameOver) return;
 
   if (keyCode === LEFT_ARROW  || key === "a" || key === "A") { move("left");  return false; }
   if (keyCode === RIGHT_ARROW || key === "d" || key === "D") { move("right"); return false; }
   if (keyCode === UP_ARROW    || key === "w" || key === "W") { move("up");    return false; }
   if (keyCode === DOWN_ARROW  || key === "s" || key === "S") { move("down");  return false; }
-  if (keyCode === 90 && (keyIsDown(91) || keyIsDown(17)))    { undo();        return false; }
-  if (keyCode === 78) { newGame(); return false; }
 }
 
 function _overCanvas() {
   return mouseX >= 0 && mouseX < width && mouseY >= 0 && mouseY < height;
 }
 
+function mousePressed() {
+  if (_overCanvas() && won && !wonAcked) { wonAcked = true; updateStatus(); return false; }
+}
+
+// ---- touch swipe ----
+let touchStartX = 0, touchStartY = 0, touchActive = false;
+
 function touchStarted() {
   if (!_overCanvas()) return;
-  touchStartX = touches[0]?.x ?? mouseX;
-  touchStartY = touches[0]?.y ?? mouseY;
+  touchActive = true;
+  touchStartX = mouseX;
+  touchStartY = mouseY;
   return false;
 }
 
 function touchEnded() {
-  if (!_overCanvas()) return;
-  const dx = (touches[0]?.x ?? mouseX) - touchStartX;
-  const dy = (touches[0]?.y ?? mouseY) - touchStartY;
-  const dist = Math.sqrt(dx * dx + dy * dy);
-  if (dist < 20) return false;
+  if (!touchActive) return;
+  touchActive = false;
+  const dx = mouseX - touchStartX;
+  const dy = mouseY - touchStartY;
   if (won && !wonAcked) { wonAcked = true; updateStatus(); return false; }
+  if (Math.hypot(dx, dy) < 20) return false;
   if (!gameOver) {
     if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? "right" : "left");
     else move(dy > 0 ? "down" : "up");

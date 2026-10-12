@@ -21,14 +21,20 @@
 //
 // Besides the shell, this file provides the helpers games share:
 //   flashNote, setStatus, celebrate, confirmHint/resetHint, setButtonActive,
-//   syncSliderUI, saveJSON/loadJSON, shuffleArray, easeInOutQuad,
-//   addParticle/spawnBurst/drawParticles/clearParticles, drawBoardOverlay.
+//   syncSliderUI, saveSettings/loadSettings, shuffleArray, easeInOutQuad,
+//   addParticle/spawnBurst/drawParticles/clearParticles, drawBoardOverlay,
+//   and (from themes.js) PAL — the active design's palette as [r, g, b].
+
+// ---- theme ----
+// PAL (canvas colours), FONT and the design picker come from themes.js,
+// which index.html loads before this file.
 
 let _cfg = null;
 let _noteTimer = null;
 
 function initGame(cfg) {
   _cfg = cfg;
+  document.title = cfg.title + " · Games";
   _buildShell();
   _wireShell();
 }
@@ -46,7 +52,7 @@ function _presetOptionsHTML() {
 function _buttonsHTML() {
   return (
     _cfg.buttons.map((b) => `<button id="${b.id}"${b.primary ? ' class="primary"' : ""}>${b.label}</button>`).join("\n") +
-    (_cfg.info ? `\n<button id="btn-info" class="info-btn">?</button>` : "")
+    (_cfg.info ? `\n<button id="btn-info" class="info-btn" title="How to play" aria-label="How to play">?</button>` : "")
   );
 }
 
@@ -74,7 +80,7 @@ function _buildShell() {
     // Fullscreen Mode (Snake, Conway): edge-to-edge canvas with a slim top
     // overlay. The custom-preset slider panel sits below the overlay and is
     // only revealed on hover/focus so it doesn't permanently block the view.
-    document.body.style.cssText = "margin:0;overflow:hidden;background:#14120f";
+    document.body.style.cssText = "margin:0;overflow:hidden;background:var(--board)";
     app.style.cssText = "max-width:none;padding:0;margin:0";
     app.innerHTML = `
        <style>
@@ -84,11 +90,11 @@ function _buildShell() {
             left: 0;
             right: 0;
             z-index: 10;
-            background: rgba(20, 18, 15, 0.94);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-bottom: 1px solid var(--panel-edge);
-            padding: 10px 18px 16px;
+            background: var(--bar-bg);
+            backdrop-filter: blur(14px) saturate(140%);
+            -webkit-backdrop-filter: blur(14px) saturate(140%);
+            border-bottom: var(--border-w) solid var(--hairline);
+            padding: 10px 18px 12px;
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -100,7 +106,7 @@ function _buildShell() {
             transform: translate(-50%, -8px);
             width: min(420px, 92vw);
             margin: 0;
-            box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.7);
             transition: transform 0.15s ease, opacity 0.15s ease, visibility 0.15s;
             opacity: 0;
             visibility: hidden;
@@ -114,7 +120,7 @@ function _buildShell() {
             pointer-events: auto;
           }
        </style>
-       <div id="canvas-wrap" style="width:100vw;height:100vh;position:fixed;inset:0;z-index:0"></div>
+       <div id="canvas-wrap" class="fs" style="width:100vw;height:100vh;position:fixed;inset:0;z-index:0"></div>
 <div id="ui-overlay" style="position:fixed">
            <div style="display:flex;flex-direction:column;gap:4px">
              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -123,9 +129,9 @@ function _buildShell() {
                  <select id="preset-select">${_presetOptionsHTML()}</select>
                </div>
                <div class="row tight" style="margin:0;flex-wrap:wrap">${_buttonsHTML()}</div>
-               <span id="status-text" style="font-size:12px;color:var(--muted);letter-spacing:0.06em;margin-left:auto"></span>
+               <span id="status-text" style="font-size:14px;font-weight:500;color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums"></span>
              </div>
-             <h2 style="font-size:13px;color:var(--ink);opacity:0.85;margin:0;font-weight:700;letter-spacing:0.14em;text-transform:uppercase">${_cfg.title}</h2>
+             <h2 style="font-size:15px;color:var(--ink);margin:0;font-family:var(--font-display);font-weight:var(--title-weight);letter-spacing:var(--title-tracking);text-transform:var(--title-transform)">${_cfg.title}</h2>
            </div>
            <div class="hint-note" id="note" style="margin:0"></div>
            <div class="controls fs-floating" id="controls" style="display:none">${_slidersHTML("Apply &amp; start")}</div>
@@ -151,6 +157,12 @@ function _buildShell() {
 
   document.getElementById("preset-select").selectedIndex = 0;
 
+  // design picker: pinned top-right, or inside the slim bar in fullscreen games
+  if (_cfg.fullscreen) {
+    const row = app.querySelector("#ui-overlay .row.tight");
+    if (row) mountThemePicker(row);
+  } else mountThemePicker(app);
+
   if (!_cfg.presets || _cfg.presets.length === 0) {
     const row = document.querySelector(".preset-row");
     if (row) row.style.display = "none";
@@ -174,7 +186,8 @@ function flashNote(msg) {
 // `intensity` is a small integer tier (1 = easiest preset, 3+ = hardest)
 // that games pass in based on their own difficulty presets — scales the
 // particle count from a light sprinkle up to a couple of big handfuls.
-const CONFETTI_COLORS = ["#e6b422", "#7fb069", "#c8323f", "#f3ede0", "#9b9182"];
+// confetti in the active design's accent colours
+const _hex = (c) => "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
 
 function celebrate(intensity) {
   if (typeof confetti !== "function") return;
@@ -199,7 +212,7 @@ function celebrate(intensity) {
     startVelocity: 42,
     gravity: 0.9,
     ticks: 220,
-    colors: CONFETTI_COLORS,
+    colors: [PAL.sun, PAL.mint, PAL.rose, PAL.sky, PAL.lilac, PAL.ink].map(_hex),
     zIndex: 200,
     disableForReducedMotion: true,
   };
@@ -213,8 +226,8 @@ function setStatus(text, state) {
   const txt = document.getElementById("status-text");
   if (!txt) return;
   const colors = {
-    solved: "var(--accent)",
-    dead: "var(--bug)",
+    solved: "var(--mint)",
+    dead: "var(--rose)",
     null: "var(--muted)",
   };
   txt.style.color = colors[state] ?? colors["null"];
@@ -275,11 +288,13 @@ function setButtonActive(id, active) {
 
 // ---- shared misc helpers ----
 
-function saveJSON(key, obj) {
+// Not saveJSON/loadJSON: p5 global mode binds its own functions of those
+// names onto window (file download / URL fetch) and silently replaces ours.
+function saveSettings(key, obj) {
   try { localStorage.setItem(key, JSON.stringify(obj)); } catch {}
 }
 
-function loadJSON(key) {
+function loadSettings(key) {
   try { return JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch { return {}; }
 }
 
@@ -304,7 +319,7 @@ function easeInOutQuad(t) {
 let _particles = [];
 
 function addParticle(pt) {
-  _particles.push({ vx: 0, vy: 0, life: 180, size: 3, col: [230, 180, 34], drag: 1, decay: 6, ...pt });
+  _particles.push({ vx: 0, vy: 0, life: 180, size: 3, col: PAL.sun, drag: 1, decay: 6, ...pt });
 }
 
 function spawnBurst(x, y, opts = {}) {
@@ -313,7 +328,7 @@ function spawnBurst(x, y, opts = {}) {
     speed = [1, 3],
     life = [100, 180],
     size = [1.5, 3.5],
-    col = [230, 180, 34],
+    col = PAL.sun,
     drag = 1,
     decay = 6,
   } = opts;
@@ -357,20 +372,25 @@ function clearParticles() {
 // Dims the board rect and prints a big title with an optional subtitle.
 // `col` is the title color as [r, g, b].
 function drawBoardOverlay(x, y, w, h, title, subtitle, col) {
-  fill(20, 18, 15, 195);
+  fill(...PAL.board, 205);
   noStroke();
   rect(x - 10, y - 10, w + 20, h + 20, 14);
+  const cx = x + w / 2, cy = y + h / 2 - (subtitle ? 14 : 0);
+  // soft glow behind the title
+  for (let k = 3; k >= 1; k--) {
+    fill(col[0], col[1], col[2], 10);
+    ellipse(cx, cy, Math.min(w, 260) * (0.5 + k * 0.22), 70 + k * 18);
+  }
   fill(col[0], col[1], col[2]);
   textAlign(CENTER, CENTER);
   textStyle(BOLD);
-  textSize(24);
-  noStroke();
-  text(title, x + w / 2, y + h / 2 - (subtitle ? 16 : 0));
+  textSize(34);
+  text(title, cx, cy);
   if (subtitle) {
-    fill(155, 145, 130);
-    textSize(13);
+    fill(...PAL.muted);
+    textSize(15);
     textStyle(NORMAL);
-    text(subtitle, x + w / 2, y + h / 2 + 16);
+    text(subtitle, cx, cy + 32);
   }
 }
 
@@ -459,6 +479,16 @@ function _wireShell() {
     if (el && b.onClick) el.addEventListener("click", b.onClick);
   }
 
+  // A mouse-clicked button keeps focus, so a later Space/Enter would both
+  // re-press it and trigger the game's own shortcut. Drop focus after
+  // pointer clicks (detail > 0); keyboard users keep theirs.
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest && e.target.closest("button");
+    if (btn && e.detail > 0) btn.blur();
+  });
+  // same for the preset dropdown once a choice is made
+  sel.addEventListener("change", () => sel.blur());
+
   if (_cfg.info) {
     document
       .getElementById("btn-info")
@@ -481,11 +511,11 @@ function _openInfo() {
   backdrop.id = "info-backdrop";
   backdrop.className = "info-backdrop";
   backdrop.innerHTML = `
-    <div class="info-modal">
-      ${title ? `<h2 class="info-title">${title}</h2>` : ""}
+    <div class="info-modal" role="dialog" aria-modal="true" aria-label="${title || "How to play"}">
+      <h2 class="info-title">${title || "How to play"}</h2>
       <div id="info-canvas-wrap"></div>
       ${lines.map((l) => `<p class="info-text">${l}</p>`).join("")}
-      <button id="info-close">✕</button>
+      <button id="info-close" aria-label="Close">✕</button>
     </div>
   `;
   document.body.appendChild(backdrop);
@@ -493,6 +523,7 @@ function _openInfo() {
     if (e.target === backdrop) _closeInfo();
   });
   document.getElementById("info-close").addEventListener("click", _closeInfo);
+  document.addEventListener("keydown", _infoKey, true);
 
   const wrap = document.getElementById("info-canvas-wrap");
   const holder = document.createElement("div");
@@ -512,7 +543,15 @@ function _openInfo() {
   });
 }
 
+// Esc closes the modal; while it's open, swallow keys so the game underneath
+// doesn't react to them.
+function _infoKey(e) {
+  e.stopPropagation();
+  if (e.key === "Escape") { e.preventDefault(); _closeInfo(); }
+}
+
 function _closeInfo() {
+  document.removeEventListener("keydown", _infoKey, true);
   if (_infoP5) {
     _infoP5.remove();
     _infoP5 = null;

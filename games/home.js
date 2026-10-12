@@ -12,7 +12,11 @@ function buildHome() {
     try { localStorage.setItem("game_stars", JSON.stringify([...set])); } catch {}
   }
 
+  let sketches = [];
+
   function buildCards() {
+    sketches.forEach((sk) => sk.remove());
+    sketches = [];
     grid.innerHTML = "";
     const sorted = [...GAMES].sort((a, b) => {
       const as = stars.has(a.id) ? 0 : 1;
@@ -26,11 +30,10 @@ function buildHome() {
       a.href = "index.html?game=" + game.id;
       a.dataset.id = game.id;
       a.innerHTML = `
-        <div class="card-overlay">
-          <div class="card-text">
-            <div class="card-title">${game.title}</div>
-            <div class="card-desc">${game.desc}</div>
-          </div>
+        <div class="preview"></div>
+        <div class="card-text">
+          <div class="card-title">${game.title}</div>
+          <div class="card-desc">${game.desc}</div>
         </div>
         <button class="star-btn${stars.has(game.id) ? " starred" : ""}" title="${stars.has(game.id) ? "Unstar game" : "Star game"}" aria-label="${stars.has(game.id) ? "Unstar" : "Star"} ${game.title}" aria-pressed="${stars.has(game.id) ? "true" : "false"}">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="star-icon">
@@ -60,19 +63,22 @@ function buildHome() {
       grid.appendChild(a);
 
       // inject p5 canvas as preview
-      new p5(function(p) {
+      const holder = a.querySelector(".preview");
+      sketches.push(new p5(function(p) {
         p.setup = function() {
           const cnv = p.createCanvas(600, 360);
-          cnv.parent(a);
-          cnv.elt.style.position = "absolute";
-          cnv.elt.style.inset = "0";
-          a.insertBefore(cnv.elt, a.firstChild);
+          cnv.parent(holder);
           p.noLoop();
+          themeSketch(p);
           game.preview(p, 600, 360);
         };
-      });
+      }));
     });
   }
 
-  buildCards();
+  // previews are drawn once, so wait for the canvas font before drawing them,
+  // and redraw them whenever the design changes
+  themeFontReady().then(buildCards);
+  window.addEventListener("themechange", () => themeFontReady().then(buildCards));
+  mountThemePicker(document.getElementById("home"));
 }

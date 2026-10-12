@@ -1,9 +1,8 @@
-// Snake II — 1 or 2 player, smooth continuous trails.
-// Glowing gradient pill-segments, floating food with heat trails, boost sparks, and death burst effects.
+// Snake — 1 or 2 players on one keyboard, swipe controls on touch screens.
 
 initGame({
    title: "Snake",
-   tag: "glowing pill segments · smooth",
+   tag: "eat · grow · survive",
    fullscreen: true,
    presets: [
     { label: "Normal",     values: [40, 26, 90] },
@@ -11,34 +10,36 @@ initGame({
     { label: "Huge (slow)",values: [55, 36, 110] },
   ],
   buttons: [
-    { id: "btn-reset", label: "Reset",             onClick: () => newGame() },
-    { id: "btn-2p",    label: "2 Player Mode",     onClick: () => toggle2P() },
-    { id: "btn-loop",  label: "Screen Loop",       onClick: () => toggleLoop() },
+    { id: "btn-reset", label: "Restart",       onClick: () => newGame() },
+    { id: "btn-2p",    label: "2 Players",     onClick: () => toggle2P() },
+    { id: "btn-loop",  label: "Wrap edges",    onClick: () => toggleLoop() },
   ],
   sliders: [
     { id: "s-gw", label: "Grid width",  min: 16, max: 60, step: 1 },
     { id: "s-gh", label: "Grid height", min: 12, max: 40, step: 1 },
+    { id: "s-ms", label: "Step time",   min: 50, max: 160, step: 10, fmt: v => v + " ms" },
   ],
   onPreset: ([w, h, ms]) => { gridW = w; gridH = h; baseMs = ms; saveState(); syncSliderUI(); newGame(); },
   onSlider: (id, v) => {
     if (id === "s-gw") gridW = v;
     else if (id === "s-gh") gridH = v;
+    else baseMs = v;
   },
   onClamp: () => {},
-  getSliderValues: () => ({ "s-gw": gridW, "s-gh": gridH }),
+  getSliderValues: () => ({ "s-gw": gridW, "s-gh": gridH, "s-ms": baseMs }),
   info: {
     anim: infoAnim,
     title: "How to play",
     text: [
-      "Steer with the arrow keys or WASD, eat the glowing food to grow, and don't run into your own body. Space gives a short boost that burns tail length.",
-      "2 Player: P1 arrows + Space boost, P2 WASD + Shift boost — outlive your opponent.",
+      "Steer with the arrow keys or WASD (or swipe), eat the glowing food to grow, and don't run into your own body. Space gives a short boost that burns tail length. P pauses.",
+      "2 Players: P1 arrows + Space boost, P2 WASD + Shift boost — the first snake to crash loses. With “Wrap edges” off, the walls are deadly too.",
     ],
   },
 });
 
 let gridW = 40;
 let gridH = 26;
-let baseMs = 100;
+let baseMs = 90;
 let twoPlayer = false;
 let edgeLoop = true;
 
@@ -46,7 +47,11 @@ let s1, s2;
 let food = [];
 let gameOver = false;
 let started = false;
+let paused = false;
 let tickTimer = null;
+let winner = null;     // 2P: "P1" | "P2" | "draw"
+let best = 0;          // 1P high score for the current settings
+let newBest = false;
 
 // boost state
 let s1Boost = false;
@@ -54,13 +59,13 @@ let s2Boost = false;
 let s1BoostTick = 0;
 let s2BoostTick = 0;
 
-const C1     = [127, 176, 105];
-const C1HEAD = [190, 240, 150];
-const C2     = [90,  160, 210];
-const C2HEAD = [150, 210, 255];
-const FOOD_C = [230, 180, 34];
-const BG     = [20,  18,  15];
-const GRID_C = [28,  25,  22];
+const C1     = PAL.mint;
+const C1HEAD = PAL.mintHi;
+const C2     = PAL.sky;
+const C2HEAD = PAL.skyHi;
+const FOOD_C = PAL.sun;
+const BG     = PAL.board;
+const GRID_C = PAL.well;
 
 const MIN_LEN = 3;
 
@@ -81,7 +86,8 @@ function makeSnake(startX, startY, dirX, color, headColor) {
 }
 
 function tickInterval(snake) {
-  if (!twoPlayer) return baseMs;
+  // 1P speeds up a little as you score, down to 70% of the base step
+  if (!twoPlayer) return Math.round(baseMs * Math.max(0.7, 1 - snake.score * 0.01));
   const len = snake.body.length;
   const t = Math.max(0, (len - 3) / 40);
   return Math.round(baseMs * (0.5 + t));
@@ -111,9 +117,14 @@ function newGame() {
   spawnFood(); spawnFood(); spawnFood();
   gameOver = false;
   started = false;
+  paused = false;
+  winner = null;
+  newBest = false;
   s1Boost = s2Boost = false;
+  _t = 0; _s1Next = 0; _s2Next = 0;
+  loadBest();
   clearParticles();
-  setStatus(twoPlayer ? "P1 vs P2 · any key to start" : "any key to start", null);
+  setStatus(twoPlayer ? "P1 vs P2 · press a key to start" : "press a key or tap to start" + (best ? " · best " + best : ""), null);
   clearInterval(tickTimer);
   tickTimer = setInterval(mainTick, 40);
 }
@@ -122,7 +133,7 @@ let _t = 0;
 let _s1Next = 0, _s2Next = 0;
 
 function mainTick() {
-  if (!started || gameOver) return;
+  if (!started || gameOver || paused) return;
   _t += 40;
 
   const move1 = _t >= _s1Next;
@@ -154,11 +165,14 @@ function mainTick() {
 
   if (gameOver) {
     clearInterval(tickTimer);
-    setStatus(`game over · score ${s1.score} · space to restart`, "dead");
+    if (twoPlayer) {
+      setStatus(winner === "draw" ? "draw — both crashed" : winner + " wins!", "solved");
+    } else {
+      if (s1.score > best) { best = s1.score; newBest = true; saveBest(); }
+      setStatus(`game over · score ${s1.score}` + (newBest ? " · new best!" : ` · best ${best}`), "dead");
+    }
   } else {
-    setStatus(twoPlayer
-      ? `P1 kills ${s1.score} (len ${s1.body.length}) · P2 kills ${s2.score} (len ${s2.body.length})`
-      : `score ${s1.score} · length ${s1.body.length}`, null);
+    updateRunningStatus();
   }
 }
 
@@ -214,7 +228,7 @@ function spawnBoostSparks(s) {
       vy: -s.dir.y * random(1.5, 4.5) + random(-0.5, 0.5),
       life: random(80, 140),
       size: random(1.5, 3.5),
-      col: [243, 237, 224], // white rocket spark
+      col: PAL.ink, // white rocket spark
     });
   }
 }
@@ -288,10 +302,29 @@ function checkCollisions() {
   }
 
   if (twoPlayer) {
-    if (s1.dead && s2.dead) gameOver = true;
+    if (s1.dead || s2.dead) {
+      gameOver = true;
+      winner = s1.dead && s2.dead ? "draw" : s1.dead ? "P2" : "P1";
+    }
   } else {
     if (s1.dead) gameOver = true;
   }
+}
+
+function updateRunningStatus() {
+  setStatus(twoPlayer
+    ? `P1 ${s1.score} · P2 ${s2.score}` + (paused ? " · paused" : "")
+    : `score ${s1.score}` + (best ? ` · best ${best}` : "") + (paused ? " · paused" : ""), null);
+}
+
+function bestKey() { return "snake_best_" + gridW + "x" + gridH + "_" + baseMs + (edgeLoop ? "_wrap" : "_walls"); }
+function loadBest() { try { best = parseInt(localStorage.getItem(bestKey())) || 0; } catch { best = 0; } }
+function saveBest() { try { localStorage.setItem(bestKey(), String(best)); } catch {} }
+
+function togglePause() {
+  if (!started || gameOver) return;
+  paused = !paused;
+  updateRunningStatus();
 }
 
 function tryDir(s, dx, dy) {
@@ -314,15 +347,17 @@ function toggleLoop() {
   edgeLoop = !edgeLoop;
   setButtonActive("btn-loop", edgeLoop);
   saveState();
+  newGame();
 }
 
 function saveState() {
-  saveJSON("snake_state", { gridW, gridH, twoPlayer, edgeLoop });
+  saveSettings("snake_state", { gridW, gridH, baseMs, twoPlayer, edgeLoop });
 }
 function loadState() {
-  const d = loadJSON("snake_state");
+  const d = loadSettings("snake_state");
   if (typeof d.gridW === "number") gridW = d.gridW;
   if (typeof d.gridH === "number") gridH = d.gridH;
+  if (typeof d.baseMs === "number" && d.baseMs >= 50 && d.baseMs <= 160) baseMs = d.baseMs;
   if (typeof d.twoPlayer === "boolean") twoPlayer = d.twoPlayer;
   if (typeof d.edgeLoop === "boolean") edgeLoop = d.edgeLoop;
 }
@@ -348,22 +383,22 @@ function infoAnim(p, w, h, frame) {
   const phase = Math.floor(t / PHASE_LEN);
   const localT = (t % PHASE_LEN) / PHASE_LEN;
 
-  p.background(20, 18, 15);
-  p.stroke(28, 25, 22); p.strokeWeight(1);
+  p.background(...PAL.board);
+  p.stroke(...PAL.well); p.strokeWeight(1);
   for (let x = 0; x <= gw; x++) p.line(ox + x*cs, oy, ox + x*cs, oy + gh*cs);
   for (let y = 0; y <= gh; y++) p.line(ox, oy + y*cs, ox + gw*cs, oy + y*cs);
   p.noStroke();
 
   function drawFood(gx, gy) {
     const cx = ox+gx*cs+cs/2, cy = oy+gy*cs+cs/2;
-    p.fill(230, 180, 34, 30); p.circle(cx, cy, cs * 0.9);
-    p.fill(230, 180, 34); p.circle(cx, cy, cs * 0.55);
-    p.fill(243, 237, 224); p.circle(cx, cy, cs * 0.25);
+    p.fill(...PAL.sun, 30); p.circle(cx, cy, cs * 0.9);
+    p.fill(...PAL.sun); p.circle(cx, cy, cs * 0.55);
+    p.fill(...PAL.ink); p.circle(cx, cy, cs * 0.25);
   }
 
   function drawSnake(body, dir) {
-    const [hr, hg, hb] = [190, 240, 150];
-    const [r, g, b] = [127, 176, 105];
+    const [hr, hg, hb] = C1HEAD;
+    const [r, g, b] = PAL.mint;
     body.forEach((seg, i) => {
       if (i === 0) return;
       const prev = body[i - 1];
@@ -381,7 +416,7 @@ function infoAnim(p, w, h, frame) {
       if (i === 0) {
         p.fill(hr, hg, hb, 40); p.circle(cx, cy, cs * 0.95);
         p.fill(hr, hg, hb); p.circle(cx, cy, cs * 0.46);
-        p.fill(20, 18, 15);
+        p.fill(...PAL.board);
         const eyeOff = cs * 0.16;
         if (dir.x !== 0) { p.circle(cx + dir.x*eyeOff, cy - eyeOff, cs*0.08); p.circle(cx + dir.x*eyeOff, cy + eyeOff, cs*0.08); }
         else { p.circle(cx - eyeOff, cy + dir.y*eyeOff, cs*0.08); p.circle(cx + eyeOff, cy + dir.y*eyeOff, cs*0.08); }
@@ -412,7 +447,7 @@ function infoAnim(p, w, h, frame) {
     drawSnake(body, { x: 1, y: 0 });
     if (flash) {
       const cx = ox + 3*cs + cs/2, cy = oy + 2*cs + cs/2;
-      p.noFill(); p.stroke(200, 50, 63, 220); p.strokeWeight(3);
+      p.noFill(); p.stroke(...PAL.rose, 220); p.strokeWeight(3);
       p.circle(cx, cy, cs * 0.9);
     }
   }
@@ -423,8 +458,38 @@ function infoAnim(p, w, h, frame) {
 function setup() {
   const cnv = createCanvas(windowWidth, windowHeight);
   cnv.parent("canvas-wrap");
-  _t = 0; _s1Next = 0; _s2Next = 0;
   newGame();
+
+  // swipe to steer P1, tap to start / restart
+  const wrap = document.getElementById("canvas-wrap");
+  wrap.style.touchAction = "none";
+  let t0 = null;
+  wrap.addEventListener("touchstart", e => { const t = e.changedTouches[0]; t0 = { x: t.clientX, y: t.clientY }; e.preventDefault(); }, { passive: false });
+  wrap.addEventListener("touchend", e => {
+    if (!t0) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - t0.x, dy = t.clientY - t0.y;
+    t0 = null;
+    e.preventDefault();
+    if (gameOver) { newGame(); return; }
+    if (!started) startGame();
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+    if (Math.abs(dx) > Math.abs(dy)) tryDir(s1, Math.sign(dx), 0);
+    else tryDir(s1, 0, Math.sign(dy));
+  }, { passive: false });
+}
+
+function startGame() {
+  started = true;
+  _t = 0; _s1Next = 0; _s2Next = 0;
+  updateRunningStatus();
+}
+
+function mousePressed(e) {
+  // only clicks on the board itself, not on the overlay's buttons
+  if (!e || e.target.tagName !== "CANVAS" || e.type.startsWith("touch")) return;
+  if (gameOver) newGame();
+  else if (!started) startGame();
 }
 
 function windowResized() {
@@ -436,16 +501,20 @@ function draw() {
 
   background(BG[0], BG[1], BG[2]);
 
-  // grid lines
+  // board: soft dot grid, solid frame when the walls are deadly
+  const bw = gridW * cs, bh = gridH * cs;
+  noStroke();
+  fill(...PAL.well);
+  rect(offX, offY, bw, bh, Math.min(14, cs));
   if (cs >= 8) {
-    stroke(GRID_C[0], GRID_C[1], GRID_C[2]);
-    strokeWeight(1);
-    for (let x = 0; x <= gridW; x++) line(offX + x*cs, offY, offX + x*cs, offY + gridH*cs);
-    for (let y = 0; y <= gridH; y++) line(offX, offY + y*cs, offX + gridW*cs, offY + y*cs);
-  } else {
-    noStroke(); fill(GRID_C[0], GRID_C[1], GRID_C[2]);
-    rect(offX, offY, gridW * cs, gridH * cs);
+    fill(...PAL.line);
+    for (let x = 1; x < gridW; x++)
+      for (let y = 1; y < gridH; y++) circle(offX + x * cs, offY + y * cs, 2);
   }
+  noFill();
+  if (edgeLoop) { stroke(...PAL.line); strokeWeight(1); }
+  else { stroke(...PAL.lineHi); strokeWeight(3); }
+  rect(offX, offY, bw, bh, Math.min(14, cs));
 
   // Draw floating food with ascending warmth particles
   noStroke();
@@ -476,7 +545,7 @@ function draw() {
     circle(cx, cy, cs * 0.55);
     
     // Brighter center core
-    fill(243, 237, 224);
+    fill(...PAL.ink);
     circle(cx, cy, cs * 0.25);
   });
 
@@ -485,6 +554,19 @@ function draw() {
   if (twoPlayer) drawSnakeBody(s2, offX, offY, cs);
 
   drawParticles();
+
+  if (gameOver) {
+    if (twoPlayer) {
+      const col = winner === "P1" ? C1 : winner === "P2" ? C2 : PAL.muted;
+      drawBoardOverlay(offX, offY, bw, bh, winner === "draw" ? "Draw" : winner + " wins!", `P1 ${s1.score} · P2 ${s2.score} — space or tap to play again`, col);
+    } else {
+      drawBoardOverlay(offX, offY, bw, bh, newBest ? "New best!" : "Game over", `score ${s1.score} · best ${best} — space or tap to play again`, newBest ? PAL.sun : PAL.rose);
+    }
+  } else if (!started) {
+    drawBoardOverlay(offX, offY, bw, bh, "Ready?", twoPlayer ? "P1: arrows + Space · P2: WASD + Shift" : "arrows / WASD / swipe — press a key to start", PAL.mint);
+  } else if (paused) {
+    drawBoardOverlay(offX, offY, bw, bh, "Paused", "press P to continue", PAL.lilac);
+  }
 }
 
 function drawSnakeBody(s, offX, offY, cs) {
@@ -546,7 +628,7 @@ function drawSnakeBody(s, offX, offY, cs) {
       circle(cx, cy, cs * 0.46);
       
       // Subtle eyes
-      fill(20, 18, 15);
+      fill(...PAL.board);
       const eyeOffset = cs * 0.16;
       if (s.dir.x !== 0) {
         circle(cx + s.dir.x * eyeOffset, cy - eyeOffset, cs * 0.08);
@@ -563,9 +645,15 @@ function drawSnakeBody(s, offX, offY, cs) {
 }
 
 function keyPressed() {
-  if (!started) { started = true; _t = 0; _s1Next = 0; _s2Next = 0; }
-
-  if (gameOver && keyCode === 32) { newGame(); return false; }
+  // ignore typing into the overlay's dropdown / sliders
+  if (document.activeElement && /^(SELECT|INPUT)$/.test(document.activeElement.tagName)) return;
+  if (gameOver) {
+    if (keyCode === 32 || keyCode === ENTER) { newGame(); return false; }
+    return;
+  }
+  if (key === "p" || key === "P" || keyCode === ESCAPE) { togglePause(); return false; }
+  if (!started) startGame();
+  if (paused) return false;
 
   // P1: arrows
   if (keyCode === LEFT_ARROW)  tryDir(s1, -1,  0);
