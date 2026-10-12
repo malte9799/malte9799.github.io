@@ -28,6 +28,8 @@ export const STRINGS = {
       open: name => `Open ${name}`,
       source: 'Source',
       screenshots: 'Screenshots',
+      prevSlide: 'Previous screenshot',
+      nextSlide: 'Next screenshot',
     },
     numbers: {
       title: 'By the numbers.',
@@ -87,6 +89,8 @@ export const STRINGS = {
       open: name => `${name} öffnen`,
       source: 'Quellcode',
       screenshots: 'Screenshots',
+      prevSlide: 'Vorheriger Screenshot',
+      nextSlide: 'Nächster Screenshot',
     },
     numbers: {
       title: 'In Zahlen.',

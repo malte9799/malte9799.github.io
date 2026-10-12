@@ -101,10 +101,9 @@ export const FEATURED = [
     url: 'https://malte9799.github.io/orbis/',
     urlLabel: 'malte9799.github.io/orbis',
     repo: 'https://github.com/malte9799/orbis',
-    // TODO: replace with Orbis screenshots (these still show the old Wetter-Globus UI).
     screenshots: [
       {
-        src: `${BASE}img/wetter.webp`,
+        src: `${BASE}img/orbis.webp`,
         label: { en: 'Forecast', de: 'Vorhersage' },
         alt: {
           en: 'Orbis forecast for Berlin: current conditions with tiles for wind, gusts, humidity, pressure, precipitation, cloud cover, UV index, sunrise and sunset, air quality and pollen',
@@ -112,11 +111,19 @@ export const FEATURED = [
         },
       },
       {
-        src: `${BASE}img/wetter-charts.webp`,
+        src: `${BASE}img/orbis-forecast-charts.webp`,
         label: { en: '48 hours & 14 days', de: '48 Stunden & 14 Tage' },
         alt: {
           en: 'Orbis charts: temperature and precipitation for the next 48 hours, and a 14-day forecast with temperature ranges and wind',
           de: 'Orbis-Diagramme: Temperatur und Niederschlag der nächsten 48 Stunden und die 14-Tage-Vorhersage mit Temperaturspannen und Wind',
+        },
+      },
+      {
+        src: `${BASE}img/orbis-space.webp`,
+        label: { en: 'Solar system', de: 'Sonnensystem' },
+        alt: {
+          en: 'Orbis solar system view: a 3D Earth in space with the list of planets and moons on the left and a fact sheet on the right',
+          de: 'Orbis-Sonnensystem: eine 3D-Erde im All, links die Liste der Planeten und Monde, rechts ein Steckbrief',
         },
       },
     ],

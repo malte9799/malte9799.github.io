@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useInView, useReducedMotion } from 'motion/react';
 import { pick } from '../i18n';
+import { ArrowRight } from './Icons';
 
 const SLIDE_SECONDS = 5;
 
@@ -26,12 +27,34 @@ export function useCarousel(count) {
   const swipe = useRef(null);
 
   const step = dir => setIndex(i => (i + dir + count) % count);
+  const stepRef = useRef(step);
+  stepRef.current = step;
+
+  // Horizontal wheel / trackpad scrolling flips slides. React's onWheel is passive,
+  // so this is attached natively to be able to stop the page from also panning.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || count < 2) return undefined;
+    let locked = false;
+    const onWheel = e => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || Math.abs(e.deltaX) < 8) return;
+      e.preventDefault();
+      if (locked) return;
+      locked = true;
+      stepRef.current(e.deltaX > 0 ? 1 : -1);
+      // One flick fires many events; wait for the inertia to die down.
+      setTimeout(() => (locked = false), 600);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [ref, count]);
 
   return {
     ref,
     index,
     select: setIndex,
     next: () => step(1),
+    prev: () => step(-1),
     playing: inView && !hovered,
     bind: {
       onPointerEnter: e => e.pointerType === 'mouse' && setHovered(true),
@@ -85,5 +108,19 @@ export function CarouselDots({ slides, index, onSelect, onDone, playing, label, 
         </p>
       )}
     </div>
+  );
+}
+
+// Previous / next buttons, laid over the left and right edges of the screenshot.
+export function CarouselArrows({ onPrev, onNext, labels, below = false }) {
+  return (
+    <>
+      <button type="button" className={`carousel-arrow is-prev${below ? ' is-above-nav' : ''}`} aria-label={labels.prev} onClick={onPrev}>
+        <ArrowRight />
+      </button>
+      <button type="button" className={`carousel-arrow is-next${below ? ' is-above-nav' : ''}`} aria-label={labels.next} onClick={onNext}>
+        <ArrowRight />
+      </button>
+    </>
   );
 }
