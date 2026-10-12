@@ -191,8 +191,8 @@ export const FEATURED = [
       en: 'Microsoft’s Fluent emoji as a ready-to-use collection, including the animated versions, with an update script that keeps it in sync. Work on the animated set is ongoing.',
       de: 'Microsofts Fluent-Emojis als sofort nutzbare Sammlung, auch in animierter Form, samt Update-Skript, das sie aktuell hält. Die Arbeit am animierten Set läuft noch.',
     },
-    url: 'https://github.com/malte9799/fluent-emoji',
-    urlLabel: 'github.com/malte9799/fluent-emoji',
+    url: 'https://malte9799.github.io/fluent-emoji/',
+    urlLabel: 'malte9799.github.io/fluent-emoji',
     repo: 'https://github.com/malte9799/fluent-emoji',
     screenshots: [
       {
