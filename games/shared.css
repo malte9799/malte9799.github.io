@@ -107,6 +107,7 @@ canvas {
 .status.dead .dot { background: var(--rose); box-shadow: 0 0 0 4px rgba(255, 110, 140, 0.18); }
 .row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 18px;
 }
