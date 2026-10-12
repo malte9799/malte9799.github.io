@@ -65,7 +65,7 @@ let SIZE = 10, COUNT = 3;
 
 function clamp() { COUNT = Math.min(COUNT, SIZE); }
 
-function saveState() { saveSettings("mygame_state", { SIZE, COUNT }); }
+function saveState() { saveSettings("mygame_state", { SIZE, COUNT }); }  // not saveJSON — p5 owns that name
 function loadState() {
   const d = loadSettings("mygame_state");
   if (typeof d.SIZE === "number") SIZE = d.SIZE;
@@ -88,7 +88,7 @@ function newGame() {
 // LOOP that demonstrates the core move — pulse ring on the target, the move
 // plays out with real motion (slide/pop/draw-in), brief hold, repeat.
 function infoAnim(p, w, h, frame) {
-  p.background(20, 18, 15);
+  p.background(...PAL.board);
   // ...
 }
 
@@ -103,13 +103,13 @@ function setup() {
 }
 
 function draw() {
-  background(20, 18, 15);
+  background(...PAL.board);
   // ...board...
   drawParticles();    // always after the board, before overlays
 
   if (won) {
     setStatus("solved!", "solved");
-    drawBoardOverlay(ox, oy, boardW, boardW, "SOLVED", "subtitle or null", [127, 176, 105]);
+    drawBoardOverlay(ox, oy, boardW, boardW, "Solved!", "subtitle or null", PAL.mint);
   } else {
     setStatus("progress text", null);
   }
@@ -141,8 +141,9 @@ and a preview function next to the others:
 function drawMyGame(p, w, h) {
   // 600×360, instance mode (use p.rect, p.fill, ...), drawn ONCE (noLoop).
   // Draw a pre-baked mid-game snapshot that looks like real play — hardcode
-  // an interesting board state, don't generate randomly.
-  p.background(20, 18, 15);
+  // an interesting board state, don't generate randomly. Keep the board
+  // centred with some margin; previewBg(p, w, h) gives the standard backdrop.
+  previewBg(p, w, h);
   // ...
 }
 ```
@@ -155,7 +156,7 @@ function drawMyGame(p, w, h) {
 | `flashNote(msg)` | small self-clearing note under the buttons |
 | `celebrate(tier)` | win confetti; tier 1-3 scaled to the difficulty the player chose |
 | `confirmHint(fn)` / `resetHint()` | "Sure?" double-press guard for the Hint button; reset on new game |
-| `setButtonActive(id, on)` | gold "toggled" styling for mode buttons (flag mode, 2P, ...) |
+| `setButtonActive(id, on)` | highlighted "toggled" styling for mode buttons (flag mode, 2P, ...) |
 | `syncSliderUI()` | push current values back into sliders + preset dropdown |
 | `saveSettings(key, obj)` / `loadSettings(key)` | localStorage settings; key convention `"<id>_state"`, type-check every field on load |
 | `spawnBurst(x, y, opts)` | radial particle burst; opts: `count, speed:[lo,hi], life:[lo,hi], size:[lo,hi], col:[r,g,b], drag, decay` |
@@ -163,15 +164,22 @@ function drawMyGame(p, w, h) {
 | `drawParticles()` | update + render, call once per `draw()` |
 | `clearParticles()` | on new game |
 | `drawBoardOverlay(x, y, w, h, title, subtitle, col)` | dimmed end-of-game overlay over the board rect |
+| `PAL` / `FONT` | theme palette as `[r, g, b]` triplets, and the canvas font name (applied automatically) |
 | `shuffleArray(arr, rnd?)` | Fisher–Yates; pass a seeded rnd for reproducible boards |
 | `easeInOutQuad(t)` | the house easing for slides/moves |
 
 ## Conventions
 
-- **Theme colors** (`shared.css` has them as CSS vars; in canvas code use the RGB triplets):
-  background `[20,18,15]`, panel `[38,35,32]`, grid lines `[58,53,46]`,
-  ink `[243,237,224]`, muted `[155,145,130]`, gold accent `[230,180,34]`,
-  green/success `[127,176,105]`, red/danger `[200,50,63]`, blue P2 `[90,160,210]`.
+- **Theme** ("Midnight": deep blue-violet with pastel accents, font Outfit).
+  Never hardcode theme colours in canvas code — spread `PAL` from game.js,
+  e.g. `fill(...PAL.sun, 80)` or `p.stroke(...PAL.line)`. The same values are
+  CSS variables in `shared.css`; keep the two in sync if you change one.
+  `board` canvas bg · `well` sunken cells · `panel`/`panelHi` raised tiles ·
+  `line`/`lineHi` grid lines · `ink`/`muted`/`dim` text · `sun` highlight
+  (targets, food, power) · `mint` success / player 1 · `rose` danger ·
+  `sky` player 2 / info · `lilac` brand accent (selection, hover) ·
+  `peach`, `aqua` extras. A colour-matching game may define its own
+  palette when it needs more clearly distinct hues (see flood.js).
 - **Puzzles must be solvable — and clue puzzles unique.** Pick the generation
   strategy by game class:
   - *Any-goal-state* (Lights Out, Netwalk, Bug Nudge): scramble a solved state
@@ -196,8 +204,13 @@ function drawMyGame(p, w, h) {
     generator can't, pre-bake a pool of good seeds instead.
 - **Difficulty settings persist**, board contents don't. Save on change, load at
   startup, always type-check loaded fields.
-- **Keyboard**: support the obvious keys (N = new game, Space = restart/toggle,
-  arrows/WASD where it makes sense) and `return false` to stop page scroll.
+- **Keyboard**: support the obvious keys (N = new game, U / Ctrl+Z = undo,
+  H = hint, Space = restart/toggle, arrows/WASD where it makes sense) and
+  `return false` to stop page scroll. List them in the info text.
+- **Touch**: p5 routes taps to `mousePressed()`; only `return false` (which
+  calls preventDefault) when the press was on the canvas, or the buttons
+  below it stop working on phones. Prefer a mode button (Flag mode, Notes,
+  Cross mode) over right-click/Shift-only actions.
 - **Right-click** on the canvas: add a `contextmenu` preventDefault on
   `#canvas-wrap` if the game uses it.
 - **Win**: `setStatus(..., "solved")` + `celebrate(tier)` exactly once per win.

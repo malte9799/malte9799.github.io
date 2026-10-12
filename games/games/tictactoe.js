@@ -620,14 +620,14 @@ function infoAnim(p, w, h, frame) {
     const { x, y } = bigOrigin(b);
     if (b === activeBoard && localT < DRAW_END) {
       // board the current player must play in
-      p.noStroke();
-      p.fill(...PAL.sun, 22);
-      p.rect(x, y, big, big, big * 0.06);
+      const c = move.mark === 1 ? PAL.mint : PAL.sky;
+      p.fill(...c, 18); p.stroke(...c, 110); p.strokeWeight(1.5);
+      p.rect(x - 2, y - 2, big + 4, big + 4, big * 0.08);
     }
     if (b === move.routed && highlightAlpha > 0) {
-      p.noStroke();
-      p.fill(...PAL.sun, highlightAlpha);
-      p.rect(x, y, big, big, big * 0.06);
+      const c = move.mark === 1 ? PAL.sky : PAL.mint; // the other player plays there next
+      p.fill(...c, highlightAlpha * 0.6); p.stroke(...c, highlightAlpha * 3.6); p.strokeWeight(1.5);
+      p.rect(x - 2, y - 2, big + 4, big + 4, big * 0.08);
     }
     p.stroke(...PAL.line);
     p.strokeWeight(1);
@@ -664,7 +664,7 @@ function infoAnim(p, w, h, frame) {
     const tx = x + big / 2, ty = y + big / 2;
     const e = easeInOutQuad(routeT);
     p.noStroke();
-    p.fill(...PAL.sun, 230);
+    p.fill(...PAL.lilac, 230);
     p.circle(p.lerp(mcx, tx, e), p.lerp(mcy, ty, e), small * 0.2);
   }
 
