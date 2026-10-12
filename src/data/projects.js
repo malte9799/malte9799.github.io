@@ -211,7 +211,8 @@ export const FEATURED = [
   },
 ];
 
-// Smaller projects: compact cards on /projects/ only, not on the landing page.
+// Smaller featured projects: compact cards (no screenshot) at the end of the
+// featured grid on /projects/ only, not on the landing page.
 export const EXTRAS = [
   {
     id: 'just-watch',
@@ -228,5 +229,5 @@ export const EXTRAS = [
   },
 ];
 
-// Repos left out of the live "More on GitHub" list (featured or extras above, or this site).
+// Repos left out of the live "More on GitHub" list (featured above, or this site).
 export const HIDDEN_REPOS = new Set(['paint.net', 'FactorioTools', 'orbis', 'fluent-emoji', 'just-watch', `${GITHUB_USER}.github.io`]);

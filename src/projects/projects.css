@@ -115,19 +115,8 @@
   }
 }
 
-/* ---------- Side projects ---------- */
+/* Small featured cards (EXTRAS): no screenshot. */
 
-.extras {
-  padding-top: clamp(96px, 16vh, 180px);
-}
-.extras .title {
-  margin-bottom: 32px;
-}
-.extras-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
-  gap: 20px;
-}
 .extra {
   display: flex;
 }

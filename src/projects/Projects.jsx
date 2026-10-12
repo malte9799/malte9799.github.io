@@ -172,7 +172,7 @@ function ExtraCard({ project, index }) {
     >
       <SpotlightCard className="extra-card" spotlightColor={p.accent[0]} intensity={0.14} spotlightSize={320} borderGlow={0.6}>
         <p className="extra-eyebrow">{p.eyebrow}</p>
-        <h3 id={`x-${p.id}`} className="extra-name">{p.name}</h3>
+        <h2 id={`x-${p.id}`} className="extra-name">{p.name}</h2>
         <p className="extra-desc">{p.description}</p>
         <ul className="feature-tags" aria-label={strings.builtWith}>
           {p.tags.map(tag => (
@@ -269,7 +269,7 @@ export default function Projects() {
   const t = strings.projects;
   useLenis();
   const rulerSections = useMemo(
-    () => ['.features', '.extras', '.more'].map((selector, i) => ({ selector, label: strings.ruler.projects[i] })),
+    () => ['.features', '.more'].map((selector, i) => ({ selector, label: strings.ruler.projects[i] })),
     [strings]
   );
 
@@ -308,24 +308,9 @@ export default function Projects() {
               wide={i === 0 || (i === FEATURED.length - 1 && i % 2 === 1)}
             />
           ))}
-        </section>
-
-        <section className="container extras" aria-labelledby="extras-title">
-          <motion.h2
-            id="extras-title"
-            className="title"
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.9, ease: EASE }}
-          >
-            {t.extras}
-          </motion.h2>
-          <div className="extras-grid">
-            {EXTRAS.map((project, i) => (
-              <ExtraCard key={project.id} project={project} index={i} />
-            ))}
-          </div>
+          {EXTRAS.map((project, i) => (
+            <ExtraCard key={project.id} project={project} index={i} />
+          ))}
         </section>
 
         <section className="container more" aria-labelledby="more-title">
