@@ -226,6 +226,12 @@ p {
   backdrop-filter: saturate(180%) blur(20px);
   box-shadow: 0 1px 0 var(--hairline);
 }
+/* Over the live 3D canvas: solid instead of blurred (see Hero.jsx). */
+html[data-hero-active] .nav[data-scrolled='true'] {
+  background: rgba(0, 0, 0, 0.82);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
 .nav-inner {
   height: 100%;
   display: flex;

@@ -16,9 +16,8 @@ export function Statement() {
       <div className="container">
         <ScrollReveal
           baseOpacity={0.12}
-          enableBlur
+          enableBlur={false}
           baseRotation={2}
-          blurStrength={6}
           textClassName="statement-text"
           wordAnimationEnd="center center"
           rotationEnd="center center"
