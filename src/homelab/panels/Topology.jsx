@@ -2,6 +2,10 @@ import { useMemo, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { DOMAIN, EXTERNAL, HOST, LINKS, LXCS, STORAGE } from '../data/inventory';
 import { Status, fmtBytes } from '../charts';
+import { targetFromMapId } from '../data/actions';
+import { ActionBar } from '../ui/Actions';
+
+const DOT = { running: 'good', degraded: 'warning', restarting: 'warning', starting: 'warning', stopped: 'critical' };
 
 // Hand-tuned layout in SVG units. Columns follow the request path left → right:
 // internet → caddy → media stack, with the LAN devices above the LXC they feed
@@ -180,7 +184,7 @@ export default function Topology({ state, selected, onSelect }) {
                   <tspan className="hl-lxc-id">{b.lxc.id}</tspan> {b.lxc.name}
                 </text>
                 <text x={b.x + 12} y={b.y + 36} className="hl-sub">
-                  {b.lxc.ip} · {live.cpu.toFixed(0)}% · {fmtBytes(live.mem)}
+                  {live.status === 'stopped' ? 'stopped' : `${b.lxc.ip} · ${live.cpu.toFixed(0)}% · ${fmtBytes(live.mem)}`}
                 </text>
                 {b.lxc.gpu && (
                   <g transform={`translate(${b.x + b.w - 44} ${b.y + 10})`}>
@@ -251,7 +255,7 @@ function Node({ n, state, dim, selected, onSelect, setHover }) {
       <g {...common} aria-label={`${n.svc.name}, ${live.status}`}>
         <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="8" className="hl-chip" />
         <rect x={n.x + 1} y={n.y + n.h - 3} width={(n.w - 2) * busy} height="2" rx="1" className="hl-chip-load" />
-        <circle cx={n.x + 12} cy={n.y + n.h / 2} r="3.5" className={`hl-dot is-${live.status === 'running' ? 'good' : live.status === 'degraded' ? 'warning' : 'critical'}`} />
+        <circle cx={n.x + 12} cy={n.y + n.h / 2} r="3.5" className={`hl-dot is-${DOT[live.status]}`} />
         <text x={n.x + 22} y={n.y + n.h / 2} dy="0.34em" className="hl-chip-name">
           {n.svc.name}
         </text>
@@ -371,7 +375,9 @@ export function NodeDetail({ id, state, onClose }) {
           ✕
         </button>
       </header>
-      {n?.type === 'svc' && <Status status={status === 'running' ? 'good' : 'warning'} label={status} />}
+      {n?.type === 'svc' && <Status status={DOT[status]} label={status} />}
+      {box && <Status status={state.lxc[box.lxc.id].status === 'stopped' ? 'critical' : 'good'} label={state.lxc[box.lxc.id].status} />}
+      <ActionBar key={id} target={targetFromMapId(id)} />
       <dl className="hl-kv">
         {rows.map(([k, v]) => (
           <div key={k}>

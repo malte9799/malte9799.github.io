@@ -48,11 +48,11 @@ const MEDIA_DURATION = {
 let seq = 0;
 const nextId = p => `${p}${++seq}`;
 
-function newScanJob(t) {
+export function newScanJob(t) {
   const i = Math.floor(Math.random() * DOC_NAMES.length);
   return { id: nextId('scan'), name: DOC_NAMES[i], tag: DOC_TAGS[i], pages: Math.ceil(rand(1, 6)), stage: 0, progress: 0, stageAt: t, startedAt: t };
 }
-function newMediaJob(t) {
+export function newMediaJob(t) {
   const movie = Math.random() < 0.55;
   const size = movie ? rand(4, 22) : rand(1.2, 4.5); // GB
   return {
@@ -109,12 +109,15 @@ function initialState(t) {
     immich: { assets: 48_213, uploadsToday: 37, queue: { thumbnails: 0, metadata: 0, faces: 0, smartSearch: 0 } },
     paperless: { docs: 1_284, inbox: 3 },
     caddy: { rps: 2, certDays: 61 },
+    qbit: { paused: false, altSpeed: false, limit: 0 },
+    scrub: {},
+    smartTests: {},
     events: [],
     activity: {},
   };
 }
 
-function event(s, source, text, level = 'info') {
+export function event(s, source, text, level = 'info') {
   s.events = [{ id: nextId('ev'), t: s.t, source, text, level }, ...s.events].slice(0, 60);
 }
 
@@ -123,14 +126,15 @@ function step(prev, t) {
   const dt = TICK_MS / 1000;
 
   // ---- Jellyfin streams ----
-  let streams = prev.streams
+  const up = id => prev.services[id]?.status === 'running' || prev.services[id]?.status === 'degraded';
+  let streams = (up('jellyfin') ? prev.streams : [])
     .map(st => ({ ...st, progress: st.paused ? st.progress : st.progress + dt / 2400, paused: Math.random() < 0.01 ? !st.paused : st.paused }))
     .filter(st => {
       if (st.progress < 1 && Math.random() > 0.004) return true;
       event(s, 'jellyfin', `${st.user} stopped “${st.title}”`);
       return false;
     });
-  if (streams.length < 3 && Math.random() < 0.012) {
+  if (up('jellyfin') && streams.length < 3 && Math.random() < 0.012) {
     const st = newStream();
     streams = [...streams, st];
     event(s, 'jellyfin', `${st.user} started “${st.title}” on ${st.device}${st.transcode ? ' · transcoding' : ''}`);
@@ -143,6 +147,8 @@ function step(prev, t) {
   let scanJobs = prev.scanJobs.map(j => ({ ...j }));
   for (const j of scanJobs) {
     const stage = SCAN_STAGES[j.stage];
+    j.stalled = stage.where in prev.services && !up(stage.where);
+    if (j.stalled) continue;
     j.progress += dt / SCAN_DURATION[stage.id](j);
     if (j.progress >= 1) {
       if (stage.id === 'done') {
@@ -176,7 +182,9 @@ function step(prev, t) {
   let mediaJobs = prev.mediaJobs.map(j => ({ ...j }));
   for (const j of mediaJobs) {
     const stage = MEDIA_STAGES[j.stage];
-    if (stage.id === 'download') j.speed = walk(j.speed, 0.25, 0.04, 0.03, 0.5);
+    j.stalled = (stage.where in prev.services && !up(stage.where)) || (stage.id === 'download' && prev.qbit.paused);
+    if (j.stalled) continue;
+    if (stage.id === 'download') j.speed = walk(j.speed, j.cap ?? (prev.qbit.altSpeed ? 0.05 : prev.qbit.limit ? Math.min(0.25, prev.qbit.limit / 1000) : 0.25), 0.04, 0.01, 0.5);
     j.progress += dt / MEDIA_DURATION[stage.id](j);
     if (j.progress >= 1) {
       if (stage.id === 'done') {
@@ -202,7 +210,7 @@ function step(prev, t) {
   }
   s.mediaJobs = mediaJobs;
   const mediaStage = id => mediaJobs.some(j => MEDIA_STAGES[j.stage].id === id);
-  const dlSpeed = mediaJobs.filter(j => MEDIA_STAGES[j.stage].id === 'download').reduce((a, j) => a + j.speed * 8 * 100, 0); // Mbit/s
+  const dlSpeed = mediaJobs.filter(j => MEDIA_STAGES[j.stage].id === 'download' && !j.stalled).reduce((a, j) => a + j.speed * 8 * 100, 0); // Mbit/s
 
   // ---- Immich ----
   const q = { ...prev.immich.queue };
@@ -217,12 +225,13 @@ function step(prev, t) {
     im.uploadsToday += n;
     event(s, 'immich', `${n} new asset${n > 1 ? 's' : ''} uploaded from iPhone`);
   }
-  q.thumbnails = Math.max(0, q.thumbnails - Math.ceil(rand(0, 4)));
-  q.metadata = Math.max(0, q.metadata - Math.ceil(rand(0, 5)));
-  q.faces = Math.max(0, q.faces - (Math.random() < 0.5 ? 1 : 0));
-  q.smartSearch = Math.max(0, q.smartSearch - (Math.random() < 0.6 ? 1 : 0));
+  const working = name => up('immich-server') && !im.paused?.[name];
+  if (working('thumbnails')) q.thumbnails = Math.max(0, q.thumbnails - Math.ceil(rand(0, 4)));
+  if (working('metadata')) q.metadata = Math.max(0, q.metadata - Math.ceil(rand(0, 5)));
+  if (working('faces') && up('immich-ml')) q.faces = Math.max(0, q.faces - (Math.random() < 0.5 ? 1 : 0));
+  if (working('smartSearch') && up('immich-ml')) q.smartSearch = Math.max(0, q.smartSearch - (Math.random() < 0.6 ? 1 : 0));
   s.immich = im;
-  const mlBusy = q.faces + q.smartSearch > 0;
+  const mlBusy = up('immich-ml') && q.faces + q.smartSearch > 0;
 
   // ---- Occasional background events ----
   if (Math.random() < 0.006) event(s, 'caddy', `GET jellyfin.${'malte.dydns.io'} ${pick(['200', '200', '200', '206', '304'])} · ${pick(['DE', 'DE', 'NL', 'AT'])}`);
@@ -287,15 +296,26 @@ function step(prev, t) {
     let cpuSum = 0;
     let memSum = 60;
     for (const sv of c.services) {
-      const p = prev.services[sv.id];
-      const cpu = walk(p.cpu, svcLoad[sv.id] ?? 0.3, 0.3, 0, 100, 0.35);
-      const mem = walk(p.mem, (svcLoad[sv.id] ?? 0.3) * 8 + (sv.id === 'jellyfin' ? 900 : sv.id === 'immich-ml' ? 1400 : sv.id.includes('db') ? 380 : 140), 6, 20, c.ram);
+      let p = prev.services[sv.id];
+      if (p.until && t >= p.until) {
+        if (p.status === 'restarting' || p.status === 'starting') event(s, sv.name, 'is up again', 'good');
+        p = { ...p, status: p.next ?? 'running', until: null, next: null };
+      }
+      if (p.status === 'stopped') {
+        services[sv.id] = { ...p, cpu: 0, mem: 0 };
+        continue;
+      }
+      const boot = p.status === 'restarting' || p.status === 'starting';
+      const cpu = walk(p.cpu, boot ? 35 : svcLoad[sv.id] ?? 0.3, 0.3, 0, 100, 0.35);
+      const mem = walk(p.mem, (svcLoad[sv.id] ?? 0.3) * 8 + (sv.id === 'jellyfin' ? 900 : sv.id === 'immich-ml' ? 1400 : sv.id.includes('db') ? 380 : 140), 6, 20, c.ram, boot ? 0.05 : 0.12);
       services[sv.id] = { ...p, cpu, mem };
       cpuSum += cpu;
       memSum += mem;
     }
-    const pl = prev.lxc[c.id];
-    lxc[c.id] = { ...pl, cpu: clamp(cpuSum / c.cores, 0, 100), mem: Math.min(memSum, c.ram), uptime: pl.uptime + dt };
+    let pl = prev.lxc[c.id];
+    if (pl.until && t >= pl.until) pl = { ...pl, status: pl.next, until: null, next: null };
+    const off = pl.status === 'stopped';
+    lxc[c.id] = { ...pl, cpu: off ? 0 : clamp(cpuSum / c.cores, 0, 100), mem: off ? 0 : Math.min(memSum, c.ram), uptime: off ? 0 : pl.uptime + dt };
   }
   s.services = services;
   s.lxc = lxc;
@@ -325,6 +345,17 @@ function step(prev, t) {
     };
   }
   s.disks = disks;
+  const scrub = {};
+  for (const [pool, sc] of Object.entries(prev.scrub)) {
+    if (sc.done) {
+      scrub[pool] = sc;
+      continue;
+    }
+    const progress = Math.min(1, sc.progress + dt / 90);
+    scrub[pool] = { ...sc, progress, done: progress >= 1 };
+    if (progress >= 1) event(s, 'zfs', `scrub of ${pool} finished · 0 errors`, 'good');
+  }
+  s.scrub = scrub;
   s.caddy = { ...prev.caddy, rps: walk(prev.caddy.rps, 1 + remote * 6, 0.8, 0, 200, 0.3) };
 
   // ---- Which links carry traffic right now (0..1), used for the flow dots ----
@@ -401,6 +432,14 @@ export const store = {
     return state;
   },
   isPaused: () => paused,
+  /** Apply a change (from an action) and notify immediately. `fn` gets a shallow copy. */
+  mutate(fn) {
+    if (!state) warmUp();
+    const next = { ...state };
+    fn(next);
+    state = next;
+    for (const l of listeners) l();
+  },
   setPaused(v) {
     paused = v;
     for (const l of listeners) l();

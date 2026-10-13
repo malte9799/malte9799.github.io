@@ -1,6 +1,9 @@
 import { DISKS, LXCS, STORAGE } from '../data/inventory';
 import { Meter, Sparkline, Status, fmtBytes, fmtDuration, fmtGB, level } from '../charts';
 import { Card } from './Hardware';
+import { ActionMenu } from '../ui/Actions';
+
+const DOT = { running: 'good', degraded: 'warning', restarting: 'warning', starting: 'warning', stopped: 'critical' };
 
 const KIND_LABEL = { docker: 'docker', systemd: 'systemd', native: 'native' };
 
@@ -10,6 +13,7 @@ export function LxcGrid({ state, onSelect, selected }) {
       {LXCS.map(c => {
         const live = state.lxc[c.id];
         const degraded = c.services.filter(s => state.services[s.id].status !== 'running');
+        const off = live.status === 'stopped';
         return (
           <section key={c.id} className={`hl-card hl-lxc-card${selected === `lxc${c.id}` ? ' is-selected' : ''}`}>
             <header className="hl-card-head">
@@ -20,7 +24,10 @@ export function LxcGrid({ state, onSelect, selected }) {
                   <p>{c.role}</p>
                 </span>
               </button>
-              <Status status={degraded.length ? 'warning' : 'good'} label={degraded.length ? `${degraded.length} degraded` : 'running'} />
+              <div className="hl-head-actions">
+                <Status status={off ? 'critical' : degraded.length ? 'warning' : 'good'} label={off ? 'stopped' : degraded.length ? `${degraded.length} not healthy` : 'running'} />
+                <ActionMenu target={{ type: 'lxc', id: c.id }} />
+              </div>
             </header>
             <div className="hl-lxc-stats">
               <div>
@@ -46,6 +53,7 @@ export function LxcGrid({ state, onSelect, selected }) {
                   <th>Type</th>
                   <th className="is-num">CPU</th>
                   <th className="is-num">RAM</th>
+                  <th aria-label="Actions" />
                 </tr>
               </thead>
               <tbody>
@@ -54,8 +62,9 @@ export function LxcGrid({ state, onSelect, selected }) {
                   return (
                     <tr key={s.id} onClick={() => onSelect(s.id)} className={selected === s.id ? 'is-selected' : ''}>
                       <td>
-                        <span className={`hl-dot-html is-${sv.status === 'running' ? 'good' : 'warning'}`} aria-label={sv.status} />
+                        <span className={`hl-dot-html is-${DOT[sv.status]}`} aria-label={sv.status} />
                         <b>{s.name}</b>
+                        {sv.status !== 'running' && <span className={`hl-state is-${DOT[sv.status]}`}>{sv.status}</span>}
                         {s.port && <span className="hl-port">:{s.port}</span>}
                         <small>{s.detail}</small>
                       </td>
@@ -64,6 +73,9 @@ export function LxcGrid({ state, onSelect, selected }) {
                       </td>
                       <td className="is-num">{sv.cpu.toFixed(1)}%</td>
                       <td className="is-num">{fmtBytes(sv.mem)}</td>
+                      <td className="hl-row-act" onClick={ev => ev.stopPropagation()}>
+                        <ActionMenu target={{ type: 'svc', id: s.id }} />
+                      </td>
                     </tr>
                   );
                 })}
@@ -76,12 +88,13 @@ export function LxcGrid({ state, onSelect, selected }) {
   );
 }
 
-export function StorageCard() {
+export function StorageCard({ scrub = {} }) {
   return (
     <Card title="ZFS pools" sub="Capacity by dataset">
       <div className="hl-pools">
         {STORAGE.map(p => {
           const pct = (p.used / p.size) * 100;
+          const sc = scrub[p.id];
           return (
             <div key={p.id} className="hl-pool">
               <div className="hl-pool-top">
@@ -90,7 +103,15 @@ export function StorageCard() {
                 <span className="hl-pool-num">
                   {fmtGB(p.used)} / {fmtGB(p.size)}
                 </span>
+                <ActionMenu target={{ type: 'pool', id: p.id }} />
               </div>
+              {sc && !sc.done && (
+                <div className="hl-row-meter">
+                  <span>Scrub</span>
+                  <Meter value={sc.progress * 100} warn={101} crit={101} thin label="Scrub progress" />
+                  <b>{(sc.progress * 100).toFixed(0)}%</b>
+                </div>
+              )}
               <Meter value={pct} warn={80} crit={90} label={`${p.id} used`} />
               <ul className="hl-datasets">
                 {p.datasets.map(d => (
@@ -98,6 +119,7 @@ export function StorageCard() {
                     <span>{d.label}</span>
                     <code>{d.id}</code>
                     <b>{fmtGB(d.used)}</b>
+                    <ActionMenu target={{ type: 'dataset', id: d.id }} className="is-hover" />
                   </li>
                 ))}
               </ul>
@@ -111,7 +133,7 @@ export function StorageCard() {
 
 const hours = h => (h > 8760 ? `${(h / 8760).toFixed(1)} y` : `${h} h`);
 
-export function DisksCard({ disks }) {
+export function DisksCard({ disks, tests = {} }) {
   return (
     <Card title="Disks & SMART" sub="Live temperature and throughput · SMART attributes from the last smartctl run" className="is-wide">
       <div className="hl-table-scroll">
@@ -125,6 +147,7 @@ export function DisksCard({ disks }) {
               <th className="is-num">Read / write</th>
               <th className="is-num">Power-on</th>
               <th>Attributes</th>
+              <th aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
@@ -142,6 +165,7 @@ export function DisksCard({ disks }) {
                   </td>
                   <td>
                     <Status status={d.smart.health} label={d.smart.health === 'good' ? 'PASSED' : 'Check'} />
+                    {tests[d.id] && <small>{tests[d.id].kind} self-test running</small>}
                   </td>
                   <td className="is-num">
                     <span className={`hl-temp is-${temp}`}>{live.temp.toFixed(0)} °C</span>
@@ -155,6 +179,9 @@ export function DisksCard({ disks }) {
                   <td className="is-num">{hours(d.smart.powerOnHours)}</td>
                   <td>
                     <SmartAttrs d={d} />
+                  </td>
+                  <td className="hl-row-act">
+                    <ActionMenu target={{ type: 'disk', id: d.id }} />
                   </td>
                 </tr>
               );

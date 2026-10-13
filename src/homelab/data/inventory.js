@@ -13,6 +13,7 @@ export const HOST = {
   ram: 64, // GiB
   swap: 8,
   nic: { name: 'vmbr0', speed: 2500 }, // Mbit
+  web: 'https://192.168.178.10:8006',
 };
 
 export const DOMAIN = 'malte.dydns.io';
@@ -94,9 +95,9 @@ export const STORAGE = [
 export const EXTERNAL = [
   { id: 'clients', label: 'Remote clients', sub: 'TV · phone · browser', icon: 'globe' },
   { id: 'dyndns', label: DOMAIN, sub: 'DynDNS · A record', icon: 'dns' },
-  { id: 'router', label: 'Router', sub: '443 → caddy', icon: 'router' },
+  { id: 'router', label: 'Router', sub: '443 → caddy', icon: 'router', url: 'http://192.168.178.1' },
   { id: 'phone', label: 'Phones', sub: 'Immich app (LAN)', icon: 'phone' },
-  { id: 'scanner-dev', label: 'WiFi scanner', sub: 'scan-to-SMB', icon: 'scanner' },
+  { id: 'scanner-dev', label: 'WiFi scanner', sub: 'scan-to-SMB', icon: 'scanner', url: 'http://192.168.178.40' },
   { id: 'indexers', label: 'Indexers', sub: 'via Prowlarr', icon: 'cloud' },
 ];
 
@@ -111,8 +112,8 @@ export const LXCS = [
     disk: 4,
     role: 'Reverse proxy · TLS',
     services: [
-      { id: 'caddy', name: 'caddy2', kind: 'native', port: 443, detail: 'Let’s Encrypt · auto-HTTPS', image: 'caddy 2.10' },
-      { id: 'ddclient', name: 'ddns-updater', kind: 'systemd', detail: `keeps ${DOMAIN} on the WAN IP` },
+      { id: 'caddy', name: 'caddy2', unit: 'caddy', kind: 'native', port: 443, detail: 'Let’s Encrypt · auto-HTTPS', image: 'caddy 2.10' },
+      { id: 'ddclient', name: 'ddns-updater', unit: 'ddns-updater', kind: 'systemd', detail: `keeps ${DOMAIN} on the WAN IP` },
     ],
   },
   {
@@ -123,6 +124,7 @@ export const LXCS = [
     ram: 12288,
     disk: 32,
     role: 'Docker · media stack',
+    compose: '/opt/media/compose.yml',
     gpu: true,
     mounts: ['tank/media', 'tank/downloads'],
     services: [
@@ -143,13 +145,14 @@ export const LXCS = [
     ram: 8192,
     disk: 24,
     role: 'Docker · photos',
+    compose: '/opt/immich/compose.yml',
     gpu: true,
     mounts: ['tank/photos'],
     services: [
-      { id: 'immich-server', name: 'immich-server', kind: 'docker', port: 2283, image: 'immich-app/immich-server:v2', detail: 'API · web · uploads' },
-      { id: 'immich-ml', name: 'immich-ml', kind: 'docker', image: 'immich-machine-learning:v2-openvino', detail: 'faces · CLIP search (OpenVINO)' },
-      { id: 'immich-db', name: 'postgres', kind: 'docker', image: 'vectorchord-pg16', detail: 'metadata + vectors' },
-      { id: 'immich-redis', name: 'redis', kind: 'docker', image: 'valkey:8', detail: 'job queue' },
+      { id: 'immich-server', name: 'immich-server', container: 'immich_server', kind: 'docker', port: 2283, image: 'immich-app/immich-server:v2', detail: 'API · web · uploads' },
+      { id: 'immich-ml', name: 'immich-ml', container: 'immich_machine_learning', kind: 'docker', image: 'immich-machine-learning:v2-openvino', detail: 'faces · CLIP search (OpenVINO)' },
+      { id: 'immich-db', name: 'postgres', container: 'immich_postgres', kind: 'docker', image: 'vectorchord-pg16', detail: 'metadata + vectors' },
+      { id: 'immich-redis', name: 'redis', container: 'immich_redis', kind: 'docker', image: 'valkey:8', detail: 'job queue' },
     ],
   },
   {
@@ -160,14 +163,15 @@ export const LXCS = [
     ram: 4096,
     disk: 16,
     role: 'Docker + systemd · documents',
+    compose: '/opt/paperless/compose.yml',
     mounts: ['tank/documents'],
     services: [
-      { id: 'smb-inbox', name: 'smb-inbox', kind: 'systemd', port: 445, detail: 'samba share the scanner writes to' },
-      { id: 'scan-watcher', name: 'scan-watcher.service', kind: 'systemd', detail: 'inotify → img2pdf → ocrmypdf → consume/' },
-      { id: 'paperless', name: 'paperless-ngx', kind: 'docker', port: 8000, image: 'paperless-ngx:2.18', detail: 'consume · classify · archive' },
-      { id: 'paperless-redis', name: 'redis', kind: 'docker', image: 'redis:7', detail: 'celery broker' },
-      { id: 'gotenberg', name: 'gotenberg', kind: 'docker', image: 'gotenberg:8', detail: 'office → PDF' },
-      { id: 'tika', name: 'tika', kind: 'docker', image: 'apache/tika', detail: 'text extraction' },
+      { id: 'smb-inbox', name: 'smb-inbox', unit: 'smbd', kind: 'systemd', port: 445, detail: 'samba share the scanner writes to' },
+      { id: 'scan-watcher', name: 'scan-watcher.service', unit: 'scan-watcher', kind: 'systemd', detail: 'inotify → img2pdf → ocrmypdf → consume/' },
+      { id: 'paperless', name: 'paperless-ngx', container: 'paperless-webserver-1', kind: 'docker', port: 8000, image: 'paperless-ngx:2.18', detail: 'consume · classify · archive' },
+      { id: 'paperless-redis', name: 'redis', container: 'paperless-broker-1', kind: 'docker', image: 'redis:7', detail: 'celery broker' },
+      { id: 'gotenberg', name: 'gotenberg', container: 'paperless-gotenberg-1', kind: 'docker', image: 'gotenberg:8', detail: 'office → PDF' },
+      { id: 'tika', name: 'tika', container: 'paperless-tika-1', kind: 'docker', image: 'apache/tika', detail: 'text extraction' },
     ],
   },
 ];

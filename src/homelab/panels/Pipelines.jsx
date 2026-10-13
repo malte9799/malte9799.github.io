@@ -2,10 +2,12 @@ import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
 import { MEDIA_STAGES, SCAN_STAGES } from '../data/inventory';
 import { Meter, Status } from '../charts';
 import { Card } from './Hardware';
+import { ActionMenu, useActions } from '../ui/Actions';
+import Icon from '../ui/Icon';
 
 const fileName = j => `scan_${j.id.slice(4).padStart(4, '0')}.pdf`;
 
-function Pipeline({ stages, jobs, renderJob, onStage, label }) {
+function Pipeline({ stages, jobs, renderJob, onStage, label, jobType }) {
   const busy = new Set(jobs.map(j => j.stage));
   return (
     <LayoutGroup id={label}>
@@ -34,6 +36,8 @@ function Pipeline({ stages, jobs, renderJob, onStage, label }) {
                       transition={{ type: 'spring', stiffness: 260, damping: 28 }}
                     >
                       {renderJob(j, st)}
+                      {j.stalled && <div className="hl-job-stalled">waiting · {st.sub.split(' ')[0]} is not running</div>}
+                      <ActionMenu target={{ type: jobType, id: j.id }} className="hl-job-menu" />
                     </motion.div>
                   ))}
                 </AnimatePresence>
@@ -49,14 +53,24 @@ function Pipeline({ stages, jobs, renderJob, onStage, label }) {
 
 export function ScanPipeline({ jobs, paperless, onSelect }) {
   const active = jobs.filter(j => j.stage < SCAN_STAGES.length - 1);
+  const { open } = useActions();
   return (
     <Card
       title="Scanner → Paperless"
       sub="LXC 103 · scan-watcher.service picks up whatever the scanner drops on the SMB share"
-      aside={active.length ? <Status status="good" label={`${active.length} in progress`} /> : <Status status="idle" label="Waiting for a scan" />}
+      aside={
+        <div className="hl-head-actions">
+          {active.length ? <Status status="good" label={`${active.length} in progress`} /> : <Status status="idle" label="Waiting for a scan" />}
+          <button className="hl-btn" onClick={() => open('scan.test', { type: 'svc', id: 'scan-watcher' })}>
+            <Icon name="play" /> Test scan
+          </button>
+          <ActionMenu target={{ type: 'svc', id: 'paperless' }} />
+        </div>
+      }
       className="is-wide"
     >
       <Pipeline
+        jobType="scanJob"
         label="Scan pipeline"
         stages={SCAN_STAGES}
         jobs={jobs}
@@ -83,16 +97,26 @@ export function ScanPipeline({ jobs, paperless, onSelect }) {
   );
 }
 
-export function MediaPipeline({ jobs, onSelect }) {
+export function MediaPipeline({ jobs, onSelect, qbit }) {
   const active = jobs.filter(j => j.stage < MEDIA_STAGES.length - 1);
+  const { open } = useActions();
   return (
     <Card
       title="Request → Jellyfin"
       sub="LXC 101 · Seerr request travels through the *arr stack into the library"
-      aside={active.length ? <Status status="good" label={`${active.length} active`} /> : <Status status="idle" label="Nothing requested" />}
+      aside={
+        <div className="hl-head-actions">
+          {qbit?.paused ? <Status status="warning" label="Downloads paused" /> : active.length ? <Status status="good" label={`${active.length} active`} /> : <Status status="idle" label="Nothing requested" />}
+          <button className="hl-btn is-primary" onClick={() => open('seerr.request', { type: 'svc', id: 'seerr' })}>
+            <Icon name="plus" /> Request
+          </button>
+          <ActionMenu target={{ type: 'svc', id: 'qbit' }} />
+        </div>
+      }
       className="is-wide"
     >
       <Pipeline
+        jobType="mediaJob"
         label="Media pipeline"
         stages={MEDIA_STAGES}
         jobs={jobs}
@@ -115,7 +139,16 @@ export function MediaPipeline({ jobs, onSelect }) {
 
 export function StreamsCard({ streams }) {
   return (
-    <Card title="Now playing" sub="Jellyfin sessions" aside={<span className="hl-big">{streams.length}</span>}>
+    <Card
+      title="Now playing"
+      sub="Jellyfin sessions"
+      aside={
+        <div className="hl-head-actions">
+          <span className="hl-big">{streams.length}</span>
+          <ActionMenu target={{ type: 'svc', id: 'jellyfin' }} />
+        </div>
+      }
+    >
       {streams.length === 0 && <p className="hl-note">Nobody is watching right now.</p>}
       <ul className="hl-streams">
         <AnimatePresence initial={false}>
@@ -123,7 +156,10 @@ export function StreamsCard({ streams }) {
             <motion.li key={s.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="hl-stream-top">
                 <b>{s.title}</b>
-                <span className={`hl-tag${s.transcode ? ' is-accent' : ''}`}>{s.transcode ? 'Transcode' : 'Direct'}</span>
+                <span className="hl-head-actions">
+                  <span className={`hl-tag${s.transcode ? ' is-accent' : ''}`}>{s.transcode ? 'Transcode' : 'Direct'}</span>
+                  <ActionMenu target={{ type: 'stream', id: s.id }} />
+                </span>
               </div>
               <div className="hl-job-meta">
                 {s.user} · {s.device} · {s.res} · {s.bitrate.toFixed(0)} Mb/s{s.paused ? ' · paused' : ''}
@@ -147,7 +183,16 @@ export function ImmichCard({ immich }) {
   ];
   const max = Math.max(20, ...rows.map(r => r[1]));
   return (
-    <Card title="Immich jobs" sub="LXC 102 · ML on the Arc via OpenVINO" aside={<span className="hl-big">{immich.assets.toLocaleString()}</span>}>
+    <Card
+      title="Immich jobs"
+      sub="LXC 102 · ML on the Arc via OpenVINO"
+      aside={
+        <div className="hl-head-actions">
+          <span className="hl-big">{immich.assets.toLocaleString()}</span>
+          <ActionMenu target={{ type: 'svc', id: 'immich-server' }} />
+        </div>
+      }
+    >
       <ul className="hl-queue">
         {rows.map(([k, v]) => (
           <li key={k}>
@@ -155,7 +200,7 @@ export function ImmichCard({ immich }) {
             <div className="hl-queue-bar">
               <div style={{ width: `${(v / max) * 100}%` }} />
             </div>
-            <b>{v || 'idle'}</b>
+            <b>{immich.paused?.all ? 'paused' : v || 'idle'}</b>
           </li>
         ))}
       </ul>
