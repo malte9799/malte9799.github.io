@@ -15,6 +15,9 @@ npm run build     # static site in dist/
   lives in `src/i18n/strings.js` (UI) and `src/data/projects.js` (projects, as `{ en, de }`).
   English pages send German-language browsers to `/de/` unless the visitor picked a
   language with the EN/DE switch.
+- `homelab/index.html` / `src/homelab/` — homelab dashboard (Proxmox host, LXCs, service map,
+  live pipelines). Runs on simulated data for now: the setup is described in
+  `src/homelab/data/inventory.js`, the fake live feed in `src/homelab/data/simulator.js`
 - `src/components/reactbits/` — text and card effects adapted from [React Bits](https://reactbits.dev)
 - `games/`, `old/` — hand-written static pages, copied into `dist/` unchanged
 
