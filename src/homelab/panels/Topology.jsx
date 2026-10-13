@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { DOMAIN, EXTERNAL, HOST, LINKS, LXCS, STORAGE } from '../data/inventory';
 import { Status, fmtBytes } from '../charts';
 import { targetFromMapId } from '../data/actions';
 import { ActionBar } from '../ui/Actions';
+import Icon from '../ui/Icon';
 
 const DOT = { running: 'good', degraded: 'warning', restarting: 'warning', starting: 'warning', stopped: 'critical' };
 
@@ -308,18 +309,7 @@ function ExtIcon({ kind, x, y }) {
 
 /** Side panel for whatever is selected on the map. */
 export function NodeDetail({ id, state, onClose }) {
-  if (!id) {
-    return (
-      <aside className="hl-detail is-empty">
-        <p>
-          Click a container, LXC, device or dataset on the map to see how it is wired up. Hover to highlight its connections.
-        </p>
-        <p className="hl-note">
-          Public entry: <b>jellyfin.{DOMAIN}</b> and <b>seerr.{DOMAIN}</b> → router :443 → Caddy (LXC 100). Everything else is LAN-only.
-        </p>
-      </aside>
-    );
-  }
+  if (!id) return null;
   const n = LAYOUT.nodes[id];
   const box = id.startsWith('lxc') ? LAYOUT.boxes.find(b => `lxc${b.lxc.id}` === id) : null;
   const links = LINKS.filter(l => l.from === id || l.to === id || (box && box.lxc.services.some(s => s.id === l.from || s.id === l.to)));
@@ -414,5 +404,37 @@ export function NodeDetail({ id, state, onClose }) {
         </>
       )}
     </aside>
+  );
+}
+
+/** The map's how-to, tucked behind an "i" button next to the heading. */
+export function MapInfo() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = ev => !ref.current?.contains(ev.target) && setOpen(false);
+    const key = ev => ev.key === 'Escape' && (ev.stopPropagation(), setOpen(false));
+    document.addEventListener('pointerdown', close);
+    window.addEventListener('keydown', key, true);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      window.removeEventListener('keydown', key, true);
+    };
+  }, [open]);
+  return (
+    <span className="hl-info" ref={ref}>
+      <button className="hl-icon-btn" onClick={() => setOpen(o => !o)} aria-expanded={open} aria-label="How to use the map">
+        <Icon name="info" />
+      </button>
+      {open && (
+        <div className="hl-info-pop" role="dialog" aria-label="How to use the map">
+          <p>Click a container, LXC, device or dataset to see how it is wired up and what you can do with it. Hover to highlight its connections.</p>
+          <p className="hl-note">
+            Public entry: <b>jellyfin.{DOMAIN}</b> and <b>seerr.{DOMAIN}</b> → router :443 → Caddy (LXC 100). Everything else is LAN-only.
+          </p>
+        </div>
+      )}
+    </span>
   );
 }

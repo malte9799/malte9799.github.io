@@ -7,7 +7,7 @@ import Icon from './ui/Icon';
 import { DISKS, DOMAIN, HOST, LXCS } from './data/inventory';
 import { Status, fmtDuration } from './charts';
 import { CpuCard, GpuCard, MemoryCard, NetworkCard } from './panels/Hardware';
-import Topology, { NodeDetail } from './panels/Topology';
+import Topology, { MapInfo, NodeDetail } from './panels/Topology';
 import { ImmichCard, MediaPipeline, ScanPipeline, StreamsCard } from './panels/Pipelines';
 import { DisksCard, LxcGrid, StorageCard } from './panels/Services';
 import Events from './panels/Events';
@@ -157,8 +157,11 @@ function DashboardBody() {
         </section>
 
         <section id="map" className="hl-section">
-          <h2 className="hl-h2">How it’s wired</h2>
-          <div className="hl-map-layout">
+          <div className="hl-h2-row">
+            <h2 className="hl-h2">How it’s wired</h2>
+            <MapInfo />
+          </div>
+          <div className={`hl-map-layout${selected ? ' has-detail' : ''}`}>
             <div className="hl-card hl-map-card" onClick={() => setSelected(null)}>
               <Topology state={state} selected={selected} onSelect={select} />
             </div>
