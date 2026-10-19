@@ -29,7 +29,7 @@ export default function App() {
       <Routes path={path} query={query} />
       {!home && <ContactBand />}
       {!home && <Footer />}
-      <FloatingContact />
+      {!home && <FloatingContact />}
       <CartDrawer />
       <CookieBanner />
     </CartProvider>
