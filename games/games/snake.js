@@ -240,6 +240,7 @@ function spawnEatSparks(x, y, col) {
 function eatFood() {
   const { cs, offX, offY } = boardLayout();
 
+  let eaten = 0;
   food = food.filter(f => {
     const cx = offX + f.x * cs + cs / 2;
     const cy = offY + f.y * cs + cs / 2;
@@ -250,18 +251,20 @@ function eatFood() {
       s1.body.push({ ...s1.body[s1.body.length - 1] });
       s1.score++;
       spawnEatSparks(cx, cy, FOOD_C);
-      spawnFood();
+      eaten++;
       return false;
     }
     if (hit2) {
       s2.body.push({ ...s2.body[s2.body.length - 1] });
       s2.score++;
       spawnEatSparks(cx, cy, FOOD_C);
-      spawnFood();
+      eaten++;
       return false;
     }
     return true;
   });
+  // spawn after filtering — spawning inside the filter pushed onto the old array and got overwritten
+  for (let i = 0; i < eaten; i++) spawnFood();
 }
 
 function checkCollisions() {
