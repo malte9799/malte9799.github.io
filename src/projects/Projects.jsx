@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
@@ -154,6 +154,35 @@ function FeaturedCard({ project: raw, index, wide }) {
   );
 }
 
+// A looping capture as a carousel slide: plays from the start whenever it is shown.
+function SlideVideo({ slide, active, shown }) {
+  const ref = useRef(null);
+  const reduced = useReducedMotion();
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    if (active && !reduced) {
+      v.play().catch(() => {});
+    } else {
+      v.pause();
+      if (!shown) v.currentTime = 0;
+    }
+  }, [active, shown, reduced]);
+  return (
+    <video
+      ref={ref}
+      className={shown ? 'is-active' : ''}
+      src={slide.src}
+      poster={slide.poster}
+      aria-label={slide.alt}
+      muted
+      loop
+      playsInline
+      preload="metadata"
+    />
+  );
+}
+
 // Screenshots of a compact card: the first slide is the hero, the rest rotate in.
 function ExtraMedia({ project, label }) {
   const lang = useLang();
@@ -163,9 +192,13 @@ function ExtraMedia({ project, label }) {
   return (
     <div ref={carousel.ref} className="carousel extra-media" {...carousel.bind}>
       <a href={slides[carousel.index].url} className="extra-stack" aria-label={`${label}: ${slides[carousel.index].label}`}>
-        {slides.map((slide, i) => (
-          <img key={slide.src} src={slide.src} alt={slide.alt} className={i === carousel.index ? 'is-active' : ''} loading="lazy" />
-        ))}
+        {slides.map((slide, i) =>
+          slide.src.endsWith('.mp4') ? (
+            <SlideVideo key={slide.src} slide={slide} active={i === carousel.index && carousel.playing} shown={i === carousel.index} />
+          ) : (
+            <img key={slide.src} src={slide.src} alt={slide.alt} className={i === carousel.index ? 'is-active' : ''} loading="lazy" />
+          )
+        )}
       </a>
       <CarouselArrows onPrev={carousel.prev} onNext={carousel.next} labels={{ prev: t.work.prevSlide, next: t.work.nextSlide }} />
       <CarouselDots

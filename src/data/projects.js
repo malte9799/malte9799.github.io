@@ -240,7 +240,8 @@ export const EXTRAS = [
     // Compact card with a carousel: the animated capture first, stills after it.
     screenshots: [
       {
-        src: `${BASE}img/permanent-collection.webp`,
+        src: `${BASE}img/permanent-collection.mp4`,
+        poster: `${BASE}img/permanent-collection-poster.webp`,
         label: { en: 'Gallery', de: 'Galerie' },
         alt: {
           en: 'Looking around the chair cylinder: the camera follows the cursor, then the room turns as it is dragged',

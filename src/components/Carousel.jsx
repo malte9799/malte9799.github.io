@@ -10,6 +10,7 @@ const SLIDE_SECONDS = 5;
 export const resolveSlides = (project, lang) =>
   project.screenshots.map(shot => ({
     src: shot.src,
+    poster: shot.poster,
     alt: pick(shot.alt, lang),
     label: pick(shot.label, lang) ?? pick(project.name, lang),
     url: shot.url ?? project.url,

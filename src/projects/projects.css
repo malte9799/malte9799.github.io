@@ -139,7 +139,8 @@
   display: block;
   aspect-ratio: 16 / 10;
 }
-.extra-stack img {
+.extra-stack img,
+.extra-stack video {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -148,7 +149,8 @@
   opacity: 0;
   transition: opacity 0.8s var(--ease-out);
 }
-.extra-stack img.is-active {
+.extra-stack img.is-active,
+.extra-stack video.is-active {
   opacity: 1;
 }
 .extra-eyebrow {
