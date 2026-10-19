@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
@@ -154,7 +154,86 @@ function FeaturedCard({ project: raw, index, wide }) {
   );
 }
 
-function ExtraCard({ project, index }) {
+// A capture as a carousel slide. It plays from the start whenever the slide is shown
+// (and the carousel is playing) and reports its length and play state to the carousel,
+// which only starts its timer once the video is actually running.
+function SlideVideo({ slide, shown, wantPlay, onMeta, onState }) {
+  const ref = useRef(null);
+  const reduced = useReducedMotion();
+  const play = () => ref.current?.play().catch(() => {});
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    if (wantPlay && !reduced) play();
+    else {
+      v.pause();
+      if (!shown) v.currentTime = 0;
+    }
+  }, [wantPlay, shown, reduced]);
+  return (
+    <video
+      ref={ref}
+      className={shown ? 'is-active' : ''}
+      src={slide.src}
+      poster={slide.poster}
+      aria-label={slide.alt}
+      muted
+      playsInline
+      preload="auto"
+      onLoadedMetadata={e => onMeta(e.currentTarget.duration)}
+      onCanPlay={() => wantPlay && !reduced && play()}
+      onPlaying={() => shown && onState(true)}
+      onPause={e => shown && !e.currentTarget.ended && onState(false)}
+      onWaiting={() => shown && onState(false)}
+    />
+  );
+}
+
+// Screenshots of a compact card: the first slide is the hero, the rest rotate in.
+function ExtraMedia({ project, label }) {
+  const lang = useLang();
+  const t = useT();
+  const slides = resolveSlides(project, lang);
+  const carousel = useCarousel(slides.length);
+  const [video, setVideo] = useState({ duration: null, playing: false });
+  const isVideo = slides[carousel.index].src.endsWith('.mp4');
+  // A new slide starts with the video not yet running.
+  useEffect(() => setVideo(v => ({ ...v, playing: false })), [carousel.index]);
+  return (
+    <div ref={carousel.ref} className="carousel extra-media" {...carousel.bind}>
+      <a href={slides[carousel.index].url} className="extra-stack" aria-label={`${label}: ${slides[carousel.index].label}`}>
+        {slides.map((slide, i) =>
+          slide.src.endsWith('.mp4') ? (
+            <SlideVideo
+              key={slide.src}
+              slide={slide}
+              shown={i === carousel.index}
+              wantPlay={i === carousel.index && carousel.inView}
+              onMeta={duration => setVideo(v => ({ ...v, duration }))}
+              onState={playing => setVideo(v => ({ ...v, playing }))}
+            />
+          ) : (
+            <img key={slide.src} src={slide.src} alt={slide.alt} className={i === carousel.index ? 'is-active' : ''} loading="lazy" />
+          )
+        )}
+      </a>
+      <CarouselArrows onPrev={carousel.prev} onNext={carousel.next} labels={{ prev: t.work.prevSlide, next: t.work.nextSlide }} />
+      <CarouselDots
+        slides={slides}
+        index={carousel.index}
+        onSelect={carousel.select}
+        onDone={carousel.next}
+        // A video keeps playing under the pointer, so hovering does not pause its timer either.
+        playing={isVideo ? carousel.inView && video.playing : carousel.playing}
+        duration={isVideo && video.duration ? video.duration : undefined}
+        label={t.work.screenshots}
+        overlay
+      />
+    </div>
+  );
+}
+
+function ExtraCard({ project, index, wide = false, span = false }) {
   const lang = useLang();
   const strings = useT();
   const t = strings.projects;
@@ -162,7 +241,7 @@ function ExtraCard({ project, index }) {
 
   return (
     <motion.article
-      className="extra"
+      className={`extra${wide ? ' extra-wide' : ''}${span ? ' extra-span' : ''}`}
       style={{ '--a': p.accent[0] }}
       aria-labelledby={`x-${p.id}`}
       initial={{ opacity: 0, y: 24 }}
@@ -171,25 +250,42 @@ function ExtraCard({ project, index }) {
       transition={{ duration: 0.8, delay: index * 0.06, ease: EASE }}
     >
       <SpotlightCard className="extra-card" spotlightColor={p.accent[0]} intensity={0.14} spotlightSize={320} borderGlow={0.6}>
-        <p className="extra-eyebrow">{p.eyebrow}</p>
-        <h2 id={`x-${p.id}`} className="extra-name">{p.name}</h2>
-        <p className="extra-desc">{p.description}</p>
-        <ul className="feature-tags" aria-label={strings.builtWith}>
-          {p.tags.map(tag => (
-            <li key={tag} className="chip">
-              {tag}
-            </li>
-          ))}
-        </ul>
-        <div className="extra-links">
-          <a className="text-link" href={p.url}>
-            {t.open}
-            <ArrowUpRight style={{ width: 12, height: 12 }} />
-          </a>
-          <a className="text-link" href={p.repo}>
-            {t.viewSource}
-            <ArrowUpRight style={{ width: 12, height: 12 }} />
-          </a>
+        {project.screenshots && <ExtraMedia project={project} label={`${t.open}: ${p.name}`} />}
+        <div className="extra-body">
+          <p className="extra-eyebrow">{p.eyebrow}</p>
+          <h2 id={`x-${p.id}`} className="extra-name">{p.name}</h2>
+          <p className="extra-desc">{p.description}</p>
+          <ul className="feature-tags" aria-label={strings.builtWith}>
+            {p.tags.map(tag => (
+              <li key={tag} className="chip">
+                {tag}
+              </li>
+            ))}
+          </ul>
+          {project.screenshots ? (
+            // Cards with media get the same white button as the big cards.
+            <div className="feature-links">
+              <a className="btn btn-primary" href={p.url}>
+                {t.open}
+                <ArrowUpRight />
+              </a>
+              <a className="text-link" href={p.repo}>
+                {t.viewSource}
+                <ArrowUpRight style={{ width: 12, height: 12 }} />
+              </a>
+            </div>
+          ) : (
+            <div className="extra-links">
+              <a className="text-link" href={p.url}>
+                {t.open}
+                <ArrowUpRight style={{ width: 12, height: 12 }} />
+              </a>
+              <a className="text-link" href={p.repo}>
+                {t.viewSource}
+                <ArrowUpRight style={{ width: 12, height: 12 }} />
+              </a>
+            </div>
+          )}
         </div>
       </SpotlightCard>
     </motion.article>
@@ -264,6 +360,13 @@ function RepoList() {
   );
 }
 
+// Order of the cards. The wide ones take a full row, the rest sit two to a row.
+const ORDER = ['orbis', 'permanent-collection', 'fluent-emoji', 'paintnet', 'games', 'factoriotools', 'just-watch'];
+const WIDE = new Set(['orbis', 'permanent-collection']);
+const SPAN = new Set(['just-watch']); // alone in the last row, so it fills it
+const ALL = [...FEATURED.map(project => ({ kind: 'feature', project })), ...EXTRAS.map(project => ({ kind: 'extra', project }))];
+const CARDS = ORDER.map(id => ALL.find(c => c.project.id === id)).filter(Boolean);
+
 export default function Projects() {
   const strings = useT();
   const t = strings.projects;
@@ -299,18 +402,13 @@ export default function Projects() {
         </header>
 
         <section className="container features" aria-label={t.featured}>
-          {FEATURED.map((project, i) => (
-            <FeaturedCard
-              key={project.id}
-              project={project}
-              index={i}
-              // First card spans the row; so does the last one if it would sit alone.
-              wide={i === 0 || (i === FEATURED.length - 1 && i % 2 === 1)}
-            />
-          ))}
-          {EXTRAS.map((project, i) => (
-            <ExtraCard key={project.id} project={project} index={i} />
-          ))}
+          {CARDS.map(({ kind, project }, i) =>
+            kind === 'feature' ? (
+              <FeaturedCard key={project.id} project={project} index={i} wide={WIDE.has(project.id)} />
+            ) : (
+              <ExtraCard key={project.id} project={project} index={i} wide={WIDE.has(project.id)} span={SPAN.has(project.id)} />
+            )
+          )}
         </section>
 
         <section className="container more" aria-labelledby="more-title">

@@ -111,14 +111,6 @@ export const FEATURED = [
         },
       },
       {
-        src: `${BASE}img/orbis-forecast-charts.webp`,
-        label: { en: '48 hours & 14 days', de: '48 Stunden & 14 Tage' },
-        alt: {
-          en: 'Orbis charts: temperature and precipitation for the next 48 hours, and a 14-day forecast with temperature ranges and wind',
-          de: 'Orbis-Diagramme: Temperatur und Niederschlag der nächsten 48 Stunden und die 14-Tage-Vorhersage mit Temperaturspannen und Wind',
-        },
-      },
-      {
         src: `${BASE}img/orbis-map-wind.webp`,
         label: { en: 'Weather map', de: 'Wetterkarte' },
         url: 'https://malte9799.github.io/orbis/#/karte',
@@ -237,6 +229,30 @@ export const EXTRAS = [
     },
     url: `${BASE}projects/permanent-collection/`,
     repo: 'https://github.com/malte9799/malte9799.github.io/tree/main/src/permanent-collection',
+    // Compact card with a carousel: the animated capture first, stills after it.
+    screenshots: [
+      {
+        src: `${BASE}img/permanent-collection.mp4`,
+        poster: `${BASE}img/permanent-collection-poster.webp`,
+        label: { en: 'Gallery', de: 'Galerie' },
+        alt: {
+          en: 'Looking around the chair cylinder: the camera follows the cursor, then the room turns as it is dragged',
+          de: 'Umschauen im Stuhl-Zylinder: Die Kamera folgt dem Cursor, dann dreht sich der Raum beim Ziehen',
+        },
+      },
+      {
+        src: `${BASE}img/permanent-collection-shop.webp`,
+        label: { en: 'Shop', de: 'Shop' },
+        url: `${BASE}projects/permanent-collection/#/shop`,
+        alt: { en: 'The shop page with filters and a product grid', de: 'Die Shop-Seite mit Filtern und Produktraster' },
+      },
+      {
+        src: `${BASE}img/permanent-collection-product.webp`,
+        label: { en: 'Product page', de: 'Produktseite' },
+        url: `${BASE}projects/permanent-collection/#/product/panton-chair`,
+        alt: { en: 'A product page with finish options and cart button', de: 'Eine Produktseite mit Ausführungen und Warenkorb-Button' },
+      },
+    ],
     accent: ['#d8d2c4', '#a79f8d'],
     tags: { en: ['React', 'Motion', 'CSS 3D', 'EN / DE'], de: ['React', 'Motion', 'CSS 3D', 'DE / EN'] },
   },
