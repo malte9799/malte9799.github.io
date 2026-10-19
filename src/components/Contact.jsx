@@ -371,9 +371,6 @@ const Contact = forwardRef(function Contact({ t, wide = false, theme = 'dark', d
                   {caption}
                 </span>
               </span>
-              <span className="contact-count">
-                {pad(shown)} / {pad(drafts.length - 1)}
-              </span>
             </div>
             <p className="contact-hint">{t.hint}</p>
           </div>

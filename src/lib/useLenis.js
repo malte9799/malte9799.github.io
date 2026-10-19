@@ -9,8 +9,8 @@ gsap.registerPlugin(ScrollTrigger);
 let current = null;
 
 // Scroll the page, smoothly through Lenis when it runs.
-export function scrollToY(top, { immediate = false } = {}) {
-  if (current) current.scrollTo(top, { immediate, force: true });
+export function scrollToY(top, { immediate = false, duration, easing, lerp } = {}) {
+  if (current) current.scrollTo(top, { immediate, force: true, duration, easing, lerp });
   else window.scrollTo({ top, behavior: immediate ? 'instant' : 'smooth' });
 }
 

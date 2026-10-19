@@ -193,7 +193,10 @@
 }
 .contact-purpose {
   position: relative;
+  flex: 1 1 auto;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .contact-measure {
@@ -203,11 +206,10 @@
   position: absolute;
   top: 0;
   left: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-}
-.contact-count {
-  color: var(--c-text-3);
-  font-variant-numeric: tabular-nums;
 }
 .contact-hint {
   display: none;
