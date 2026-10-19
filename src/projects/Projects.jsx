@@ -8,7 +8,7 @@ import { CarouselArrows, CarouselDots, resolveSlides, useCarousel } from '../com
 import BlurText from '../components/reactbits/BlurText';
 import SpotlightCard from '../components/reactbits/SpotlightCard';
 import { ArrowUpRight, StarIcon } from '../components/Icons';
-import { EXTRAS, FEATURED, GITHUB_URL } from '../data/projects';
+import { CARD_ORDER, EXTRAS, FEATURED, GITHUB_URL } from '../data/projects';
 import { useLenis } from '../lib/useLenis';
 import { localize, useLang, useT } from '../i18n';
 import { useRepos } from './useRepos';
@@ -361,11 +361,10 @@ function RepoList() {
 }
 
 // Order of the cards. The wide ones take a full row, the rest sit two to a row.
-const ORDER = ['orbis', 'permanent-collection', 'fluent-emoji', 'paintnet', 'games', 'factoriotools', 'just-watch'];
 const WIDE = new Set(['orbis', 'permanent-collection']);
 const SPAN = new Set(['just-watch']); // alone in the last row, so it fills it
 const ALL = [...FEATURED.map(project => ({ kind: 'feature', project })), ...EXTRAS.map(project => ({ kind: 'extra', project }))];
-const CARDS = ORDER.map(id => ALL.find(c => c.project.id === id)).filter(Boolean);
+const CARDS = CARD_ORDER.map(id => ALL.find(c => c.project.id === id)).filter(Boolean);
 
 export default function Projects() {
   const strings = useT();

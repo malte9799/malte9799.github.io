@@ -260,3 +260,6 @@ export const EXTRAS = [
 
 // Repos left out of the live "More on GitHub" list (featured above, or this site).
 export const HIDDEN_REPOS = new Set(['paint.net', 'FactorioTools', 'orbis', 'fluent-emoji', 'just-watch', `${GITHUB_USER}.github.io`]);
+
+// Display order of the cards, shared by the landing page (featured only) and /projects/.
+export const CARD_ORDER = ['orbis', 'permanent-collection', 'fluent-emoji', 'paintnet', 'games', 'factoriotools', 'just-watch'];

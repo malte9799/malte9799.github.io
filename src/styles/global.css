@@ -557,126 +557,202 @@ html.has-scroll-ruler {
 html.has-scroll-ruler::-webkit-scrollbar {
   display: none;
 }
-.scroll-ruler {
-  --t: 0;
-  --ruler-w: 64px;
+.ruler,
+.ruler-ghost,
+.ruler-names,
+.ruler-pools,
+.ruler-static {
+  --ruler-accent: #2997ff;
+  --ruler-accent-ink: #7dbaff;
+}
+.ruler {
   position: fixed;
-  top: 52px;
+  top: 0;
   right: 0;
   bottom: 0;
-  z-index: 60;
-  width: var(--ruler-w);
-  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  z-index: 45;
+  overflow: hidden;
+  cursor: crosshair;
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 }
-.scroll-ruler[data-open] {
-  width: 300px;
-  cursor: grab;
+.ruler-frost {
+  position: absolute;
+  inset: 0;
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+  background-color: color-mix(in srgb, var(--bg) 55%, transparent);
 }
-.scroll-ruler[data-dragging] {
-  cursor: grabbing;
-}
-.scroll-ruler > * {
+.ruler-ticks {
   position: absolute;
   top: 0;
-}
-.scroll-ruler-bg {
-  inset: 0;
-  opacity: var(--t);
-  pointer-events: none;
-  background: linear-gradient(to left, rgba(10, 10, 12, 0.94) 0, rgba(10, 10, 12, 0.86) 55%, rgba(10, 10, 12, 0));
-}
-.scroll-ruler-ticks {
-  right: 10px;
-  width: calc(var(--ruler-w) - 10px);
-  height: 0;
+  left: 0;
+  right: 0;
   will-change: transform;
-  pointer-events: none;
 }
-.scroll-ruler-tick {
+.ruler-tick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+}
+.ruler-tick-line {
   position: absolute;
   right: 0;
-  top: calc(var(--i) * var(--b));
-  width: 8px;
+  top: 0;
   height: 1px;
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--text);
+  transform-origin: right center;
 }
-.scroll-ruler-tick.is-major {
-  width: 18px;
-  background: rgba(255, 255, 255, 0.6);
-}
-.scroll-ruler-tick span {
+.ruler-tick-num {
   position: absolute;
-  right: 24px;
   top: 0;
   transform: translateY(-50%);
-  font-size: 11px;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+.ruler-bracket {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+}
+.ruler-bracket-fill {
+  position: absolute;
+  inset: 0;
+  background: var(--text);
+}
+.ruler-bracket-edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--text);
+  opacity: 0.5;
+}
+.ruler-needle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  opacity: 0;
+}
+.ruler-needle-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--ruler-accent);
+  box-shadow: 0 0 6px var(--ruler-accent);
+}
+.ruler-readout {
+  position: absolute;
+  right: 2px;
+  top: 4px;
+  display: flex;
+  white-space: nowrap;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: var(--ruler-accent-ink);
+}
+.ruler-digits {
+  display: inline-flex;
+  height: 1em;
   line-height: 1;
-  color: var(--text-3);
-  font-variant-numeric: tabular-nums;
+  overflow: hidden;
 }
-.scroll-ruler-window {
-  right: 10px;
-  width: calc(var(--ruler-w) - 10px);
-  opacity: var(--t);
-  pointer-events: none;
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.35),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.35);
-  will-change: transform, height;
+.ruler-digit-col {
+  display: block;
+  transition: transform 0.35s var(--ease-out);
 }
-.scroll-ruler-line {
-  right: 10px;
-  width: calc(var(--ruler-w) + 2px);
-  height: 2px;
-  margin-top: -1px;
-  background: #fff;
+.ruler-digit-col span {
+  display: block;
+  height: 1em;
+}
+.ruler-ghost {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 45;
+  height: 0;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s;
 }
-.scroll-ruler[data-open] .scroll-ruler-line {
-  opacity: calc(var(--t) * 0.9);
+.ruler-ghost-line {
+  position: absolute;
+  right: 0;
+  top: -1.5px;
+  width: 100%;
+  height: 3px;
+  background: var(--text);
 }
-.scroll-ruler-thumb {
-  right: 2px;
-  width: 3px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.22);
+.ruler-pools {
+  position: fixed;
+  inset: 0;
+  z-index: 44;
   pointer-events: none;
-  transition: background-color 0.3s;
-  will-change: transform;
 }
-.scroll-ruler[data-open] .scroll-ruler-thumb {
-  background: rgba(255, 255, 255, 0.5);
+.ruler-pool {
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+  background-color: color-mix(in srgb, var(--bg) 80%, transparent);
 }
-.scroll-ruler-label {
-  right: calc(var(--ruler-w) + 6px);
-  padding: 2px 0;
+.ruler-names {
+  position: fixed;
+  inset: 0;
+  z-index: 46;
+  pointer-events: none;
+}
+.ruler-hit {
+  position: absolute;
+  padding: 0;
   border: 0;
   background: none;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 18px;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--text-3);
   cursor: pointer;
-  will-change: transform;
-  transition: color 0.25s;
+  pointer-events: none;
 }
-.scroll-ruler-label[data-active='true'] {
+.ruler-letter {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: pre;
+  font-family: var(--font);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+  opacity: 0;
+  will-change: transform, opacity;
+  text-shadow:
+    0 0 4px var(--bg),
+    0 0 10px var(--bg);
+  pointer-events: none;
+}
+.ruler-static {
+  position: fixed;
+  z-index: 46;
+  text-align: right;
+}
+.ruler-static ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ruler-static a {
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
   color: var(--text-2);
 }
-.scroll-ruler[data-open] .scroll-ruler-label {
-  color: rgba(245, 245, 247, 0.82);
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.8);
-}
-.scroll-ruler[data-open] .scroll-ruler-label:hover {
-  color: #fff;
+.ruler-static a:hover {
+  color: var(--text);
 }
