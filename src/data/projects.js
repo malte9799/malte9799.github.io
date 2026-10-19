@@ -111,14 +111,6 @@ export const FEATURED = [
         },
       },
       {
-        src: `${BASE}img/orbis-forecast-charts.webp`,
-        label: { en: '48 hours & 14 days', de: '48 Stunden & 14 Tage' },
-        alt: {
-          en: 'Orbis charts: temperature and precipitation for the next 48 hours, and a 14-day forecast with temperature ranges and wind',
-          de: 'Orbis-Diagramme: Temperatur und Niederschlag der nächsten 48 Stunden und die 14-Tage-Vorhersage mit Temperaturspannen und Wind',
-        },
-      },
-      {
         src: `${BASE}img/orbis-map-wind.webp`,
         label: { en: 'Weather map', de: 'Wetterkarte' },
         url: 'https://malte9799.github.io/orbis/#/karte',
