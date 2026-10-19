@@ -208,7 +208,7 @@ function ExtraMedia({ project, label }) {
               key={slide.src}
               slide={slide}
               shown={i === carousel.index}
-              wantPlay={i === carousel.index && carousel.playing}
+              wantPlay={i === carousel.index && carousel.inView}
               onMeta={duration => setVideo(v => ({ ...v, duration }))}
               onState={playing => setVideo(v => ({ ...v, playing }))}
             />
@@ -223,7 +223,8 @@ function ExtraMedia({ project, label }) {
         index={carousel.index}
         onSelect={carousel.select}
         onDone={carousel.next}
-        playing={carousel.playing && (!isVideo || video.playing)}
+        // A video keeps playing under the pointer, so hovering does not pause its timer either.
+        playing={isVideo ? carousel.inView && video.playing : carousel.playing}
         duration={isVideo && video.duration ? video.duration : undefined}
         label={t.work.screenshots}
         overlay

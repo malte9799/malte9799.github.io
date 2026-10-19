@@ -56,6 +56,7 @@ export function useCarousel(count) {
     select: setIndex,
     next: () => step(1),
     prev: () => step(-1),
+    inView,
     playing: inView && !hovered,
     bind: {
       onPointerEnter: e => e.pointerType === 'mouse' && setHovered(true),
