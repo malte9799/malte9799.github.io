@@ -237,6 +237,24 @@ export const EXTRAS = [
     },
     url: `${BASE}projects/permanent-collection/`,
     repo: 'https://github.com/malte9799/malte9799.github.io/tree/main/src/permanent-collection',
+    // Compact card with images: an animated capture first, stills after it.
+    images: [
+      {
+        src: `${BASE}img/permanent-collection.webp`,
+        alt: {
+          en: 'Looking around the chair cylinder: the camera follows the cursor, then the room turns as it is dragged',
+          de: 'Umschauen im Stuhl-Zylinder: Die Kamera folgt dem Cursor, dann dreht sich der Raum beim Ziehen',
+        },
+      },
+      {
+        src: `${BASE}img/permanent-collection-shop.webp`,
+        alt: { en: 'The shop page with filters and a product grid', de: 'Die Shop-Seite mit Filtern und Produktraster' },
+      },
+      {
+        src: `${BASE}img/permanent-collection-product.webp`,
+        alt: { en: 'A product page with finish options and cart button', de: 'Eine Produktseite mit Ausführungen und Warenkorb-Button' },
+      },
+    ],
     accent: ['#d8d2c4', '#a79f8d'],
     tags: { en: ['React', 'Motion', 'CSS 3D', 'EN / DE'], de: ['React', 'Motion', 'CSS 3D', 'DE / EN'] },
   },

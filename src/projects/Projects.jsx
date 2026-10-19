@@ -10,7 +10,7 @@ import SpotlightCard from '../components/reactbits/SpotlightCard';
 import { ArrowUpRight, StarIcon } from '../components/Icons';
 import { EXTRAS, FEATURED, GITHUB_URL } from '../data/projects';
 import { useLenis } from '../lib/useLenis';
-import { localize, useLang, useT } from '../i18n';
+import { localize, pick, useLang, useT } from '../i18n';
 import { useRepos } from './useRepos';
 
 const EASE = [0.22, 1, 0.36, 1];
@@ -171,6 +171,18 @@ function ExtraCard({ project, index }) {
       transition={{ duration: 0.8, delay: index * 0.06, ease: EASE }}
     >
       <SpotlightCard className="extra-card" spotlightColor={p.accent[0]} intensity={0.14} spotlightSize={320} borderGlow={0.6}>
+        {project.images && (
+          <a className="extra-media" href={p.url} aria-label={`${t.open}: ${p.name}`}>
+            <img className="extra-hero" src={project.images[0].src} alt={pick(project.images[0].alt, lang)} loading="lazy" />
+            {project.images.length > 1 && (
+              <span className="extra-thumbs">
+                {project.images.slice(1).map(img => (
+                  <img key={img.src} src={img.src} alt={pick(img.alt, lang)} loading="lazy" />
+                ))}
+              </span>
+            )}
+          </a>
+        )}
         <p className="extra-eyebrow">{p.eyebrow}</p>
         <h2 id={`x-${p.id}`} className="extra-name">{p.name}</h2>
         <p className="extra-desc">{p.description}</p>
