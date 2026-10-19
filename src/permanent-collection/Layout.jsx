@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { PRODUCTS } from './items';
+import Contact from '../components/Contact';
+import FlyButton from '../components/FlyButton';
+import { ArrowRight } from '../components/Icons';
+import { STRINGS } from '../i18n/strings';
+import { CONTACT_EMAIL } from '../data/contact';
 import { useLang } from './i18n';
 import { FREE_SHIPPING_FROM, useCart } from './store';
 
@@ -125,6 +130,33 @@ export function CartDrawer() {
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+// A wide, light-themed contact band that sits above the footer.
+export function ContactBand() {
+  const { lang } = useLang();
+  return <Contact t={STRINGS[lang].contact} theme="light" wide />;
+}
+
+// A pill that stays in the corner on every page. It opens the first letter, which
+// unfolds out of the pill.
+export function FloatingContact() {
+  const { lang } = useLang();
+  const t = STRINGS[lang].contact;
+  const letter = useRef(null);
+  const pill = useRef(null);
+  const open = e => {
+    e.preventDefault();
+    letter.current?.open(0, () => pill.current.getBoundingClientRect());
+  };
+  return (
+    <div className="contact" data-theme="light" style={{ display: 'contents' }}>
+      <FlyButton ref={pill} className="contact-btn contact-float" href={`mailto:${CONTACT_EMAIL}`} onClick={open} icon={<ArrowRight />}>
+        {t.button}
+      </FlyButton>
+      <Contact ref={letter} t={t} theme="light" dialogOnly />
+    </div>
   );
 }
 

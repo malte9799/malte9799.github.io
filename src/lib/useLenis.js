@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { setScrollLockHandler } from './scrollLock';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -22,6 +23,7 @@ export function useLenis() {
 
     const lenis = new Lenis({ lerp: 0.1, anchors: { offset: -52 } });
     current = lenis;
+    setScrollLockHandler(locked => (locked ? lenis.stop() : lenis.start()));
     lenis.on('scroll', ScrollTrigger.update);
     const tick = time => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
@@ -29,6 +31,7 @@ export function useLenis() {
 
     return () => {
       gsap.ticker.remove(tick);
+      setScrollLockHandler(null);
       lenis.destroy();
       if (current === lenis) current = null;
     };

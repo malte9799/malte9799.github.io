@@ -10,3 +10,5 @@ Local changes:
   triggers with `gsap.context`, so unmounting no longer kills every
   ScrollTrigger on the page.
 - `ScrollVelocity` class names are prefixed with `rb-`.
+- `PixelCard` is a trimmed rewrite of the original: no variants or Tailwind, the
+  canvas also reacts to keyboard focus, and it skips the effect for reduced motion.

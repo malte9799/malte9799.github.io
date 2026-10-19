@@ -11,7 +11,7 @@ export const STRINGS = {
       switchLabel: 'Auf Deutsch lesen',
     },
     ruler: {
-      landing: ['Start', 'About', 'Work', 'Numbers', 'More'],
+      landing: ['Start', 'About', 'Work', 'Numbers', 'More', 'Contact'],
       projects: ['Featured', 'On GitHub'],
     },
     footer: {
@@ -49,6 +49,23 @@ export const STRINGS = {
       lede: 'Experiments, Minecraft tooling, Factorio mods and the odd fork. All of it is on the projects page.',
       allProjects: 'All projects',
     },
+    contact: {
+      title: 'Say hello.',
+      infoTitle: 'Open for projects.',
+      info: 'I’m open to website requests, freelance work and anything else you have in mind. Tell me what you’re building, or just say hi.',
+      button: 'Contact me',
+      hint: 'Pick an envelope. Make it yours.',
+      sub: 'Edit this draft, then send it from your email app.',
+      to: 'To', from: 'From', fromPlaceholder: 'Your name or email (optional)', subject: 'Subject', message: 'Message',
+      note: 'Your email app opens with this draft. Choose your sending account there.',
+      send: 'Open email app', copy: 'Copy', copied: 'Copied', prev: 'Previous draft', next: 'Next draft', close: 'Close',
+      drafts: [
+        { purpose: 'A project together', subject: 'Let’s build something together', body: 'Hi Malte,\n\nI came across your work and have a project I’d love to talk about.\n\nHere’s what I have in mind:\n\nWould you be open to a chat?' },
+        { purpose: 'A role on your team', subject: 'Let’s talk about a role on our team', body: 'Hi Malte,\n\nI came across your portfolio and would love to talk about a developer role on our team.\n\nYour approach to designing and building caught my attention. I’d be happy to share more about the role and learn what you’re looking for next.\n\nWould you be open to a conversation?' },
+        { purpose: 'Feedback or a bug', subject: 'Feedback on one of your projects', body: 'Hi Malte,\n\nI’ve been using one of your projects and wanted to share some feedback.\n\nProject:\nWhat I noticed:\n\nThanks for building it!' },
+        { purpose: 'Just saying hi', subject: 'Hello from a visitor', body: 'Hi Malte,\n\nI stopped by your site and wanted to say hello.\n\nHave a great day!' },
+      ],
+    },
     projects: {
       eyebrow: 'Projects',
       title: 'Things I’ve built.',
@@ -76,7 +93,7 @@ export const STRINGS = {
       switchLabel: 'Read in English',
     },
     ruler: {
-      landing: ['Start', 'Über mich', 'Projekte', 'Zahlen', 'Mehr'],
+      landing: ['Start', 'Über mich', 'Projekte', 'Zahlen', 'Mehr', 'Kontakt'],
       projects: ['Ausgewählt', 'Auf GitHub'],
     },
     footer: {
@@ -113,6 +130,23 @@ export const STRINGS = {
       title: 'Da ist noch mehr.',
       lede: 'Experimente, Minecraft-Tools, Factorio-Mods und der eine oder andere Fork. Alles davon steht auf der Projektseite.',
       allProjects: 'Alle Projekte',
+    },
+    contact: {
+      title: 'Sag Hallo.',
+      infoTitle: 'Offen für Projekte.',
+      info: 'Ich nehme gern Website-Anfragen, Freelance-Aufträge und alles andere an, was dir einfällt. Erzähl mir, was du baust, oder sag einfach Hallo.',
+      button: 'Kontakt aufnehmen',
+      hint: 'Wähle einen Umschlag. Mach ihn zu deinem.',
+      sub: 'Bearbeite den Entwurf und sende ihn dann aus deiner E-Mail-App.',
+      to: 'An', from: 'Von', fromPlaceholder: 'Dein Name oder deine E-Mail (optional)', subject: 'Betreff', message: 'Nachricht',
+      note: 'Deine E-Mail-App öffnet sich mit diesem Entwurf. Dort wählst du dein Konto zum Senden.',
+      send: 'E-Mail-App öffnen', copy: 'Kopieren', copied: 'Kopiert', prev: 'Voriger Entwurf', next: 'Nächster Entwurf', close: 'Schließen',
+      drafts: [
+        { purpose: 'Ein gemeinsames Projekt', subject: 'Lass uns etwas zusammen bauen', body: 'Hallo Malte,\n\nich bin auf deine Arbeit gestoßen und habe ein Projekt, über das ich gern sprechen würde.\n\nMeine Idee:\n\nHättest du Lust auf ein Gespräch?' },
+        { purpose: 'Eine Rolle in deinem Team', subject: 'Eine Rolle in unserem Team', body: 'Hallo Malte,\n\nich bin auf dein Portfolio gestoßen und würde gern über eine Entwicklerrolle in unserem Team sprechen.\n\nDeine Art, Dinge zu gestalten und zu bauen, ist mir aufgefallen. Ich erzähle gern mehr über die Rolle und erfahre, was du als Nächstes suchst.\n\nHättest du Lust auf ein Gespräch?' },
+        { purpose: 'Feedback oder ein Bug', subject: 'Feedback zu einem deiner Projekte', body: 'Hallo Malte,\n\nich nutze eines deiner Projekte und wollte Feedback geben.\n\nProjekt:\nWas mir aufgefallen ist:\n\nDanke, dass du es gebaut hast!' },
+        { purpose: 'Einfach Hallo', subject: 'Hallo von einem Besucher', body: 'Hallo Malte,\n\nich war auf deiner Seite und wollte kurz Hallo sagen.\n\nEinen schönen Tag noch!' },
+      ],
     },
     projects: {
       eyebrow: 'Projekte',

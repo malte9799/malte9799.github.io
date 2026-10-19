@@ -1,0 +1,605 @@
+/* Shared contact section (envelope tray, letter dialog, buttons). Themed through
+   the --c-* variables on .contact: dark by default, data-theme="light" for light pages. */
+
+.contact {
+  --c-ink: 255, 255, 255;
+  --c-text: #f5f5f7;
+  --c-text-2: #a1a1a6;
+  --c-text-3: #6e6e73;
+  --c-line: rgba(255, 255, 255, 0.1);
+  --c-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --c-tile-a: #121214;
+  --c-tile-b: #0a0a0b;
+  --c-tray-back: #101012;
+  --c-tray-front: #151517;
+  --c-tray-slot: #0b0b0c;
+  --c-env-back: #0e0e10;
+  --c-paper: #1c1c1f;
+  --c-body: #d8d8dc;
+  --c-scrim: rgba(6, 6, 8, 0.6);
+  --c-btn-bg: #f5f5f7;
+  --c-btn-text: #000;
+  --c-btn-px: #b3aef5;
+  color: var(--c-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter Variable', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.011em;
+  line-height: 1.47;
+}
+.contact[data-theme='light'] {
+  --c-ink: 26, 26, 24;
+  --c-text: #1a1a18;
+  --c-text-2: #6b6b66;
+  --c-text-3: #9a9a94;
+  --c-line: #e5e4e0;
+  --c-tile-a: #fbfbfa;
+  --c-tile-b: #f3f2ef;
+  --c-tray-back: #ecebe7;
+  --c-tray-front: #f7f6f3;
+  --c-tray-slot: #e2e1dc;
+  --c-env-back: #e6e5e0;
+  --c-paper: #ffffff;
+  --c-body: #3a3a36;
+  --c-scrim: rgba(255, 255, 255, 0.55);
+  --c-btn-bg: #1a1a18;
+  --c-btn-text: #fff;
+  --c-btn-px: #6c65e0;
+}
+.contact *,
+.contact *::before,
+.contact *::after {
+  box-sizing: border-box;
+}
+.contact-wrap {
+  width: 100%;
+  max-width: var(--contact-max, 980px);
+  margin: 0 auto;
+  padding-inline: var(--contact-gutter, clamp(20px, 5vw, 48px));
+}
+.contact[data-wide] {
+  --contact-max: 1480px;
+}
+
+/* ---------- Contact (envelope tray) ---------- */
+
+.contact {
+  padding: var(--contact-pad, 0 0 clamp(80px, 12vh, 140px));
+}
+.contact-tile {
+  display: grid;
+  grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(28px, 6vw, 88px);
+  margin: 0 auto;
+  padding: clamp(20px, 3vw, 28px) clamp(24px, 4vw, 44px);
+  border: 1px solid var(--c-line);
+  border-radius: 28px;
+  background: linear-gradient(180deg, var(--c-tile-a), var(--c-tile-b));
+}
+.contact-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  text-align: left;
+}
+.contact-info-title {
+  margin: 0;
+  font-size: clamp(28px, 3.6vw, 40px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+.contact-info-text {
+  margin: 12px 0 20px;
+  max-width: 520px;
+  font-size: 17px;
+  color: var(--c-text-2);
+}
+.contact-email {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--c-text-3);
+}
+@media (max-width: 760px) {
+  .contact-tile {
+    grid-template-columns: 1fr;
+  }
+  .contact-play {
+    max-width: 220px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+.contact-rack {
+  display: block;
+  width: min(100%, 190px);
+  margin: 0 auto 8px;
+  overflow: visible;
+}
+.contact-rack path {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.tray path {
+  fill: var(--c-tray-back);
+  stroke: rgba(var(--c-ink), 0.28);
+  stroke-width: 1.2;
+}
+.tray-front path {
+  fill: var(--c-tray-front);
+}
+.tray-front .tray-rim {
+  fill: none;
+  stroke: rgba(var(--c-ink), 0.45);
+}
+.tray-front .tray-slot {
+  fill: var(--c-tray-slot);
+  stroke: rgba(var(--c-ink), 0.35);
+}
+.env {
+  cursor: pointer;
+  outline: none;
+}
+.env-lift {
+  transition: transform 0.5s var(--c-ease);
+}
+.env.is-lifted .env-lift {
+  transform: translateY(-30px);
+}
+.env.is-hidden {
+  visibility: hidden;
+}
+.env-back {
+  fill: var(--c-env-back);
+  stroke: rgba(var(--c-ink), 0.22);
+  stroke-width: 1;
+}
+.env-body {
+  fill: var(--c-paper);
+  stroke: rgba(var(--c-ink), 0.4);
+  stroke-width: 1.2;
+  transition: stroke 0.3s;
+}
+.env-flap {
+  fill: var(--c-paper);
+  stroke: rgba(var(--c-ink), 0.4);
+  stroke-width: 1.2;
+  transition: fill 0.3s, stroke 0.3s;
+}
+.env-pocket {
+  fill: none;
+  stroke: rgba(var(--c-ink), 0.16);
+  stroke-width: 1;
+}
+.env-lines {
+  fill: none;
+  stroke: rgba(var(--c-ink), 0.2);
+  stroke-width: 1.4;
+}
+.env.is-lifted .env-body,
+.env:focus-visible .env-body {
+  stroke: rgb(var(--c-ink));
+}
+.env.is-lifted .env-flap,
+.env:focus-visible .env-flap {
+  stroke: rgb(var(--c-ink));
+}
+.contact-caption {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 8px;
+  color: var(--c-text);
+}
+.contact-purpose {
+  position: relative;
+  min-width: 0;
+  white-space: nowrap;
+}
+.contact-measure {
+  color: transparent;
+}
+.contact-paint {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+}
+.contact-count {
+  color: var(--c-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.contact-hint {
+  display: none;
+}
+
+/* ---- Opening: the envelope in the tray unfolds into the letter ---- */
+
+.mail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  opacity: 0;
+  background: var(--c-scrim);
+  backdrop-filter: blur(12px);
+}
+.mail-popup {
+  position: fixed;
+  z-index: 101;
+  top: 50%;
+  left: 50%;
+  width: min(580px, 100vw - 32px);
+  height: min(610px, 100dvh - 32px);
+  transform: translate(-50%, -50%);
+}
+.mail-sheet {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  isolation: isolate;
+  transform-origin: 0 0;
+  border: 1px solid rgba(var(--c-ink), 0.4);
+  border-radius: 22px;
+  background: var(--sheet-fill, var(--c-paper));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+.mail-paper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: var(--sheet-fill, var(--c-paper));
+}
+.mail-front {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  transform-origin: bottom;
+}
+.mail-front svg {
+  width: 100%;
+  height: 100%;
+}
+.mail-front path,
+.mail-flap path {
+  fill: var(--sheet-fill, var(--c-paper));
+  stroke: rgba(var(--c-ink), 0.4);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.mail-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 100%;
+  height: 58%;
+  pointer-events: none;
+  transform-origin: top;
+}
+.mail-letter {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 18px clamp(18px, 5vw, 36px) 24px;
+  color: var(--c-text);
+}
+.mail-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mail-nav {
+  display: flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.mail-nav span {
+  width: 58px;
+  text-align: center;
+  font-size: 13px;
+}
+.mail-nav i {
+  font-style: normal;
+  color: var(--c-text-2);
+}
+.mail-letter svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mail-nav button,
+.mail-close,
+.mail-copy {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--c-text);
+  transition: background 0.16s, transform 0.16s var(--c-ease);
+}
+.mail-nav button:hover,
+.mail-close:hover,
+.mail-copy:hover,
+.mail-nav button:focus-visible,
+.mail-close:focus-visible,
+.mail-copy:focus-visible {
+  background: rgba(var(--c-ink), 0.1);
+}
+.mail-nav button:active,
+.mail-close:active,
+.mail-copy:active {
+  transform: scale(0.95);
+}
+.mail-heading {
+  margin: 14px 0 20px;
+}
+.mail-heading h3 {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 4.4vw, 30px);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+}
+.mail-heading p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--c-text-2);
+}
+.mail-fields {
+  border-block: 1px solid var(--c-line);
+}
+.mail-fields label {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 44px;
+}
+.mail-fields label + label {
+  border-top: 1px solid var(--c-line);
+}
+.mail-fields label > span {
+  flex: none;
+  width: 48px;
+  font-size: 12px;
+  color: var(--c-text-2);
+}
+.mail-letter input,
+.mail-letter textarea {
+  min-width: 0;
+  padding: 8px 0;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  color: var(--c-text);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+.mail-letter input {
+  flex: 1;
+}
+.mail-letter input::placeholder {
+  color: var(--c-text-2);
+  opacity: 0.8;
+}
+.mail-message {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 92px;
+  margin-block: 16px;
+}
+.mail-message textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  padding: 4px;
+  resize: none;
+  color: var(--c-body);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.mail-signature {
+  margin: 0;
+  padding-inline: 4px;
+  color: var(--c-body);
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.mail-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-line);
+}
+.mail-foot p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--c-text-2);
+}
+.mail-foot > div {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 8px;
+}
+@media (max-width: 560px) {
+  .mail-foot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .mail-foot > div {
+    justify-content: flex-end;
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .env-lift {
+    transition: none;
+  }
+}
+
+/* ---------- Fly button (glow, letter roll, flying icon) ---------- */
+
+.fly-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.fly-label {
+  display: inline-flex;
+}
+.fly-letter {
+  display: inline-grid;
+  overflow: hidden;
+}
+.fly-letter > span {
+  grid-area: 1 / 1;
+  transition: transform 0.5s var(--c-ease);
+  transition-delay: calc(var(--i) * 16ms);
+}
+.fly-letter > span:last-child {
+  transform: translateY(110%);
+}
+.fly-btn:hover .fly-letter > span:first-child,
+.fly-btn:focus-visible .fly-letter > span:first-child {
+  transform: translateY(-110%);
+}
+.fly-btn:hover .fly-letter > span:last-child,
+.fly-btn:focus-visible .fly-letter > span:last-child {
+  transform: none;
+}
+.fly-icon {
+  display: inline-grid;
+  overflow: hidden;
+}
+.fly-icon > span {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  transition: transform 0.5s var(--c-ease);
+}
+.fly-btn .fly-icon svg,
+.fly-btn:hover .fly-icon svg {
+  transform: none;
+}
+.fly-icon > span:last-child {
+  transform: translate(-150%, 0);
+}
+.fly-btn[data-dir='right']:hover .fly-icon > span:first-child,
+.fly-btn[data-dir='right']:focus-visible .fly-icon > span:first-child {
+  transform: translate(150%, 0);
+}
+.fly-btn[data-dir='up-right'] .fly-icon > span:last-child {
+  transform: translate(-150%, 150%);
+}
+.fly-btn[data-dir='up-right']:hover .fly-icon > span:first-child,
+.fly-btn[data-dir='up-right']:focus-visible .fly-icon > span:first-child {
+  transform: translate(150%, -150%);
+}
+.fly-btn:hover .fly-icon > span:last-child,
+.fly-btn:focus-visible .fly-icon > span:last-child {
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fly-letter > span,
+  .fly-icon > span {
+    transition: none;
+  }
+}
+
+/* ---------- Pixel card (contact tile) ---------- */
+
+.pixel-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.pixel-card-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ---- Buttons ---- */
+
+.contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--c-btn-bg);
+  color: var(--c-btn-text);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.3s var(--c-ease), box-shadow 0.3s var(--c-ease);
+}
+.contact-btn:active {
+  transform: scale(0.97);
+}
+.contact-btn.small {
+  min-height: 40px;
+  padding: 0 18px;
+  font-size: 13px;
+}
+.contact-btn .fly-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.contact-btn.small .fly-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.contact-btn:hover {
+  box-shadow: 0 0 0 5px rgba(var(--c-ink), 0.08);
+}
+
+/* Floating "contact me" pill. */
+.contact-float {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.contact[data-wide] .contact-tile {
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  padding-block: clamp(24px, 3.4vw, 40px);
+}
+.contact[data-wide] .contact-rack {
+  width: min(100%, 230px);
+}
+.contact[data-wide] .contact-info-title {
+  font-size: clamp(30px, 4vw, 52px);
+}
