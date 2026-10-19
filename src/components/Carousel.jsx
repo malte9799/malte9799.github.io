@@ -77,7 +77,8 @@ export function useCarousel(count) {
 // Apple-style pagination: dots, the active one stretched into a pill that
 // fills up over the slide's duration and advances when full.
 // `overlay` lays the pill over the screenshot's bottom edge and drops the caption.
-export function CarouselDots({ slides, index, onSelect, onDone, playing, label, overlay = false }) {
+// `duration` (seconds) overrides the slide length, e.g. for a video slide.
+export function CarouselDots({ slides, index, onSelect, onDone, playing, label, overlay = false, duration = SLIDE_SECONDS }) {
   const reduced = useReducedMotion();
 
   return (
@@ -96,7 +97,7 @@ export function CarouselDots({ slides, index, onSelect, onDone, playing, label, 
               <span
                 key={index}
                 className="carousel-dot-fill"
-                style={{ animationDuration: `${SLIDE_SECONDS}s`, animationPlayState: playing ? 'running' : 'paused' }}
+                style={{ animationDuration: `${duration}s`, animationPlayState: playing ? 'running' : 'paused' }}
                 onAnimationEnd={onDone}
               />
             )}

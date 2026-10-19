@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'motion/react';
 import Nav from '../components/Nav';
 import Footer from '../components/Footer';
@@ -154,20 +154,22 @@ function FeaturedCard({ project: raw, index, wide }) {
   );
 }
 
-// A looping capture as a carousel slide: plays from the start whenever it is shown.
-function SlideVideo({ slide, active, shown }) {
+// A capture as a carousel slide. It plays from the start whenever the slide is shown
+// (and the carousel is playing) and reports its length and play state to the carousel,
+// which only starts its timer once the video is actually running.
+function SlideVideo({ slide, shown, wantPlay, onMeta, onState }) {
   const ref = useRef(null);
   const reduced = useReducedMotion();
+  const play = () => ref.current?.play().catch(() => {});
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
-    if (active && !reduced) {
-      v.play().catch(() => {});
-    } else {
+    if (wantPlay && !reduced) play();
+    else {
       v.pause();
       if (!shown) v.currentTime = 0;
     }
-  }, [active, shown, reduced]);
+  }, [wantPlay, shown, reduced]);
   return (
     <video
       ref={ref}
@@ -176,9 +178,13 @@ function SlideVideo({ slide, active, shown }) {
       poster={slide.poster}
       aria-label={slide.alt}
       muted
-      loop
       playsInline
-      preload="metadata"
+      preload="auto"
+      onLoadedMetadata={e => onMeta(e.currentTarget.duration)}
+      onCanPlay={() => wantPlay && !reduced && play()}
+      onPlaying={() => shown && onState(true)}
+      onPause={e => shown && !e.currentTarget.ended && onState(false)}
+      onWaiting={() => shown && onState(false)}
     />
   );
 }
@@ -189,12 +195,23 @@ function ExtraMedia({ project, label }) {
   const t = useT();
   const slides = resolveSlides(project, lang);
   const carousel = useCarousel(slides.length);
+  const [video, setVideo] = useState({ duration: null, playing: false });
+  const isVideo = slides[carousel.index].src.endsWith('.mp4');
+  // A new slide starts with the video not yet running.
+  useEffect(() => setVideo(v => ({ ...v, playing: false })), [carousel.index]);
   return (
     <div ref={carousel.ref} className="carousel extra-media" {...carousel.bind}>
       <a href={slides[carousel.index].url} className="extra-stack" aria-label={`${label}: ${slides[carousel.index].label}`}>
         {slides.map((slide, i) =>
           slide.src.endsWith('.mp4') ? (
-            <SlideVideo key={slide.src} slide={slide} active={i === carousel.index && carousel.playing} shown={i === carousel.index} />
+            <SlideVideo
+              key={slide.src}
+              slide={slide}
+              shown={i === carousel.index}
+              wantPlay={i === carousel.index && carousel.playing}
+              onMeta={duration => setVideo(v => ({ ...v, duration }))}
+              onState={playing => setVideo(v => ({ ...v, playing }))}
+            />
           ) : (
             <img key={slide.src} src={slide.src} alt={slide.alt} className={i === carousel.index ? 'is-active' : ''} loading="lazy" />
           )
@@ -206,7 +223,8 @@ function ExtraMedia({ project, label }) {
         index={carousel.index}
         onSelect={carousel.select}
         onDone={carousel.next}
-        playing={carousel.playing}
+        playing={carousel.playing && (!isVideo || video.playing)}
+        duration={isVideo && video.duration ? video.duration : undefined}
         label={t.work.screenshots}
         overlay
       />
@@ -243,16 +261,30 @@ function ExtraCard({ project, index, wide = false, span = false }) {
               </li>
             ))}
           </ul>
-          <div className="extra-links">
-            <a className="text-link" href={p.url}>
-              {t.open}
-              <ArrowUpRight style={{ width: 12, height: 12 }} />
-            </a>
-            <a className="text-link" href={p.repo}>
-              {t.viewSource}
-              <ArrowUpRight style={{ width: 12, height: 12 }} />
-            </a>
-          </div>
+          {project.screenshots ? (
+            // Cards with media get the same white button as the big cards.
+            <div className="feature-links">
+              <a className="btn btn-primary" href={p.url}>
+                {t.open}
+                <ArrowUpRight />
+              </a>
+              <a className="text-link" href={p.repo}>
+                {t.viewSource}
+                <ArrowUpRight style={{ width: 12, height: 12 }} />
+              </a>
+            </div>
+          ) : (
+            <div className="extra-links">
+              <a className="text-link" href={p.url}>
+                {t.open}
+                <ArrowUpRight style={{ width: 12, height: 12 }} />
+              </a>
+              <a className="text-link" href={p.repo}>
+                {t.viewSource}
+                <ArrowUpRight style={{ width: 12, height: 12 }} />
+              </a>
+            </div>
+          )}
         </div>
       </SpotlightCard>
     </motion.article>
