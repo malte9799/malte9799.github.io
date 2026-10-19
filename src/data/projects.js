@@ -237,10 +237,11 @@ export const EXTRAS = [
     },
     url: `${BASE}projects/permanent-collection/`,
     repo: 'https://github.com/malte9799/malte9799.github.io/tree/main/src/permanent-collection',
-    // Compact card with images: an animated capture first, stills after it.
-    images: [
+    // Compact card with a carousel: the animated capture first, stills after it.
+    screenshots: [
       {
         src: `${BASE}img/permanent-collection.webp`,
+        label: { en: 'Gallery', de: 'Galerie' },
         alt: {
           en: 'Looking around the chair cylinder: the camera follows the cursor, then the room turns as it is dragged',
           de: 'Umschauen im Stuhl-Zylinder: Die Kamera folgt dem Cursor, dann dreht sich der Raum beim Ziehen',
@@ -248,10 +249,14 @@ export const EXTRAS = [
       },
       {
         src: `${BASE}img/permanent-collection-shop.webp`,
+        label: { en: 'Shop', de: 'Shop' },
+        url: `${BASE}projects/permanent-collection/#/shop`,
         alt: { en: 'The shop page with filters and a product grid', de: 'Die Shop-Seite mit Filtern und Produktraster' },
       },
       {
         src: `${BASE}img/permanent-collection-product.webp`,
+        label: { en: 'Product page', de: 'Produktseite' },
+        url: `${BASE}projects/permanent-collection/#/product/panton-chair`,
         alt: { en: 'A product page with finish options and cart button', de: 'Eine Produktseite mit Ausführungen und Warenkorb-Button' },
       },
     ],

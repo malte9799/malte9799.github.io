@@ -129,29 +129,27 @@
   background-image: radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--a) 12%, transparent), transparent 60%);
 }
 .extra-media {
-  display: block;
   margin: -8px -8px 20px;
   border-radius: 16px;
   overflow: hidden;
   background: #fff;
 }
-.extra-hero {
+.extra-stack {
+  position: relative;
   display: block;
-  width: 100%;
   aspect-ratio: 16 / 10;
-  object-fit: cover;
 }
-.extra-thumbs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px;
-  margin-top: 2px;
-}
-.extra-thumbs img {
-  display: block;
+.extra-stack img {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  height: 100%;
   object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease-out);
+}
+.extra-stack img.is-active {
+  opacity: 1;
 }
 .extra-eyebrow {
   font-size: 13px;

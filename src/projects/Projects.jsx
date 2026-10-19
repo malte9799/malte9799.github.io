@@ -10,7 +10,7 @@ import SpotlightCard from '../components/reactbits/SpotlightCard';
 import { ArrowUpRight, StarIcon } from '../components/Icons';
 import { EXTRAS, FEATURED, GITHUB_URL } from '../data/projects';
 import { useLenis } from '../lib/useLenis';
-import { localize, pick, useLang, useT } from '../i18n';
+import { localize, useLang, useT } from '../i18n';
 import { useRepos } from './useRepos';
 
 const EASE = [0.22, 1, 0.36, 1];
@@ -154,6 +154,33 @@ function FeaturedCard({ project: raw, index, wide }) {
   );
 }
 
+// Screenshots of a compact card: the first slide is the hero, the rest rotate in.
+function ExtraMedia({ project, label }) {
+  const lang = useLang();
+  const t = useT();
+  const slides = resolveSlides(project, lang);
+  const carousel = useCarousel(slides.length);
+  return (
+    <div ref={carousel.ref} className="carousel extra-media" {...carousel.bind}>
+      <a href={slides[carousel.index].url} className="extra-stack" aria-label={`${label}: ${slides[carousel.index].label}`}>
+        {slides.map((slide, i) => (
+          <img key={slide.src} src={slide.src} alt={slide.alt} className={i === carousel.index ? 'is-active' : ''} loading="lazy" />
+        ))}
+      </a>
+      <CarouselArrows onPrev={carousel.prev} onNext={carousel.next} labels={{ prev: t.work.prevSlide, next: t.work.nextSlide }} />
+      <CarouselDots
+        slides={slides}
+        index={carousel.index}
+        onSelect={carousel.select}
+        onDone={carousel.next}
+        playing={carousel.playing}
+        label={t.work.screenshots}
+        overlay
+      />
+    </div>
+  );
+}
+
 function ExtraCard({ project, index }) {
   const lang = useLang();
   const strings = useT();
@@ -171,18 +198,7 @@ function ExtraCard({ project, index }) {
       transition={{ duration: 0.8, delay: index * 0.06, ease: EASE }}
     >
       <SpotlightCard className="extra-card" spotlightColor={p.accent[0]} intensity={0.14} spotlightSize={320} borderGlow={0.6}>
-        {project.images && (
-          <a className="extra-media" href={p.url} aria-label={`${t.open}: ${p.name}`}>
-            <img className="extra-hero" src={project.images[0].src} alt={pick(project.images[0].alt, lang)} loading="lazy" />
-            {project.images.length > 1 && (
-              <span className="extra-thumbs">
-                {project.images.slice(1).map(img => (
-                  <img key={img.src} src={img.src} alt={pick(img.alt, lang)} loading="lazy" />
-                ))}
-              </span>
-            )}
-          </a>
-        )}
+        {project.screenshots && <ExtraMedia project={project} label={`${t.open}: ${p.name}`} />}
         <p className="extra-eyebrow">{p.eyebrow}</p>
         <h2 id={`x-${p.id}`} className="extra-name">{p.name}</h2>
         <p className="extra-desc">{p.description}</p>
