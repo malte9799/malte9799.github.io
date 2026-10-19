@@ -14,7 +14,6 @@ const STEP = 360 / PER_RING;
 const LOOK = 36; // degrees of camera turn across the screen before the first drag
 const EDGE = 0.07; // outer share of the screen width (each side) that turns the room
 const EDGE_SPEED = 45; // degrees per second at the very edge
-const FREE_EDGE_SPEED = 18; // same, once the title is gone (slower)
 const FREE_EDGE_SPEED_Y = 220; // pixels per second, up and down
 const KEY_SPEED = 70; // degrees per second with WASD / arrow keys
 const KEY_SPEED_Y = 520; // pixels per second
@@ -138,12 +137,12 @@ export default function Gallery() {
     };
     const move = e => {
       if (free && !last) {
-        // title gone: the edges slowly turn the room and move it up and down
+        // title gone: the edges turn the room and move it up and down
         const nx = e.clientX / el.clientWidth - 0.5;
         const ny = e.clientY / el.clientHeight - 0.5;
         const dx = depthOf(nx);
         const dy = depthOf(ny);
-        edgeSpeed = dx ? -Math.sign(nx) * (0.25 + 0.75 * Math.min(dx, 1)) * FREE_EDGE_SPEED : 0;
+        edgeSpeed = dx ? Math.sign(nx) * (0.25 + 0.75 * Math.min(dx, 1)) * EDGE_SPEED : 0;
         edgeSpeedY = dy ? Math.sign(ny) * (0.25 + 0.75 * Math.min(dy, 1)) * FREE_EDGE_SPEED_Y : 0;
         return;
       }
