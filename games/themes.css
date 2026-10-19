@@ -327,6 +327,19 @@ html[data-theme="brutal"] {
   color-scheme: dark;
 }
 
+/* guide lines sit in the gaps between the card columns (24px page padding, 28px gap);
+   --gNh is the same spot for the 11px-wide horizontal bar of a + mark */
+html[data-theme="brutal"] {
+  --g1: calc(33.333% + 3.33px); --g1h: calc(33.333% + 2px);
+  --g2: calc(66.667% - 3.33px); --g2h: calc(66.667% - 1px);
+}
+@media (min-width: 641px) and (max-width: 900px) {
+  html[data-theme="brutal"] { --g1: 50%; --g1h: calc(50% + 0.5px); --g2: 300%; --g2h: 300%; }
+}
+@media (max-width: 640px) {
+  html[data-theme="brutal"] { --g1: 300%; --g1h: 300%; --g2: 300%; --g2h: 300%; }
+}
+
 /* vertical guide lines run down the page and draw themselves in on load */
 html[data-theme="brutal"] body::before {
   content: "";
@@ -338,8 +351,8 @@ html[data-theme="brutal"] body::before {
   z-index: 0;
   background:
     linear-gradient(rgba(242, 241, 236, 0.09), rgba(242, 241, 236, 0.09)) 0 0 / 1px 100% no-repeat,
-    linear-gradient(rgba(242, 241, 236, 0.09), rgba(242, 241, 236, 0.09)) 33.333% 0 / 1px 100% no-repeat,
-    linear-gradient(rgba(242, 241, 236, 0.09), rgba(242, 241, 236, 0.09)) 66.666% 0 / 1px 100% no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.09), rgba(242, 241, 236, 0.09)) var(--g1) 0 / 1px 100% no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.09), rgba(242, 241, 236, 0.09)) var(--g2) 0 / 1px 100% no-repeat,
     linear-gradient(rgba(242, 241, 236, 0.09), rgba(242, 241, 236, 0.09)) 100% 0 / 1px 100% no-repeat;
   animation: art-guides 1.6s var(--ease) both;
 }
@@ -402,27 +415,44 @@ html[data-theme="brutal"] #canvas-wrap:not(.fs):hover::after { inset: 6px; opaci
 /* home: header */
 html[data-theme="brutal"] #home .hero { position: relative; margin-bottom: 64px; padding-top: 12px; }
 html[data-theme="brutal"] #home .hero::after {
-  /* rule under the header, drawn left to right */
+  /* rule under the header; spans the whole guide area and
+     marks every crossing with a small + */
   content: "";
   display: block;
-  height: 1px;
-  margin-top: 40px;
-  background: var(--ink);
-  opacity: 0.2;
-  transform-origin: 0 50%;
-  animation: art-rule 1.4s 0.3s var(--ease) both;
+  height: 11px;
+  margin: 35px -24px 0;
+  background:
+    linear-gradient(rgba(242, 241, 236, 0.6), rgba(242, 241, 236, 0.6)) -5px 50% / 11px 1px no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.6), rgba(242, 241, 236, 0.6)) 0% 50% / 1px 11px no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.6), rgba(242, 241, 236, 0.6)) var(--g1h) 50% / 11px 1px no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.6), rgba(242, 241, 236, 0.6)) var(--g1) 50% / 1px 11px no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.6), rgba(242, 241, 236, 0.6)) var(--g2h) 50% / 11px 1px no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.6), rgba(242, 241, 236, 0.6)) var(--g2) 50% / 1px 11px no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.6), rgba(242, 241, 236, 0.6)) calc(100% + 6px) 50% / 11px 1px no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.6), rgba(242, 241, 236, 0.6)) 100% 50% / 1px 11px no-repeat,
+    linear-gradient(rgba(242, 241, 236, 0.2), rgba(242, 241, 236, 0.2)) 0 50% / 100% 1px no-repeat;
 }
-@keyframes art-rule { from { transform: scaleX(0); } }
 html[data-theme="brutal"] #home h1 {
   position: relative;
   display: inline-block;
   font-weight: 500;
   letter-spacing: -0.04em;
-  -webkit-text-stroke: 1.2px var(--ink);
+  -webkit-text-stroke: 2.4px var(--ink);
   transition: background-size 0.7s var(--ease);
   cursor: default;
 }
+/* the variable font's glyph contours overlap and the stroke would draw those inner
+   lines; a bg-coloured copy on top hides the inner half of the stroke (and the overlaps) */
+html[data-theme="brutal"] #home h1::before {
+  content: attr(data-text);
+  position: absolute; inset: 0;
+  color: var(--bg);
+  -webkit-text-stroke: 0;
+  pointer-events: none;
+  transition: opacity 0.5s var(--ease);
+}
 html[data-theme="brutal"] #home h1:hover { background-size: 100% 100%; }
+html[data-theme="brutal"] #home h1:hover::before { opacity: 0; }
 html[data-theme="brutal"] #home .subtitle { position: relative; letter-spacing: 0.01em; }
 html[data-theme="brutal"] #home .site-link { position: relative; z-index: 2; }
 
