@@ -252,3 +252,5 @@ summary { cursor: pointer; font-size: 14px; }
 .cookies p { margin: 0; }
 .cookies .btn { padding: 8px 14px; }
 .hint { bottom: 72px; }
+
+.contact { --contact-pad: 72px 0 64px; --contact-gutter: clamp(16px, 3vw, 40px); }

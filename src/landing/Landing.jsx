@@ -6,13 +6,15 @@ import { useLenis } from '../lib/useLenis';
 import { useT } from '../i18n';
 import Hero from './Hero';
 import Work from './Work';
+import Contact from '../components/Contact';
 import { Statement, Numbers, Marquee, Outro } from './Sections';
 
 export default function Landing() {
   useLenis();
-  const labels = useT().ruler.landing;
+  const t = useT();
+  const labels = t.ruler.landing;
   const rulerSections = useMemo(
-    () => ['.hero', '.statement', '#work', '.numbers', '.outro'].map((selector, i) => ({ selector, label: labels[i] })),
+    () => ['.hero', '.statement', '#work', '.numbers', '.outro', '.contact'].map((selector, i) => ({ selector, label: labels[i] })),
     [labels]
   );
 
@@ -27,6 +29,7 @@ export default function Landing() {
         <Numbers />
         <Marquee />
         <Outro />
+        <Contact t={t.contact} />
       </main>
       <Footer />
     </>
