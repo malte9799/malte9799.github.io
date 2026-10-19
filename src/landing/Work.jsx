@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform, useReducedMotion } from 'motion/react'
 import BrowserFrame from '../components/BrowserFrame';
 import { CarouselArrows, CarouselDots, resolveSlides, useCarousel } from '../components/Carousel';
 import { ArrowUpRight } from '../components/Icons';
-import { FEATURED } from '../data/projects';
+import { CARD_ORDER, FEATURED } from '../data/projects';
 import { localize, useLang, useT } from '../i18n';
 
 const reveal = {
@@ -105,11 +105,13 @@ function Showcase({ project: raw, index }) {
   );
 }
 
+const SHOWCASES = CARD_ORDER.map(id => FEATURED.find(p => p.id === id)).filter(Boolean);
+
 export default function Work() {
   const t = useT();
   return (
     <section id="work" className="work" aria-label={t.work.label}>
-      {FEATURED.map((project, i) => (
+      {SHOWCASES.map((project, i) => (
         <Showcase key={project.id} project={project} index={i} />
       ))}
     </section>
