@@ -1,7 +1,7 @@
 import { useRoute } from './router';
 import { CartProvider } from './store';
 import { LangProvider } from './i18n';
-import { CartDrawer, CookieBanner, Footer, Header } from './Layout';
+import { CartDrawer, ContactBand, CookieBanner, FloatingContact, Footer, Header } from './Layout';
 import Gallery from './Gallery';
 import Shop from './Shop';
 import Product, { NotFound } from './Product';
@@ -27,7 +27,9 @@ export default function App() {
     <CartProvider>
       <Header home={home} />
       <Routes path={path} query={query} />
+      {!home && <ContactBand />}
       {!home && <Footer />}
+      <FloatingContact />
       <CartDrawer />
       <CookieBanner />
     </CartProvider>
