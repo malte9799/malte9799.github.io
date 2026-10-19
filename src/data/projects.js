@@ -227,6 +227,19 @@ export const EXTRAS = [
     accent: ['#ff5f6d', '#ffc371'],
     tags: { en: ['JavaScript', 'TMDB API'], de: ['JavaScript', 'TMDB-API'] },
   },
+  {
+    id: 'permanent-collection',
+    name: 'The Permanent Collection',
+    eyebrow: { en: 'Concept shop', de: 'Konzept-Shop' },
+    description: {
+      en: 'A chair shop where the landing page is a 3D cylinder of photos and you stand inside it. Cursor, drag, scroll and WASD all move the camera; behind it sits a plain shop with filters, cart, checkout and EN/DE. CSS 3D and Motion, no WebGL.',
+      de: 'Ein Stuhl-Shop, dessen Startseite ein 3D-Zylinder aus Fotos ist, in dem man steht. Cursor, Ziehen, Scrollen und WASD bewegen die Kamera; dahinter steckt ein schlichter Shop mit Filtern, Warenkorb, Kasse und DE/EN. CSS 3D und Motion, kein WebGL.',
+    },
+    url: `${BASE}projects/permanent-collection/`,
+    repo: 'https://github.com/malte9799/malte9799.github.io/tree/main/src/permanent-collection',
+    accent: ['#d8d2c4', '#a79f8d'],
+    tags: { en: ['React', 'Motion', 'CSS 3D', 'EN / DE'], de: ['React', 'Motion', 'CSS 3D', 'DE / EN'] },
+  },
 ];
 
 // Repos left out of the live "More on GitHub" list (featured above, or this site).
