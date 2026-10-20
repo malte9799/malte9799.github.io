@@ -605,3 +605,24 @@
 .contact[data-wide] .contact-info-title {
   font-size: clamp(30px, 4vw, 52px);
 }
+
+/* Must come after the data-wide rules above so phones stack the tile in one column. */
+@media (max-width: 760px) {
+  .contact .contact-tile,
+  .contact[data-wide] .contact-tile {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    padding-inline: 20px;
+  }
+  .contact .contact-play {
+    max-width: 260px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .contact .contact-title {
+    text-align: center;
+  }
+  .contact[data-wide] .contact-rack {
+    width: min(100%, 220px);
+  }
+}
