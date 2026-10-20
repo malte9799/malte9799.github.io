@@ -199,9 +199,11 @@ summary { cursor: pointer; font-size: 14px; }
 
 .scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.25); z-index: 30; }
 .drawer {
-  position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100vw); z-index: 31;
-  background: #fff; padding: 20px 24px; display: flex; flex-direction: column; overflow-y: auto;
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); box-sizing: border-box; z-index: 31;
+  background: #fff; padding: 20px 24px; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;
+  overscroll-behavior: contain;
 }
+.lines li > div { min-width: 0; }
 .drawer-head { display: flex; justify-content: space-between; align-items: center; }
 .drawer-head h2 { font: 400 22px var(--serif); margin: 0; }
 .lines { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 16px; }
