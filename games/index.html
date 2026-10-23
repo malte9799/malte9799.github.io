@@ -75,6 +75,7 @@
 //   - Wordle-like    — daily word guess with keyboard heatmap
 
 const _gameName = new URLSearchParams(location.search).get("game");
+window._pageKind = _gameName ? "game" : "home";
 
 function loadScript(src, onload, onerror) {
   const s = document.createElement("script");

@@ -1,0 +1,170 @@
+/* ---- Holographic: foil cards that catch the light as you tilt them ---- */
+@property --ang { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes holo-spin { to { --ang: 360deg; } }
+
+html[data-theme="holo"] {
+  --bg: #0a0816;
+  --board: #0e0c20;
+  --panel: #1a1636;
+  --panel-2: #262050;
+  --panel-edge: rgba(255, 255, 255, 0.16);
+  --edge-hover: rgba(255, 255, 255, 0.5);
+  --grid-line: rgba(255, 255, 255, 0.1);
+  --hairline: rgba(255, 255, 255, 0.14);
+  --ink: #f6f2ff;
+  --muted: #b3a9d8;
+  --dim: #6c6498;
+  --sun: #ffeca0;
+  --mint: #96ffd6;
+  --rose: #ff8cc8;
+  --sky: #8cc8ff;
+  --lilac: #c8a0ff;
+  --accent: #c8a0ff;
+  --toggle: #96ffd6;
+  --toggle-fg: #96ffd6;
+
+  --holo: linear-gradient(110deg, #ff9ad5 0%, #ffe29a 22%, #9affd6 42%, #9ad0ff 62%, #d0a8ff 82%, #ff9ad5 100%);
+  --holo-conic: conic-gradient(from var(--ang), #ff7ac0, #ffd978, #7affd0, #78b8ff, #c090ff, #ff7ac0);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font: "Sora", system-ui, sans-serif;
+  --font-display: var(--font);
+  --ui-tracking: 0;
+  --title-size: 28px;
+  --title-weight: 700;
+  --title-tracking: -0.03em;
+  --title-transform: none;
+  --hero-fill: var(--holo);
+  --hero-size: clamp(54px, 11vw, 112px);
+
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 20px;
+  --r-xl: 22px;
+  --border-w: 1.5px;
+
+  --page-bg: var(--bg);
+  --wrap-shadow: 0 30px 70px -30px rgba(160, 120, 255, 0.55);
+  --btn-shadow: none;
+  --btn-shadow-press: none;
+  --btn-press: scale(0.97);
+  --primary-bg: var(--holo);
+  --primary-hover: var(--holo);
+  --primary-fg: #140f30;
+  --primary-border: transparent;
+  --primary-shadow: 0 8px 30px -8px rgba(200, 160, 255, 0.7);
+  --card-bg: #120f2b;
+  --card-shadow: 0 24px 50px -26px rgba(0, 0, 0, 0.9);
+  --card-hover-shadow: 0 40px 80px -30px rgba(190, 150, 255, 0.6);
+  --card-hover-lift: none;
+  --modal-bg: #141030;
+  --modal-shadow: 0 40px 90px -20px rgba(0, 0, 0, 0.85), 0 0 60px -10px rgba(180, 140, 255, 0.35);
+  --backdrop: rgba(8, 6, 20, 0.78);
+  --bar-bg: rgba(10, 8, 22, 0.8);
+  --chip-bg: rgba(18, 15, 43, 0.75);
+  color-scheme: dark;
+}
+
+/* aurora behind everything */
+html[data-theme="holo"] body::before {
+  content: ""; position: fixed; inset: -20%; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(40% 40% at 20% 20%, rgba(255, 122, 192, 0.5), transparent 70%),
+    radial-gradient(45% 45% at 80% 25%, rgba(122, 255, 208, 0.38), transparent 70%),
+    radial-gradient(50% 50% at 55% 85%, rgba(120, 184, 255, 0.42), transparent 70%),
+    radial-gradient(35% 35% at 10% 80%, rgba(192, 144, 255, 0.4), transparent 70%);
+  filter: blur(40px) hue-rotate(0deg);
+  animation: holo-aurora 26s ease-in-out infinite alternate;
+  opacity: 0.95;
+}
+@keyframes holo-aurora { to { transform: translate(4%, -3%) rotate(8deg) scale(1.1); filter: blur(46px) hue-rotate(90deg); } }
+html[data-theme="holo"] #home, html[data-theme="holo"] #app { position: relative; z-index: 1; }
+
+html[data-theme="holo"] #home h1, html[data-theme="holo"] #app h1 {
+  background: var(--holo); background-size: 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: holo-shift 7s linear infinite;
+  filter: drop-shadow(0 0 26px rgba(190, 150, 255, 0.45));
+  font-weight: 800; letter-spacing: -0.045em;
+}
+@keyframes holo-shift { to { background-position: -250% 0; } }
+html[data-theme="holo"] #home .subtitle { color: #cbbff0; letter-spacing: 0.04em; font-weight: 300; font-size: 18px; }
+html[data-theme="holo"] .back-link, html[data-theme="holo"] #home .site-link { color: #b3a9d8; }
+html[data-theme="holo"] .back-link:hover, html[data-theme="holo"] #home .site-link:hover { color: #fff; }
+
+/* foil cards */
+html[data-theme="holo"] #home .grid { gap: 26px; perspective: 1200px; }
+html[data-theme="holo"] #home .card {
+  border: 1.5px solid transparent;
+  background: linear-gradient(#120f2b, #120f2b) padding-box, var(--holo-conic) border-box;
+  animation: holo-spin 8s linear infinite;
+  border-radius: 20px;
+  transform-style: preserve-3d;
+  transition: transform 0.7s var(--ease), box-shadow 0.3s;
+}
+html[data-theme="holo"] #home .card:hover {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0) scale(1.03);
+  transition: transform 0.12s linear, box-shadow 0.3s;
+}
+html[data-theme="holo"] #home .card.reveal.in:hover { transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(1.03); }
+html[data-theme="holo"] #home .card::before,
+html[data-theme="holo"] #home .card::after,
+html[data-theme="holo"] #canvas-wrap:not(.fs)::before,
+html[data-theme="holo"] #canvas-wrap:not(.fs)::after {
+  content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; transition: opacity 0.35s;
+}
+/* rainbow foil bands that slide with the pointer */
+html[data-theme="holo"] #home .card::before,
+html[data-theme="holo"] #canvas-wrap:not(.fs)::before {
+  background:
+    radial-gradient(circle at var(--px, 50%) var(--py, 0%), rgba(255, 255, 255, 0.85), transparent 38%),
+    repeating-linear-gradient(115deg, #ff5fa2 0%, #ffd166 9%, #5ef0c8 18%, #5aaaff 27%, #b58cff 36%, #ff5fa2 45%) var(--bx, 0%) 0 / 260% 100%;
+  mix-blend-mode: color-dodge; filter: brightness(0.75) contrast(1.3) saturate(1.3);
+}
+/* glitter */
+html[data-theme="holo"] #home .card::after,
+html[data-theme="holo"] #canvas-wrap:not(.fs)::after {
+  background:
+    radial-gradient(circle, #fff 0.6px, transparent 1.4px) 0 0 / 9px 9px,
+    radial-gradient(circle, #ffd8ff 0.5px, transparent 1.2px) 4px 5px / 13px 13px;
+  background-position: calc(var(--bx, 0%) * 0.4) calc(var(--py, 0%) * 0.3), 4px 5px;
+  mix-blend-mode: overlay;
+  -webkit-mask: radial-gradient(circle at var(--px, 50%) var(--py, 50%), #000, transparent 70%);
+          mask: radial-gradient(circle at var(--px, 50%) var(--py, 50%), #000, transparent 70%);
+}
+html[data-theme="holo"] #home .card::before { opacity: 0.12; }
+html[data-theme="holo"] #home .card:hover::before { opacity: 0.55; }
+html[data-theme="holo"] #home .card:hover::after { opacity: 0.9; }
+html[data-theme="holo"] #canvas-wrap:not(.fs):hover::before { opacity: 0.22; }
+html[data-theme="holo"] #canvas-wrap:not(.fs):hover::after { opacity: 0.5; }
+html[data-theme="holo"] #home .card .preview { background: #0e0c20; margin: 8px 8px 0; border-radius: 14px 14px 6px 6px; }
+html[data-theme="holo"] #home .card-text { border-top: 0; padding: 14px 20px 18px; }
+html[data-theme="holo"] #home .card-title { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; background: var(--holo); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; display: inline-block; animation: holo-shift 7s linear infinite; }
+html[data-theme="holo"] #home .card-desc { color: #a79dd0; font-weight: 300; }
+html[data-theme="holo"] #home .star-btn { z-index: 6; }
+
+/* game page */
+html[data-theme="holo"] #canvas-wrap:not(.fs) {
+  border: 2px solid transparent;
+  background: linear-gradient(#0e0c20, #0e0c20) padding-box, var(--holo-conic) border-box;
+  animation: wrap-in var(--wrap-dur) var(--wrap-ease) both, holo-spin 10s linear infinite;
+  --wrap-shadow: 0 30px 70px -30px rgba(160, 120, 255, 0.6);
+}
+html[data-theme="holo"] #canvas-wrap canvas { position: relative; z-index: 1; }
+html[data-theme="holo"] button, html[data-theme="holo"] .preset-row select { background-color: rgba(255, 255, 255, 0.06); backdrop-filter: blur(8px); font-weight: 500; }
+html[data-theme="holo"] button:hover {
+  border-color: transparent;
+  background: linear-gradient(rgba(26, 22, 54, 0.92), rgba(26, 22, 54, 0.92)) padding-box, var(--holo-conic) border-box;
+  animation: holo-spin 4s linear infinite;
+}
+html[data-theme="holo"] button.primary { background: var(--holo); background-size: 200% 100%; border: 0; color: #140f30; animation: holo-shift 6s linear infinite; }
+html[data-theme="holo"] button.primary:hover { background: var(--holo); background-size: 200% 100%; filter: brightness(1.12); animation: holo-shift 2s linear infinite; }
+html[data-theme="holo"] button.active, html[data-theme="holo"] button.hint-confirm { background: rgba(150, 255, 214, 0.15); border-color: rgba(150, 255, 214, 0.6); }
+html[data-theme="holo"] .controls { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
+html[data-theme="holo"] .info-modal { border: 1.5px solid transparent; background: linear-gradient(#141030, #141030) padding-box, var(--holo-conic) border-box; animation: info-pop 0.28s var(--ease), holo-spin 8s linear infinite; }
+html[data-theme="holo"] .theme-menu { background: #141030; }
+html[data-theme="holo"] .preset-row select option { background: #1a1636; }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="holo"] body::before, html[data-theme="holo"] #home h1, html[data-theme="holo"] #app h1, html[data-theme="holo"] #home .card, html[data-theme="holo"] #home .card-title { animation: none; }
+}

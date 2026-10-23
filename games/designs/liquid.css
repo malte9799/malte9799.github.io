@@ -1,0 +1,169 @@
+/* ---- Liquid morph: gooey blobs drift behind glass shapes that never hold still ---- */
+html[data-theme="liquid"] {
+  --bg: #150a33;
+  --board: #1c0e46;
+  --panel: #2c1a6e;
+  --panel-2: #3a2490;
+  --panel-edge: rgba(255, 255, 255, 0.2);
+  --edge-hover: rgba(255, 255, 255, 0.55);
+  --grid-line: rgba(255, 255, 255, 0.12);
+  --hairline: rgba(255, 255, 255, 0.18);
+  --ink: #faf4ff;
+  --muted: #c4b4ee;
+  --dim: #7f6cb8;
+  --sun: #ffd666;
+  --mint: #5ef0c8;
+  --rose: #ff58a0;
+  --sky: #5aaaff;
+  --lilac: #ba8cff;
+  --accent: #ff7ac0;
+  --toggle: #5ef0c8;
+  --toggle-fg: #8bffdd;
+
+  --ease: cubic-bezier(0.3, 1.25, 0.4, 1);
+  --font: "Bricolage Grotesque", ui-rounded, system-ui, sans-serif;
+  --font-display: var(--font);
+  --ui-tracking: 0;
+  --title-size: 30px;
+  --title-weight: 800;
+  --title-tracking: -0.03em;
+  --title-transform: none;
+  --hero-fill: linear-gradient(100deg, #ffd666, #ff58a0, #ba8cff, #5ef0c8, #ffd666);
+  --hero-size: clamp(60px, 13vw, 132px);
+
+  --r-sm: 999px;
+  --r-md: 28px 36px 30px 40px;
+  --r-lg: 34px 46px 36px 50px;
+  --r-xl: 40px 54px 44px 58px;
+  --border-w: 1px;
+
+  --page-bg: radial-gradient(1200px 800px at 50% 120%, #2b0f66, transparent 70%), var(--bg);
+  --wrap-shadow: 0 30px 80px -30px rgba(255, 88, 160, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  --btn-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset;
+  --btn-shadow-press: none;
+  --btn-press: scale(0.94, 0.9);
+  --primary-bg: linear-gradient(135deg, #ff58a0, #9a6bff);
+  --primary-hover: linear-gradient(135deg, #ff77b4, #ad86ff);
+  --primary-fg: #fff;
+  --primary-border: transparent;
+  --primary-shadow: 0 10px 30px -10px rgba(255, 88, 160, 0.8), 0 1px 0 rgba(255, 255, 255, 0.4) inset;
+  --card-bg: linear-gradient(160deg, rgba(58, 34, 130, 0.78), rgba(28, 14, 76, 0.86));
+  --card-shadow: 0 24px 50px -28px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.25) inset;
+  --card-hover-shadow: 0 34px 70px -26px rgba(255, 88, 160, 0.55), 0 1px 0 rgba(255, 255, 255, 0.35) inset;
+  --card-hover-lift: translateY(-8px) scale(1.025);
+  --modal-bg: linear-gradient(160deg, #3a2490, #1f0f52);
+  --modal-shadow: 0 40px 90px -20px rgba(0, 0, 0, 0.8);
+  --backdrop: rgba(14, 6, 34, 0.7);
+  --bar-bg: rgba(21, 10, 51, 0.7);
+  --chip-bg: rgba(40, 22, 96, 0.6);
+  color-scheme: dark;
+}
+
+/* the blob field (injected by liquid.js): metaballs via an SVG goo filter */
+.liq-fx { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.liq-goo { position: absolute; inset: 0; filter: url(#liq-goo); }
+.liq-goo i, .liq-goo b {
+  position: absolute; border-radius: 50%;
+  width: var(--s); height: var(--s); left: var(--x); top: var(--y);
+  background: radial-gradient(circle at 35% 30%, var(--c1), var(--c2));
+  animation: liq-drift var(--t) ease-in-out infinite alternate;
+  animation-delay: var(--d, 0s);
+  opacity: 0.5;
+}
+.liq-goo i:nth-child(1) { --s: 46vmax; --x: -14vmax; --y: -12vmax; --c1: #ff6fb0; --c2: #c2306f; --t: 19s; }
+.liq-goo i:nth-child(2) { --s: 38vmax; --x: 62vw;    --y: -10vmax; --c1: #7a7bff; --c2: #4a2fd0; --t: 23s; --d: -6s; }
+.liq-goo i:nth-child(3) { --s: 34vmax; --x: 10vw;    --y: 62vh;    --c1: #5ef0c8; --c2: #1aa3b8; --t: 21s; --d: -9s; }
+.liq-goo i:nth-child(4) { --s: 30vmax; --x: 70vw;    --y: 58vh;    --c1: #ffd666; --c2: #ff8a3d; --t: 25s; --d: -3s; }
+.liq-goo i:nth-child(5) { --s: 22vmax; --x: 40vw;    --y: 30vh;    --c1: #ba8cff; --c2: #7b4ae6; --t: 17s; --d: -12s; }
+.liq-goo b { --s: 9vmax; left: 0; top: 0; margin: -4.5vmax 0 0 -4.5vmax; --c1: #fff2a8; --c2: #ff8ac8; animation: none; opacity: 0.95; will-change: transform; }
+@keyframes liq-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(9vw, 12vh) scale(1.18); }
+  100% { transform: translate(-8vw, 6vh) scale(0.9); }
+}
+html[data-theme="liquid"] #home, html[data-theme="liquid"] #app { position: relative; z-index: 1; }
+
+/* hero: the title ripples like it's under water */
+html[data-theme="liquid"] #home h1 {
+  font-variation-settings: "opsz" 96;
+  line-height: 0.95;
+  background-size: 300% 100%;
+  animation: liq-hue 12s linear infinite;
+  filter: url(#liq-ripple) drop-shadow(0 8px 30px rgba(255, 88, 160, 0.35));
+}
+@keyframes liq-hue { to { background-position: -300% 0; } }
+html[data-theme="liquid"] #home .subtitle { font-size: 19px; font-weight: 500; }
+html[data-theme="liquid"] #home .hero { margin-bottom: 56px; }
+html[data-theme="liquid"] #app h1 { filter: drop-shadow(0 2px 8px rgba(20, 5, 60, 0.75)); background: var(--hero-fill); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: liq-hue 12s linear infinite; }
+html[data-theme="liquid"] .back-link,
+html[data-theme="liquid"] #home .site-link { color: var(--muted); }
+
+/* cards: glass blobs whose outline keeps melting */
+html[data-theme="liquid"] #home .grid { gap: 28px; }
+html[data-theme="liquid"] #home .card {
+  border-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-radius: 44px 58px 40px 64px / 56px 42px 62px 46px;
+  animation: liq-morph-a 15s ease-in-out infinite alternate;
+  transition: transform 0.6s var(--ease), border-color 0.2s, box-shadow 0.4s;
+}
+html[data-theme="liquid"] #home .card:nth-child(3n+2) { animation-name: liq-morph-b; animation-duration: 18s; }
+html[data-theme="liquid"] #home .card:nth-child(3n) { animation-name: liq-morph-c; animation-duration: 21s; }
+html[data-theme="liquid"] #home .card:nth-child(2n) { animation-delay: -7s; }
+@keyframes liq-morph-a {
+  0%   { border-radius: 44px 58px 40px 64px / 56px 42px 62px 46px; }
+  50%  { border-radius: 62px 40px 60px 42px / 44px 62px 40px 60px; }
+  100% { border-radius: 40px 64px 48px 58px / 60px 46px 58px 40px; }
+}
+@keyframes liq-morph-b {
+  0%   { border-radius: 60px 44px 62px 40px / 42px 60px 44px 62px; }
+  50%  { border-radius: 42px 62px 44px 60px / 62px 44px 60px 42px; }
+  100% { border-radius: 58px 48px 40px 64px / 46px 58px 62px 42px; }
+}
+@keyframes liq-morph-c {
+  0%   { border-radius: 50px 50px 64px 40px / 40px 62px 46px 58px; }
+  50%  { border-radius: 40px 64px 42px 62px / 58px 40px 64px 46px; }
+  100% { border-radius: 64px 42px 56px 46px / 48px 60px 42px 62px; }
+}
+html[data-theme="liquid"] #home .card:hover { animation-duration: 3.5s; }
+html[data-theme="liquid"] #home .card::after {
+  /* gloss that follows the pointer */
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: radial-gradient(260px circle at var(--px, 30%) var(--py, 0%), rgba(255, 255, 255, 0.28), transparent 60%);
+  opacity: 0; transition: opacity 0.4s;
+}
+html[data-theme="liquid"] #home .card:hover::after { opacity: 1; }
+html[data-theme="liquid"] #home .card .preview { background: transparent; margin: 12px 12px 0; border-radius: 38px 48px 34px 52px / 46px 36px 50px 38px; }
+html[data-theme="liquid"] #home .card-text { border-top: 0; padding: 14px 26px 22px; }
+html[data-theme="liquid"] #home .card-title { font-size: 22px; font-weight: 800; }
+html[data-theme="liquid"] #home .card:hover canvas { transform: scale(1.08) rotate(-1deg); }
+html[data-theme="liquid"] #home .star-btn { opacity: 0.8; }
+
+/* game page */
+html[data-theme="liquid"] #canvas-wrap {
+  border-radius: 46px 62px 44px 66px / 58px 44px 64px 48px;
+  border-color: rgba(255, 255, 255, 0.22);
+  animation: wrap-in var(--wrap-dur) var(--wrap-ease) both, liq-morph-a 16s ease-in-out infinite alternate;
+}
+html[data-theme="liquid"] #canvas-wrap.fs { border-radius: 0; animation: none; }
+html[data-theme="liquid"] button { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.1); transition: transform 0.45s var(--ease), background 0.2s, border-color 0.2s, box-shadow 0.2s; }
+html[data-theme="liquid"] button:hover { transform: scale(1.05, 1.1); background: rgba(255, 255, 255, 0.2); }
+html[data-theme="liquid"] button:active { transform: var(--btn-press); }
+html[data-theme="liquid"] button.primary { background: var(--primary-bg); }
+html[data-theme="liquid"] button.primary:hover { background: var(--primary-hover); }
+html[data-theme="liquid"] button.active, html[data-theme="liquid"] button.hint-confirm { background: rgba(94, 240, 200, 0.22); }
+html[data-theme="liquid"] .preset-row select { background-color: rgba(255, 255, 255, 0.1); padding-left: 20px; }
+html[data-theme="liquid"] .controls { background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(12px); border-radius: 34px 44px 36px 48px; }
+html[data-theme="liquid"] .info-modal { border-radius: 54px 40px 58px 44px / 44px 58px 42px 60px; }
+html[data-theme="liquid"] .status { padding-left: 10px; }
+html[data-theme="liquid"] .theme-menu { border-radius: 32px 40px 34px 44px; }
+html[data-theme="liquid"] .theme-opt { border-radius: 24px; }
+
+:root { --liq-ease: cubic-bezier(0.3, 1.25, 0.4, 1); }
+@media (max-width: 640px) { html[data-theme="liquid"] #home .grid { gap: 22px; } html[data-theme="liquid"] #home .card { border-radius: 38px 48px 36px 52px / 46px 38px 50px 40px; } }
+@media (prefers-reduced-motion: reduce) {
+  .liq-goo i { animation: none; }
+  html[data-theme="liquid"] #home .card, html[data-theme="liquid"] #canvas-wrap, html[data-theme="liquid"] #home h1, html[data-theme="liquid"] #app h1 { animation: none; }
+  html[data-theme="liquid"] #home h1 { filter: none; }
+}

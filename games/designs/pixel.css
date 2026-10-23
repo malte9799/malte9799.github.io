@@ -1,0 +1,153 @@
+/* ---- Pixel art: 16 colours, hard edges, level-select cards, quantised previews ---- */
+html[data-theme="pixel"] {
+  --bg: #1d2b53;
+  --board: #12183a;
+  --panel: #2a3875;
+  --panel-2: #3a4a96;
+  --panel-edge: #fff1e8;
+  --edge-hover: #ffec27;
+  --grid-line: #3a4a96;
+  --hairline: #fff1e8;
+  --ink: #fff1e8;
+  --muted: #c2c3c7;
+  --dim: #83769c;
+  --sun: #ffec27;
+  --mint: #00e436;
+  --rose: #ff004d;
+  --sky: #29adff;
+  --lilac: #83769c;
+  --accent: #ffec27;
+  --toggle: #ffec27;
+  --toggle-fg: #ffec27;
+
+  --ease: steps(3, end);
+  --font: "Silkscreen", "VT323", ui-monospace, monospace;
+  --font-display: "Press Start 2P", "Silkscreen", monospace;
+  --ui-tracking: 0.02em;
+  --title-size: 18px;
+  --title-weight: 400;
+  --title-tracking: 0;
+  --title-transform: uppercase;
+  --hero-fill: none;
+  --hero-size: clamp(38px, 9.5vw, 92px);
+
+  --r-sm: 0;
+  --r-md: 0;
+  --r-lg: 0;
+  --r-xl: 0;
+  --border-w: 0px;
+
+  --page-bg: #1d2b53;
+  --wrap-shadow: 0 -4px 0 0 #fff1e8, 0 4px 0 0 #fff1e8, -4px 0 0 0 #fff1e8, 4px 0 0 0 #fff1e8, 0 12px 0 0 #000, 0 -8px 0 0 #000, 0 8px 0 0 #000, -8px 0 0 0 #000, 8px 0 0 0 #000;
+  --btn-shadow: 0 -3px 0 0 #fff1e8, 0 3px 0 0 #fff1e8, -3px 0 0 0 #fff1e8, 3px 0 0 0 #fff1e8, 0 6px 0 0 #000;
+  --btn-shadow-press: 0 -3px 0 0 #fff1e8, 0 3px 0 0 #fff1e8, -3px 0 0 0 #fff1e8, 3px 0 0 0 #fff1e8;
+  --btn-press: translateY(3px);
+  --primary-bg: #ff004d;
+  --primary-hover: #ff3b76;
+  --primary-fg: #fff1e8;
+  --primary-border: transparent;
+  --primary-shadow: 0 -3px 0 0 #000, 0 3px 0 0 #000, -3px 0 0 0 #000, 3px 0 0 0 #000, 0 6px 0 0 #7e2553;
+  --card-bg: #12183a;
+  --card-shadow: 0 -4px 0 0 #fff1e8, 0 4px 0 0 #fff1e8, -4px 0 0 0 #fff1e8, 4px 0 0 0 #fff1e8, 0 8px 0 0 #000;
+  --card-hover-shadow: 0 -4px 0 0 #ffec27, 0 4px 0 0 #ffec27, -4px 0 0 0 #ffec27, 4px 0 0 0 #ffec27, 0 8px 0 0 #000;
+  --card-hover-lift: translateY(-4px);
+  --modal-bg: #12183a;
+  --modal-shadow: 0 -4px 0 0 #fff1e8, 0 4px 0 0 #fff1e8, -4px 0 0 0 #fff1e8, 4px 0 0 0 #fff1e8, 0 12px 0 0 #000, 0 -8px 0 0 #000, 0 8px 0 0 #000, -8px 0 0 0 #000, 8px 0 0 0 #000;
+  --backdrop: rgba(10, 14, 40, 0.84);
+  --bar-bg: rgba(29, 43, 83, 0.95);
+  --chip-bg: #12183a;
+  color-scheme: dark;
+}
+html[data-theme="pixel"] body { image-rendering: pixelated; }
+html[data-theme="pixel"] body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' shape-rendering='crispEdges'><rect x='87' y='141' width='3' height='3' fill='%23ffec27'/><rect x='72' y='15' width='3' height='3' fill='%23fff1e8'/><rect x='93' y='192' width='6' height='6' fill='%2383769c'/><rect x='9' y='174' width='6' height='6' fill='%23ffec27'/><rect x='147' y='189' width='3' height='3' fill='%23ff77a8'/><rect x='153' y='33' width='3' height='3' fill='%23ffec27'/><rect x='6' y='102' width='6' height='6' fill='%23ff77a8'/><rect x='180' y='144' width='3' height='3' fill='%23c2c3c7'/><rect x='99' y='36' width='6' height='6' fill='%23fff1e8'/><rect x='144' y='39' width='3' height='3' fill='%23c2c3c7'/><rect x='129' y='90' width='3' height='3' fill='%23c2c3c7'/><rect x='189' y='198' width='3' height='3' fill='%2383769c'/><rect x='24' y='12' width='3' height='3' fill='%23ffec27'/><rect x='54' y='174' width='6' height='6' fill='%23c2c3c7'/><rect x='108' y='135' width='3' height='3' fill='%23ffec27'/><rect x='60' y='36' width='3' height='3' fill='%23ff77a8'/><rect x='135' y='189' width='3' height='3' fill='%23ff77a8'/><rect x='117' y='57' width='3' height='3' fill='%2329adff'/><rect x='195' y='27' width='3' height='3' fill='%23ff77a8'/><rect x='132' y='93' width='3' height='3' fill='%23fff1e8'/><rect x='129' y='84' width='3' height='3' fill='%2329adff'/><rect x='162' y='96' width='3' height='3' fill='%23ffec27'/><rect x='159' y='66' width='6' height='6' fill='%23c2c3c7'/><rect x='42' y='63' width='3' height='3' fill='%23c2c3c7'/><rect x='75' y='60' width='3' height='3' fill='%2329adff'/><rect x='3' y='144' width='3' height='3' fill='%2329adff'/></svg>") 0 0 / 200px 200px, url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' shape-rendering='crispEdges'><rect x='87' y='141' width='3' height='3' fill='%23ffec27'/><rect x='72' y='15' width='3' height='3' fill='%23fff1e8'/><rect x='93' y='192' width='6' height='6' fill='%2383769c'/><rect x='9' y='174' width='6' height='6' fill='%23ffec27'/><rect x='147' y='189' width='3' height='3' fill='%23ff77a8'/><rect x='153' y='33' width='3' height='3' fill='%23ffec27'/><rect x='6' y='102' width='6' height='6' fill='%23ff77a8'/><rect x='180' y='144' width='3' height='3' fill='%23c2c3c7'/><rect x='99' y='36' width='6' height='6' fill='%23fff1e8'/><rect x='144' y='39' width='3' height='3' fill='%23c2c3c7'/><rect x='129' y='90' width='3' height='3' fill='%23c2c3c7'/><rect x='189' y='198' width='3' height='3' fill='%2383769c'/><rect x='24' y='12' width='3' height='3' fill='%23ffec27'/><rect x='54' y='174' width='6' height='6' fill='%23c2c3c7'/><rect x='108' y='135' width='3' height='3' fill='%23ffec27'/><rect x='60' y='36' width='3' height='3' fill='%23ff77a8'/><rect x='135' y='189' width='3' height='3' fill='%23ff77a8'/><rect x='117' y='57' width='3' height='3' fill='%2329adff'/><rect x='195' y='27' width='3' height='3' fill='%23ff77a8'/><rect x='132' y='93' width='3' height='3' fill='%23fff1e8'/><rect x='129' y='84' width='3' height='3' fill='%2329adff'/><rect x='162' y='96' width='3' height='3' fill='%23ffec27'/><rect x='159' y='66' width='6' height='6' fill='%23c2c3c7'/><rect x='42' y='63' width='3' height='3' fill='%23c2c3c7'/><rect x='75' y='60' width='3' height='3' fill='%2329adff'/><rect x='3' y='144' width='3' height='3' fill='%2329adff'/></svg>") 77px 113px / 200px 200px;
+  animation: px-stars 90s linear infinite; opacity: 0.45;
+}
+@keyframes px-stars { to { background-position: 0 200px, 77px 313px; } }
+html[data-theme="pixel"] body::after {
+  content: ""; position: fixed; inset: 0; z-index: 95; pointer-events: none;
+  background: repeating-linear-gradient(transparent 0 3px, rgba(0, 0, 0, 0.14) 3px 4px);
+}
+html[data-theme="pixel"] #home, html[data-theme="pixel"] #app { position: relative; z-index: 1; }
+html[data-theme="pixel"] ::selection { background: #ffec27; color: #000; }
+
+/* hero */
+html[data-theme="pixel"] #home .hero { position: relative; margin-bottom: 64px; padding-top: 14px; }
+html[data-theme="pixel"] #home h1 {
+  background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #ffec27;
+  font-weight: 400; letter-spacing: 0.04em; line-height: 1.1; text-shadow: 4px 4px 0 #ff004d, 8px 8px 0 #000;
+  margin-bottom: 26px; image-rendering: pixelated;
+}
+html[data-theme="pixel"] #home .subtitle { font-size: 14px; color: #c2c3c7; text-transform: uppercase; letter-spacing: 0.08em; }
+html[data-theme="pixel"] #home .subtitle::before { content: "► press start ◄"; display: block; margin-bottom: 14px; font: 400 14px/1 var(--font-display); color: #ff004d; text-shadow: 2px 2px 0 #000; animation: px-blink 1s steps(1) infinite; }
+@keyframes px-blink { 50% { opacity: 0; } }
+html[data-theme="pixel"] #home .site-link, html[data-theme="pixel"] .back-link { font-size: 13px; text-transform: uppercase; letter-spacing: 0.1em; color: #29adff; }
+html[data-theme="pixel"] #home .site-link:hover, html[data-theme="pixel"] .back-link:hover { color: #ffec27; }
+.px-sprite { position: absolute; width: var(--p); height: var(--p); background: transparent; pointer-events: none; animation: px-bob 0.9s steps(2) infinite; }
+@keyframes px-bob { 50% { transform: translateY(-6px); } }
+
+/* cards: level select */
+html[data-theme="pixel"] #home .grid { gap: 38px 34px; counter-reset: pg; }
+html[data-theme="pixel"] #home .card {
+  counter-increment: pg; border: 0; margin: 4px; overflow: hidden;
+  transition: transform 0.14s steps(2), box-shadow 0.14s steps(2);
+}
+html[data-theme="pixel"] #home .card:hover { transform: translateY(-6px); }
+html[data-theme="pixel"] #home .card .preview { margin: 8px 8px 0; box-shadow: 0 -3px 0 0 #000, 0 3px 0 0 #000, -3px 0 0 0 #000, 3px 0 0 0 #000; width: auto; background: #12183a; }
+html[data-theme="pixel"] #home .card canvas { image-rendering: pixelated; }
+html[data-theme="pixel"] #home .card:hover canvas { transform: none; }
+html[data-theme="pixel"] #home .card .preview::before {
+  content: "LV " counter(pg, decimal-leading-zero); position: absolute; left: 0; top: 0; z-index: 3; padding: 6px 8px 5px; background: #000; color: #ffec27; font: 400 10px/1 var(--font-display);
+}
+html[data-theme="pixel"] #home .card-text { border: 0; padding: 16px 14px 16px; }
+html[data-theme="pixel"] #home .card-title { font: 400 13px/1.5 var(--font-display); color: #fff1e8; text-transform: uppercase; letter-spacing: 0; text-shadow: 2px 2px 0 #000; }
+html[data-theme="pixel"] #home .card-title::before { content: "▶ "; color: #ffec27; visibility: hidden; }
+html[data-theme="pixel"] #home .card:hover .card-title::before { visibility: visible; animation: px-blink 0.6s steps(1) infinite; }
+html[data-theme="pixel"] #home .card:hover .card-title { color: #ffec27; }
+html[data-theme="pixel"] #home .card-desc { font-size: 12px; color: #83769c; margin-top: 6px; text-transform: uppercase; }
+html[data-theme="pixel"] #home .card:hover .card-desc { color: #c2c3c7; }
+html[data-theme="pixel"] #home .star-btn { border: 0; border-radius: 0; box-shadow: 0 -3px 0 0 #000, 0 3px 0 0 #000, -3px 0 0 0 #000, 3px 0 0 0 #000; background: #12183a; width: 30px; height: 30px; top: 14px; right: 14px; color: #83769c; }
+html[data-theme="pixel"] #home .star-btn.starred { color: #ffec27; }
+html[data-theme="pixel"] #home .star-btn.starred .star-icon { fill: #ffec27; }
+html[data-theme="pixel"] #home .card.reveal { transform: translateY(24px); transition: opacity 0.4s steps(4), transform 0.4s steps(4); }
+html[data-theme="pixel"] #home .card.reveal.in { transform: none; }
+
+/* game page */
+html[data-theme="pixel"] #app { padding-top: 76px; }
+html[data-theme="pixel"] #app h1 { font-size: 20px; line-height: 1.3; color: #ffec27; text-shadow: 3px 3px 0 #ff004d, 5px 5px 0 #000; }
+html[data-theme="pixel"] .tag { font-size: 12px; color: #83769c; text-transform: uppercase; }
+html[data-theme="pixel"] header { align-items: center; margin-bottom: 26px; }
+html[data-theme="pixel"] #canvas-wrap { margin: 4px; image-rendering: pixelated; }
+html[data-theme="pixel"] #canvas-wrap:not(.fs) { box-shadow: var(--wrap-shadow); }
+html[data-theme="pixel"] #canvas-wrap:not(.fs)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: repeating-linear-gradient(transparent 0 3px, rgba(0, 0, 0, 0.1) 3px 4px); }
+html[data-theme="pixel"] #canvas-wrap canvas { image-rendering: pixelated; }
+html[data-theme="pixel"] .status { font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 22px; }
+html[data-theme="pixel"] .status::before { content: "HP"; font: 400 10px/1 var(--font-display); color: #ff004d; }
+html[data-theme="pixel"] .status .dot { border-radius: 0; width: 10px; height: 10px; }
+html[data-theme="pixel"] button, html[data-theme="pixel"] .preset-row select {
+  margin: 3px; background-color: #2a3875; text-transform: uppercase; font-size: 13px; font-weight: 400; letter-spacing: 0.04em; transition: none; border: 0;
+}
+html[data-theme="pixel"] .preset-row select { box-shadow: 0 -3px 0 0 #fff1e8, 0 3px 0 0 #fff1e8, -3px 0 0 0 #fff1e8, 3px 0 0 0 #fff1e8, 0 6px 0 0 #000; }
+html[data-theme="pixel"] button:hover { background: #3a4a96; box-shadow: 0 -3px 0 0 #ffec27, 0 3px 0 0 #ffec27, -3px 0 0 0 #ffec27, 3px 0 0 0 #ffec27, 0 6px 0 0 #000; color: #ffec27; }
+html[data-theme="pixel"] button:active { transform: translateY(6px); box-shadow: 0 -3px 0 0 #ffec27, 0 3px 0 0 #ffec27, -3px 0 0 0 #ffec27, 3px 0 0 0 #ffec27; }
+html[data-theme="pixel"] button.primary:hover { color: #fff1e8; background: #ff3b76; box-shadow: 0 -3px 0 0 #ffec27, 0 3px 0 0 #ffec27, -3px 0 0 0 #ffec27, 3px 0 0 0 #ffec27, 0 6px 0 0 #7e2553; }
+html[data-theme="pixel"] button.active, html[data-theme="pixel"] button.hint-confirm { background: #ffec27; color: #000; box-shadow: 0 -3px 0 0 #000, 0 3px 0 0 #000, -3px 0 0 0 #000, 3px 0 0 0 #000, 0 6px 0 0 #ab5236; }
+html[data-theme="pixel"] .preset-row select:hover { background-color: #3a4a96; box-shadow: 0 -3px 0 0 #ffec27, 0 3px 0 0 #ffec27, -3px 0 0 0 #ffec27, 3px 0 0 0 #ffec27, 0 6px 0 0 #000; }
+html[data-theme="pixel"] .controls { border: 0; margin: 4px; box-shadow: 0 -3px 0 0 #fff1e8, 0 3px 0 0 #fff1e8, -3px 0 0 0 #fff1e8, 3px 0 0 0 #fff1e8, 0 6px 0 0 #000; background: #12183a; }
+html[data-theme="pixel"] .ctl + .ctl { border-top: 2px dashed #3a4a96; }
+html[data-theme="pixel"] .info-modal { border: 0; margin: 4px; }
+html[data-theme="pixel"] .info-title { font: 400 16px/1.4 var(--font-display); color: #ffec27; }
+html[data-theme="pixel"] .info-text { font-size: 14px; }
+html[data-theme="pixel"] .info-modal canvas { border: 0; box-shadow: 0 -3px 0 0 #000, 0 3px 0 0 #000, -3px 0 0 0 #000, 3px 0 0 0 #000; }
+html[data-theme="pixel"] .theme-menu { border: 0; box-shadow: 0 -4px 0 0 #fff1e8, 0 4px 0 0 #fff1e8, -4px 0 0 0 #fff1e8, 4px 0 0 0 #fff1e8, 0 8px 0 0 #000; }
+html[data-theme="pixel"] .theme-opt:hover, html[data-theme="pixel"] .theme-opt:focus-visible { background: #3a4a96; }
+html[data-theme="pixel"] .preset-row select option { background: #12183a; }
+html[data-theme="pixel"] .preset-row::after { border-color: #ffec27; border-width: 4px; width: 8px; height: 8px; margin-top: -8px; }
+html[data-theme="pixel"] .info-btn { font-family: var(--font-display) !important; }
+@media (max-width: 640px) { html[data-theme="pixel"] .px-sprite { display: none; } html[data-theme="pixel"] #home .card-title { font-size: 12px; } }
+@media (prefers-reduced-motion: reduce) { html[data-theme="pixel"] body::before, .px-sprite, html[data-theme="pixel"] #home .subtitle::before { animation: none; } }
+
+/* primary button keeps its own colours over the design's generic button look */
+html[data-theme="pixel"] button.primary { background: var(--primary-bg); color: var(--primary-fg); border-color: var(--primary-border); }
+html[data-theme="pixel"] button.primary:hover { background: var(--primary-hover); color: var(--primary-fg); border-color: var(--primary-border); }
