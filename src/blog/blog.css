@@ -1,0 +1,139 @@
+/* Blog (/projects/blog/). Reuses the shared dark theme from global.css. */
+
+.blog-hero {
+  padding-top: clamp(120px, 22vh, 220px);
+  padding-bottom: clamp(48px, 8vh, 96px);
+}
+
+/* The title: every letter is mirrored horizontally; hovering flips them back one by one. */
+.blog-title {
+  margin: 0;
+  font-size: clamp(72px, 16vw, 200px);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  cursor: default;
+  user-select: none;
+}
+
+.blog-letter {
+  display: inline-block;
+  transform: scaleX(-1);
+  transform-origin: center;
+  transition: transform 0.6s var(--ease-out);
+  transition-delay: calc(var(--i) * 90ms);
+}
+
+.blog-title:hover .blog-letter,
+.blog-title:focus-visible .blog-letter {
+  transform: scaleY(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-letter {
+    transition: none;
+  }
+  .blog-title:hover .blog-letter,
+  .blog-title:focus-visible .blog-letter {
+    transform: scaleY(1);
+  }
+}
+
+.blog-hint {
+  margin-top: 18px;
+  font-size: 13px;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.blog-posts {
+  padding-bottom: clamp(80px, 14vh, 160px);
+  display: grid;
+  gap: 20px;
+  max-width: 720px;
+}
+
+.blog-post {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  padding: clamp(24px, 4vw, 40px);
+}
+
+.blog-post-title {
+  margin: 0 0 14px;
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: -0.02em;
+}
+
+.blog-post-body {
+  color: var(--text-2);
+}
+
+/* Markdown output */
+.blog-md-p {
+  white-space: pre-line;
+  margin: 0 0 16px;
+}
+.blog-md-p:last-child {
+  margin-bottom: 0;
+}
+.blog-md-quote {
+  margin: 0 0 16px;
+  padding: 2px 0 2px 16px;
+  border-left: 2px solid var(--hairline-strong);
+  white-space: pre-line;
+}
+.blog-md-pre {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  overflow-x: auto;
+  white-space: pre;
+}
+.blog-md-list {
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+.blog-md-list li {
+  margin: 4px 0;
+}
+.blog-md-h {
+  color: var(--text);
+  margin: 28px 0 10px;
+  letter-spacing: -0.02em;
+}
+.blog-md-h:first-child {
+  margin-top: 0;
+}
+.blog-md-h1 { font-size: 26px; }
+.blog-md-h2 { font-size: 22px; }
+.blog-md-h3,
+.blog-md-h4,
+.blog-md-h5,
+.blog-md-h6 { font-size: 18px; }
+.blog-post-body code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.9em;
+  background: var(--bg-elevated);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+.blog-post-body a {
+  color: var(--link);
+}
+.blog-post-body a:hover {
+  text-decoration: underline;
+}
+
+.blog-post-todo {
+  color: var(--text-3);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 14px;
+}
