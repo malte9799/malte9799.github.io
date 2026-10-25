@@ -2,6 +2,13 @@
 // # Headings, > blockquotes, - lists, paragraphs and inline **bold**,
 // *italic*, `code` and [text](url). Each paragraph keeps its line breaks,
 // so poems survive pasting as-is. Full-line <!-- comments --> are ignored.
+//
+// Annotation syntax:
+//   ==passage==     -> a clickable highlight (cursor hints at clicking)
+//   ==passage==%%description%%          -> the highlight reveals its description on click
+//   a paragraph that is only %%description%% -> a visible aside (standalone note)
+
+import { useState } from 'react';
 
 const INLINE = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)\s]+\))/g;
 
@@ -15,6 +22,55 @@ function inline(text, keyPrefix) {
     if (link) return <a key={key} href={link[2]} target="_blank" rel="noreferrer">{link[1]}</a>;
     return part;
   });
+}
+
+// A highlighted passage; clicking toggles its %%description%%.
+function Highlight({ text, note, keyPrefix }) {
+  const [open, setOpen] = useState(false);
+  if (!note) {
+    return <mark key={keyPrefix} className="blog-md-mark">{inline(text, keyPrefix)}</mark>;
+  }
+  const noteKey = `${keyPrefix}-note`;
+  return (
+    <span key={keyPrefix} className={`blog-md-hl${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className={`blog-md-mark is-button${open ? ' is-open' : ''}`}
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        {inline(text, `${keyPrefix}-t`)}
+      </button>
+      <span className={`blog-md-note${open ? ' is-open' : ''}`} role="note">
+        {inline(note, noteKey)}
+      </span>
+    </span>
+  );
+}
+
+function withHl(text, keyPrefix) {
+  // Split into plain / highlight segments, matching an optional trailing
+  // %%description%% directly after each ==passage==.
+  const out = [];
+  const pushPlain = chunk => {
+    if (!chunk) return;
+    const key = `${keyPrefix}-s${out.length}`;
+    out.push(inline(chunk, key));
+  };
+  let rest = String(text);
+  for (;;) {
+    const m = rest.match(/==([\s\S]+?)==/);
+    if (!m) break;
+    pushPlain(rest.slice(0, m.index));
+    const key = `${keyPrefix}-s${out.length}`;
+    const tail = rest.slice(m.index + m[0].length);
+    const note = tail.match(/^(?:\s*%%([\s\S]+?)%%)/);
+    const noteText = note ? note[1] : '';
+    out.push(<Highlight key={key} text={m[1]} note={noteText} keyPrefix={`${key}-h`} />);
+    rest = note ? tail.slice(note[0].length) : tail;
+  }
+  pushPlain(rest);
+  return out;
 }
 
 export default function Markdown({ text }) {
@@ -88,11 +144,17 @@ export default function Markdown({ text }) {
       return (
         <ul key={key} className="blog-md-list">
           {block.items.map((item, j) => (
-            <li key={j}>{inline(item, `${key}-${j}`)}</li>
+            <li key={j}>{withHl(item, `${key}-${j}`)}</li>
           ))}
         </ul>
       );
     }
-    return <p key={key} className="blog-md-p">{inline(block.lines.join('\n'), key)}</p>;
+    // A paragraph that is nothing but %%text%% renders as a visible aside
+    // (e.g. for notes that belong to a code block rather than a passage).
+    if (block.lines.length === 1) {
+      const solo = block.lines[0].trim().match(/^%%([\s\S]+)%%$/);
+      if (solo) return <aside key={key} className="blog-md-aside">{inline(solo[1], `${key}-a`)}</aside>;
+    }
+    return <p key={key} className="blog-md-p">{withHl(block.lines.join('\n'), key)}</p>;
   });
 }
