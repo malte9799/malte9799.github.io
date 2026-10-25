@@ -231,10 +231,8 @@ e
 r
 ```
 
-  t h e
+  ==t h e==%%The last real word it has left: an article, spelled out slowly — "the" without anything behind it. All the poem's meaning has withdrawn from the word yet; only the shape it used to hold remains.%%
 
 ```
-
-%%The final block is one sentence written in a thin column of breath: with the spaces removed it reads "Index of the spirit for forever. Many things in the semester, but the work is transmitted to you as the willing, which is the same as the others, and the other" — a whisper spread one letter at a time, so it can survive transmission.%%
 
 ```
