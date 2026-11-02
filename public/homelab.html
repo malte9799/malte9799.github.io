@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Homelab Media-Stack</title>
+<meta name="description" content="Von der Anfrage bis zum Abspielen: der Media-Stack meines Homelabs mit Seerr, Radarr, Sonarr, Prowlarr, SABnzbd, Jellyfin und Caddy.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ein Diagramm mit Schrittwahl darunter, Detailfeld unter dem Diagramm */
+:root{
+  --bg:#EDF1F3; --panel:#FFFFFF; --fg:#14202A; --muted:#5A6A76; --line:#B4C1CA;
+  --you:#B5680A; --doc:#117A69; --ext:#56646F; --flow:#CF4519;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1418; --panel:#161E24; --fg:#E6EEF2; --muted:#92A3AE; --line:#3A4A55;
+    --you:#F0B04A; --doc:#4CC9B0; --ext:#9BAAB4; --flow:#FF8D5E; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1418; --panel:#161E24; --fg:#E6EEF2; --muted:#92A3AE; --line:#3A4A55;
+  --you:#F0B04A; --doc:#4CC9B0; --ext:#9BAAB4; --flow:#FF8D5E; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.55;
+  padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));padding-block:28px 40px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,5vw,36px);line-height:1.1;margin:0;text-wrap:balance}
+.sub{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 8px 8px}
+svg{display:block;width:100%;height:auto}
+.node{cursor:pointer;transition:opacity .25s}
+.node:focus-visible{outline:none}
+.node:focus-visible rect{stroke-width:3}
+.node rect{stroke-width:1.5;transition:stroke-width .2s}
+.node:hover rect,.node.sel rect{stroke-width:3}
+.k-you rect{fill:color-mix(in srgb,var(--you) 15%,var(--panel));stroke:var(--you)}
+.k-doc rect{fill:color-mix(in srgb,var(--doc) 15%,var(--panel));stroke:var(--doc)}
+.k-ext rect{fill:color-mix(in srgb,var(--ext) 12%,var(--panel));stroke:var(--ext);stroke-dasharray:5 4}
+.nt{font:600 14px var(--body);fill:var(--fg)}
+.ns{font:400 12px var(--body);fill:var(--muted)}
+.lbl{font:400 12px var(--body);fill:var(--muted)}
+.edge{stroke:var(--line);stroke-width:1.6;fill:none;transition:stroke .25s,opacity .25s}
+.edge.on{stroke:var(--flow);stroke-width:2.4}
+.dim{opacity:.25}
+@media (prefers-reduced-motion:no-preference){
+  .edge.on{stroke-dasharray:6 5;animation:flow .9s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-11}}
+}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;padding:8px 10px 4px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:14px;height:14px;border-radius:3px;border:1.5px solid}
+.sw.you{border-color:var(--you);background:color-mix(in srgb,var(--you) 15%,var(--panel))}
+.sw.doc{border-color:var(--doc);background:color-mix(in srgb,var(--doc) 15%,var(--panel))}
+.sw.ext{border-color:var(--ext);border-style:dashed;background:color-mix(in srgb,var(--ext) 12%,var(--panel))}
+.steps{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:500 14px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.chip:hover{border-color:var(--fg)}
+.chip:focus-visible,.next:focus-visible{outline:2px solid var(--flow);outline-offset:2px}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.next{margin-left:auto;font:500 14px var(--body);background:var(--flow);color:#fff;border:0;border-radius:999px;padding:8px 18px;cursor:pointer}
+:root[data-theme="dark"] .next{color:#1b1005}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .next{color:#1b1005}}
+.detail{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-height:112px}
+.detail h2{font-family:var(--display);font-size:19px;margin:0 0 4px;font-weight:600}
+.detail p{margin:0;max-width:62ch}
+.port{display:inline-block;margin-top:10px;font:500 13px var(--mono);color:var(--fg);background:color-mix(in srgb,var(--doc) 14%,var(--panel));border:1px solid var(--line);border-radius:6px;padding:3px 9px}
+.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 16px;margin:0;padding:0;list-style:none}
+.ports li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:6px 0;min-width:0}
+.ports b{font-weight:500}
+.ports code{font:400 13px var(--mono);color:var(--muted)}
+.prov{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h4{font-family:var(--display);font-size:17px;font-weight:600;margin:0 0 4px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.card p{margin:0 0 10px;font-size:14px}
+.tag{font:400 12px var(--body);color:var(--muted)}
+.card dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0 0 12px;font-size:14px}
+.card dt{color:var(--muted)}
+.card dd{margin:0;min-width:0}
+.card code{font:400 13px var(--mono);overflow-wrap:anywhere}
+.card .how{color:var(--fg);border-top:1px solid var(--line);padding-top:10px}
+.card .note{color:var(--muted);font-size:13px;margin:10px 0 0}
+.links{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.links a{color:var(--doc);text-underline-offset:3px}
+.links a:focus-visible{outline:2px solid var(--flow);outline-offset:2px}
+h3{font-family:var(--display);font-size:16px;margin:0 0 6px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Homelab Media-Stack</h1>
+    <p class="sub">Von der Anfrage bis zum Abspielen. Tippe auf einen Dienst oder geh den Weg einer Anfrage Schritt für Schritt durch.</p>
+  </header>
+
+  <div class="stage">
+    <svg id="map" viewBox="0 0 680 495" role="img" aria-label="Ablaufdiagramm: Caddy leitet von außen an Jellyfin und Seerr, Seerr leitet an Radarr und Sonarr, Prowlarr liefert Indexer, SABnzbd lädt über Eweka, Jellyfin zeigt die Medien">
+      <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <g id="edges"></g>
+      <text class="lbl" x="362" y="312">Medienordner</text>
+      <g id="nodes"></g>
+    </svg>
+    <div class="legend">
+      <span><i class="sw you"></i>Für dich sichtbar</span>
+      <span><i class="sw doc"></i>Docker-Container</span>
+      <span><i class="sw ext"></i>Extern im Internet</span>
+    </div>
+  </div>
+
+  <div class="steps" id="steps"></div>
+
+  <div class="detail" id="detail" aria-live="polite"></div>
+
+  <section id="extern" class="ext-docs">
+    <h3>Externe Dienste</h3>
+    <div class="prov">
+      <article class="card">
+        <h4>Eweka <span class="tag">Usenet-Provider</span></h4>
+        <p>Liefert die Artikel, die SABnzbd herunterlädt. Die Zugangsdaten stehen im Kundenbereich.</p>
+        <dl>
+          <dt>Server</dt><dd><code>news.eweka.nl</code></dd>
+          <dt>Port mit SSL</dt><dd><code>563</code> (empfohlen)</dd>
+          <dt>Port ohne SSL</dt><dd><code>119</code></dd>
+          <dt>Verbindungen</dt><dd>bis 50, Start mit 20</dd>
+        </dl>
+        <p class="how">In SABnzbd unter Config, Servers eintragen: Host, Port 563, SSL an, Benutzername und Passwort aus dem Kundenbereich.</p>
+        <ul class="links">
+          <li><a href="https://www.eweka.nl/en" target="_blank" rel="noopener">Startseite</a></li>
+          <li><a href="https://www.eweka.nl/en/myeweka/login" target="_blank" rel="noopener">Kundenbereich (Login)</a></li>
+          <li><a href="https://www.eweka.nl/en/usenet_toegang/specificaties" target="_blank" rel="noopener">Server-Spezifikationen</a></li>
+          <li><a href="https://www.eweka.nl/en/support" target="_blank" rel="noopener">Support</a></li>
+        </ul>
+      </article>
+      <article class="card">
+        <h4>Treasure-Maps <span class="tag">Usenet-Indexer</span></h4>
+        <p>Ehemals SceneNZBs. Wird in der Community besonders für deutsche Inhalte empfohlen.</p>
+        <dl>
+          <dt>Registrierung</dt><dd>offen</dd>
+          <dt>Gratis-Konto</dt><dd>5 Downloads pro Tag</dd>
+          <dt>API-Key</dt><dd>nur mit Premium</dd>
+          <dt>Premium</dt><dd>15 pro Jahr (laut Guide)</dd>
+        </dl>
+        <p class="how">Den API-Key findest du im Profil. In Prowlarr unter Indexers, Add Indexer, nach Treasure-Maps suchen und Key eintragen. Fehlt er in der Liste, geht es als Generic Newznab mit der Adresse deines Kontos.</p>
+        <ul class="links">
+          <li><a href="https://github.com/PCJones/usenet-guide" target="_blank" rel="noopener">Usenet-Guide mit Indexer-Liste (GitHub)</a></li>
+          <li><a href="https://prowlarr.com" target="_blank" rel="noopener">Prowlarr</a></li>
+        </ul>
+        <p class="note">Eine direkte Adresse für Treasure-Maps konnte ich nicht belegen. Der Guide verlinkt Indexer bewusst nicht. Trag hier die Adresse ein, die du bei der Anmeldung nutzt.</p>
+      </article>
+      <article class="card">
+        <h4>dydns.io <span class="tag">Dynamisches DNS</span></h4>
+        <p>Hält deine Adressen auf die wechselnde IP deines Anschlusses gerichtet. Du hast den Anbieter gewählt, weil er mehrere Ebenen wie <code>media.malte.dydns.io</code> erlaubt.</p>
+        <dl>
+          <dt>Adressen</dt><dd><code>malte.dydns.io</code>, <code>media.malte.dydns.io</code></dd>
+          <dt>Update</dt><dd>Skript auf dem Server (altes ging verloren)</dd>
+          <dt>Zertifikate</dt><dd>Caddy per HTTP-Challenge, Port 80 und 443 offen</dd>
+        </dl>
+        <p class="how">Der Updater ist ein Aufruf mit Token, den ein Timer etwa alle fünf Minuten ausführt, zum Beispiel per systemd. Die genaue Update-Adresse steht in deinem Kundenkonto beim Anbieter.</p>
+        <p class="note">Einen Link zum Anbieter konnte ich nicht belegen, die Suche fand dazu nichts. Trag hier die Adresse deines Kontos ein.</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h3>Ports im lokalen Netz</h3>
+    <ul class="ports" id="ports"></ul>
+  </section>
+</div>
+
+<script>
+var NODES=[
+ {id:'seerr',x:270,y:30,w:160,t:'Seerr',s:'Anfragen & Wünsche',k:'you',port:5055,d:'Die Webseite für dich, Familie und Freunde. Hier suchst du Filme und Serien und stellst eine Anfrage. Seerr kümmert sich um den Rest.'},
+ {id:'radarr',x:200,y:130,w:140,t:'Radarr',s:'Filme',k:'doc',port:7878,d:'Verwaltet die Filmsammlung. Sucht über die Indexer nach der passenden Datei, schickt sie an den Downloader und sortiert sie danach ein.'},
+ {id:'sonarr',x:360,y:130,w:140,t:'Sonarr',s:'Serien',k:'doc',port:8989,d:'Wie Radarr, nur für Serien. Behält Staffeln und neue Folgen im Blick und holt fehlende nach.'},
+ {id:'prowlarr',x:20,y:130,w:130,t:'Prowlarr',s:'Indexer-Manager',k:'doc',port:9696,d:'Eine zentrale Stelle für alle Indexer. Du trägst Treasure-Maps einmal ein, Prowlarr synchronisiert ihn automatisch zu Radarr und Sonarr.'},
+ {id:'tm',x:20,y:230,w:130,t:'Treasure-Maps',s:'Usenet-Indexer',k:'ext',port:null,d:'Der Indexer liefert NZB-Dateien, also Wegweiser zu den Artikeln im Usenet. Er läuft extern, in Prowlarr kommt nur der API-Key hinein.'},
+ {id:'sab',x:270,y:230,w:160,t:'SABnzbd',s:'Usenet-Downloader',k:'doc',port:8080,d:'Nimmt NZB-Dateien an, lädt sie über den Provider herunter, prüft und entpackt sie. Danach meldet er den fertigen Download zurück.'},
+ {id:'eweka',x:520,y:230,w:130,t:'Eweka',s:'Usenet-Provider',k:'ext',port:null,d:'Der Usenet-Provider (eweka.nl) speichert die Artikel. Zugangsdaten und Zahl der Verbindungen trägst du in SABnzbd ein.'},
+ {id:'jelly',x:270,y:330,w:160,t:'Jellyfin',s:'Mediathek',k:'you',port:8096,d:'Liest den Medienordner ein und zeigt Filme und Serien mit Postern an. Streamt auf Fernseher, Handy und Browser.'},
+ {id:'dydns',x:520,y:420,w:130,t:'dydns.io',s:'Dynamisches DNS',k:'ext',port:null,d:'Dynamisches DNS. Deine Adressen wie media.malte.dydns.io zeigen darüber auf die wechselnde IP deines Anschlusses. Ein Updater meldet die neue IP regelmäßig an den Anbieter, sonst läuft die Adresse ins Leere.'},
+ {id:'caddy',x:520,y:330,w:130,t:'Caddy',s:'Reverse Proxy',k:'doc',port:'80 / 443',d:'Der einzige Dienst, der von außen erreichbar ist. Caddy holt die HTTPS-Zertifikate automatisch und leitet Anfragen an Jellyfin und Seerr weiter. Radarr, Sonarr, Prowlarr und SABnzbd bleiben im internen Netz.'}
+];
+var EDGES=[
+ {id:'e1',a:[310,88,272,128]},{id:'e2',a:[390,88,428,128]},
+ {id:'e3',a:[85,228,85,188]},{id:'e4',a:[152,158,198,158]},
+ {id:'e5',a:[290,188,318,228]},{id:'e6',a:[410,188,382,228]},
+ {id:'e7',a:[432,258,518,258]},{id:'e8',a:[350,288,350,328]},
+ {id:'e11',a:[585,418,585,388]},{id:'e9',a:[518,358,432,358]},{id:'e10',d:'M650 358H668V58H432'}
+];
+var STEPS=[
+ {t:'Zugriff von außen',d:'Dein Handy oder Fernseher ruft deine Adresse auf. Über dydns.io findet es die aktuelle IP deines Anschlusses. Caddy nimmt die Verbindung an, sorgt für HTTPS und leitet sie an Jellyfin oder Seerr weiter. Mehr ist von außen nicht erreichbar.',n:['dydns','caddy','jelly','seerr'],e:['e11','e9','e10']},
+ {t:'Du fragst an',d:'In Seerr suchst du einen Titel und klickst auf Anfragen. Seerr gibt Filme an Radarr und Serien an Sonarr weiter.',n:['seerr','radarr','sonarr'],e:['e1','e2']},
+ {t:'Suche im Usenet',d:'Radarr und Sonarr fragen über Prowlarr bei Treasure-Maps nach passenden NZB-Dateien. Prowlarr hält die Indexer-Einstellungen für beide bereit.',n:['radarr','sonarr','prowlarr','tm'],e:['e3','e4']},
+ {t:'Download starten',d:'Das beste Ergebnis schickt Radarr oder Sonarr an SABnzbd.',n:['radarr','sonarr','sab'],e:['e5','e6']},
+ {t:'Von Eweka laden',d:'SABnzbd holt die Artikel bei Eweka, setzt die Teile zusammen und entpackt sie.',n:['sab','eweka'],e:['e7']},
+ {t:'Einsortieren',d:'Radarr und Sonarr erkennen den fertigen Download, benennen die Datei um und legen sie im Medienordner ab.',n:['sab','radarr','sonarr'],e:['e5','e6','e8']},
+ {t:'Abspielen',d:'Jellyfin liest den Medienordner ein. Der neue Titel erscheint in der Mediathek und kann gestreamt werden.',n:['jelly'],e:['e8']}
+];
+var NS='http://www.w3.org/2000/svg';
+function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+var gE=document.getElementById('edges'),gN=document.getElementById('nodes'),elmap={},emap={};
+EDGES.forEach(function(e){emap[e.id]=e.d?el('path',{d:e.d,'class':'edge','marker-end':'url(#arrow)'},gE):el('line',{x1:e.a[0],y1:e.a[1],x2:e.a[2],y2:e.a[3],'class':'edge','marker-end':'url(#arrow)'},gE)});
+NODES.forEach(function(n){
+  var g=el('g',{'class':'node k-'+n.k,tabindex:0,role:'button','aria-label':n.t+', '+n.s},gN);
+  el('rect',{x:n.x,y:n.y,width:n.w,height:56,rx:8},g);
+  var t=el('text',{'class':'nt',x:n.x+n.w/2,y:n.y+19,'text-anchor':'middle','dominant-baseline':'central'},g);t.textContent=n.t;
+  var s=el('text',{'class':'ns',x:n.x+n.w/2,y:n.y+38,'text-anchor':'middle','dominant-baseline':'central'},g);s.textContent=n.s;
+  g.addEventListener('click',function(){pick(n.id)});
+  g.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();pick(n.id)}});
+  elmap[n.id]=g;
+});
+var detail=document.getElementById('detail'),stepsBox=document.getElementById('steps'),cur=-1,chips=[];
+function chip(label,i){var b=document.createElement('button');b.className='chip';b.type='button';b.textContent=label;b.setAttribute('aria-pressed','false');b.onclick=function(){go(i)};stepsBox.appendChild(b);chips.push(b)}
+chip('Überblick',-1);STEPS.forEach(function(s,i){chip((i+1)+'. '+s.t,i)});
+var nx=document.createElement('button');nx.className='next';nx.type='button';nx.textContent='Weiter';nx.onclick=function(){go(cur>=STEPS.length-1?-1:cur+1)};stepsBox.appendChild(nx);
+function render(title,text,port){
+  detail.innerHTML='';
+  var h=document.createElement('h2');h.textContent=title;detail.appendChild(h);
+  var p=document.createElement('p');p.textContent=text;detail.appendChild(p);
+  if(port){var c=document.createElement('span');c.className='port';c.textContent=String(port).indexOf('/')>-1?'Ports '+port:'http://server-ip:'+port;detail.appendChild(c)}
+}
+function mark(nodes,edges,sel){
+  for(var id in elmap){var on=!nodes||nodes.indexOf(id)>-1;elmap[id].classList.toggle('dim',!on);elmap[id].classList.toggle('sel',sel===id)}
+  for(var e in emap){var on2=!edges||edges.indexOf(e)>-1;emap[e].classList.toggle('dim',!on2);emap[e].classList.toggle('on',!!edges&&on2)}
+}
+function go(i){
+  cur=i;
+  chips.forEach(function(c,k){c.setAttribute('aria-pressed',String(k-1===i))});
+  nx.textContent=i>=STEPS.length-1?'Von vorn':'Weiter';
+  if(i<0){mark(null,null);render('Überblick','Caddy ist die Tür nach außen. Seerr nimmt Wünsche an, Radarr und Sonarr suchen sie über Prowlarr und Treasure-Maps, SABnzbd lädt sie bei Eweka, Jellyfin spielt sie ab. Alles läuft als Docker-Container auf einem Linux-Server.');return}
+  var s=STEPS[i];mark(s.n,s.e);render((i+1)+'. '+s.t,s.d);
+}
+function pick(id){
+  var n=NODES.filter(function(x){return x.id===id})[0];
+  cur=-1;chips.forEach(function(c,k){c.setAttribute('aria-pressed',String(k===0))});
+  mark([id],[],id);
+  for(var e in emap){emap[e].classList.remove('dim')}
+  for(var k in elmap){if(k!==id)elmap[k].classList.add('dim')}
+  render(n.t+' · '+n.s,n.d,n.port);
+}
+var pl=document.getElementById('ports');
+NODES.filter(function(n){return n.port}).forEach(function(n){
+  var li=document.createElement('li');var b=document.createElement('b');b.textContent=n.t;var c=document.createElement('code');c.textContent=n.port;li.appendChild(b);li.appendChild(c);pl.appendChild(li)});
+go(-1);
+</script>
+</body>
+</html>
