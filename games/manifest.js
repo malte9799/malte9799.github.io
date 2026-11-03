@@ -18,6 +18,7 @@ const GAMES = [
   { id: "flood",       title: "Flood It",      desc: "flood the board",             preview: drawFlood },
   { id: "sudoku",      title: "Sudoku",        desc: "9×9 · 6×6 · 4×4",             preview: drawSudoku },
   { id: "netwalk",     title: "Netwalk",       desc: "rotate pipes · power the grid", preview: drawNetwalk },
+  { id: "blackjack",   title: "Blackjack",     desc: "hit · stand · beat the dealer", preview: drawBlackjack },
 ];
 
 // ---- preview renderers ----
@@ -489,4 +490,66 @@ function drawNetwalk(p, w, h) {
   p.fill(...PAL.sun, 40); p.circle(sx, sy, cs * 0.66);
   p.fill(...PAL.sun); p.circle(sx, sy, cs * 0.4);
   p.noFill(); p.stroke(...PAL.dim); p.strokeWeight(2); p.circle(ox + 0.5 * cs, oy + 1.5 * cs, cs * 0.5);
+}
+
+function drawBlackjack(p, w, h) {
+  previewBg(p, w, h);
+  const cw = 70, ch = 98;
+  const RANK = [null, "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+  const suit = (s, cx, cy, z, col) => {
+    p.noStroke(); p.fill(...col);
+    if (s === 0) {
+      p.circle(cx - z * 0.24, cy + z * 0.1, z * 0.52); p.circle(cx + z * 0.24, cy + z * 0.1, z * 0.52);
+      p.triangle(cx - z * 0.49, cy + z * 0.04, cx + z * 0.49, cy + z * 0.04, cx, cy - z * 0.52);
+      p.triangle(cx, cy + z * 0.1, cx - z * 0.2, cy + z * 0.5, cx + z * 0.2, cy + z * 0.5);
+    } else if (s === 1) {
+      p.circle(cx - z * 0.24, cy - z * 0.14, z * 0.52); p.circle(cx + z * 0.24, cy - z * 0.14, z * 0.52);
+      p.triangle(cx - z * 0.49, cy - z * 0.06, cx + z * 0.49, cy - z * 0.06, cx, cy + z * 0.5);
+    } else if (s === 2) {
+      p.quad(cx, cy - z * 0.52, cx + z * 0.38, cy, cx, cy + z * 0.52, cx - z * 0.38, cy);
+    } else {
+      p.circle(cx, cy - z * 0.2, z * 0.44); p.circle(cx - z * 0.23, cy + z * 0.1, z * 0.44); p.circle(cx + z * 0.23, cy + z * 0.1, z * 0.44);
+      p.triangle(cx, cy, cx - z * 0.2, cy + z * 0.5, cx + z * 0.2, cy + z * 0.5);
+    }
+  };
+  const face = (x, y, r, s) => {
+    const col = (s === 1 || s === 2) ? PAL.rose : PAL.onLight;
+    p.fill(0, 0, 0, 40); p.noStroke(); p.rect(x + 1, y + 4, cw, ch, 9);
+    p.stroke(...PAL.lineHi, 120); p.strokeWeight(1); p.fill(250, 247, 240); p.rect(x, y, cw, ch, 9);
+    p.noStroke(); p.fill(...col); p.textAlign(p.LEFT, p.TOP); p.textStyle(p.BOLD); p.textSize(r === 10 ? 18 : 20);
+    p.text(RANK[r], x + 7, y + 6);
+    suit(s, x + 14, y + 37, 13, col);
+    if (r > 10) { p.textAlign(p.CENTER, p.CENTER); p.textSize(36); p.text(RANK[r], x + cw / 2 + 7, y + ch / 2 + 14); suit(s, x + cw / 2 + 10, y + ch / 2 - 16, 20, col); }
+    else suit(s, x + cw / 2 + 6, y + ch / 2 + 9, r === 1 ? 38 : 32, col);
+  };
+  const back = (x, y) => {
+    p.stroke(...PAL.lineHi, 120); p.strokeWeight(1); p.fill(...PAL.lilac); p.rect(x, y, cw, ch, 9);
+    p.noFill(); p.stroke(...PAL.onDark, 150); p.strokeWeight(1.5); p.rect(x + 6, y + 6, cw - 12, ch - 12, 6);
+    p.noStroke(); p.fill(...PAL.onDark, 120); p.quad(x + cw / 2, y + ch / 2 - 18, x + cw / 2 + 13, y + ch / 2, x + cw / 2, y + ch / 2 + 18, x + cw / 2 - 13, y + ch / 2);
+  };
+  const chip = (cx, cy, rad, v, col) => {
+    p.noStroke(); p.fill(0, 0, 0, 40); p.circle(cx + 1, cy + 3, rad * 2);
+    p.fill(...col); p.circle(cx, cy, rad * 2);
+    p.stroke(...PAL.onLight, 140); p.strokeWeight(rad * 0.16); p.strokeCap(p.SQUARE);
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; p.line(cx + Math.cos(a) * rad * 0.82, cy + Math.sin(a) * rad * 0.82, cx + Math.cos(a) * rad * 0.98, cy + Math.sin(a) * rad * 0.98); }
+    p.noFill(); p.stroke(...PAL.onLight, 120); p.strokeWeight(1.2); p.circle(cx, cy, rad * 1.3);
+    p.noStroke(); p.fill(...PAL.onLight); p.textAlign(p.CENTER, p.CENTER); p.textStyle(p.BOLD); p.textSize(rad * (v >= 100 ? 0.62 : 0.72)); p.text(v, cx, cy + 1);
+  };
+  const badge = (cx, cy, txt, col, ink) => {
+    p.textSize(15); p.textStyle(p.BOLD);
+    const bw = p.textWidth(txt) + 20;
+    p.noStroke(); p.fill(...col); p.rect(cx - bw / 2, cy - 12, bw, 24, 12);
+    p.fill(...ink); p.textAlign(p.CENTER, p.CENTER); p.text(txt, cx, cy + 0.5);
+  };
+  // dealer: 9 + hole card, you: K + A (blackjack); drawn in a 1.15× scaled frame around the centre
+  p.push(); p.translate(w / 2, h / 2); p.scale(1.15); p.translate(-w / 2, -h / 2);
+  const dx = w / 2 - cw - 6, dy = 62, py = 188;
+  face(dx, dy, 9, 2); back(dx + cw + 12, dy);
+  face(dx - 6, py, 13, 0); face(dx + cw + 6, py - 4, 1, 1);
+  badge(dx - 40, dy + 14, "9", PAL.panel, PAL.ink);
+  badge(dx - 40, py + 14, "21", PAL.mint, PAL.onLight);
+  // chip stack bottom-left, shoe top-right
+  chip(150, 270, 24, 100, PAL.mint); chip(150, 261, 24, 50, PAL.rose); chip(150, 252, 24, 10, PAL.sky);
+  back(430, 62); back(432, 64);
+  p.pop();
 }
