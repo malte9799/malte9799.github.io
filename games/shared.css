@@ -17,8 +17,16 @@ body {
   min-height: 100vh;
 }
 ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }
+/* Board size. --ar is the canvas height/width (set by game.js, 1 = square).
+   Narrow screens: one column, up to 720px wide.
+   Wide landscape screens: board on the left sized to the viewport height, controls in a side column. */
+:root {
+  --ar: 1;
+  --side: 360px;
+  --gap: 28px;
+}
 #app {
-  max-width: 480px;
+  max-width: 720px;
   margin: 0 auto;
   /* padding-top leaves room for the fixed .back-link */
   padding: 64px 18px 56px;
@@ -43,6 +51,19 @@ h1 {
   font-size: 13px;
   color: var(--muted);
   text-align: right;
+}
+.stage-main { min-width: 0; }
+.stage-side { min-width: 0; }
+@media (min-width: 960px) and (min-aspect-ratio: 5/4) {
+  :root {
+    /* width of the board: what fits next to the side column, and what fits above the fold */
+    --cv: max(360px, min(100vw - var(--side) - var(--gap) - 72px, (100vh - 150px) / var(--ar), 1200px));
+  }
+  #app { max-width: calc(var(--cv) + var(--gap) + var(--side) + 36px); }
+  .stage { display: flex; align-items: flex-start; gap: var(--gap); }
+  .stage-main { flex: none; width: var(--cv); }
+  .stage-side { flex: none; width: var(--side); }
+  .stage-side .status { margin-top: 0; }
 }
 #canvas-wrap {
   position: relative;
@@ -240,6 +261,7 @@ button.hint-confirm:hover { background: color-mix(in srgb, var(--toggle) 22%, va
 .info-btn {
   flex: none !important;
   width: 40px;
+  min-height: 40px;
   padding: 0 !important;
   font-size: 16px !important;
   font-weight: 700 !important;

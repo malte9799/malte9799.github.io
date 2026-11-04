@@ -4,6 +4,7 @@
 initGame({
   title: "Nonogram",
   tag: "paint the hidden picture",
+  fullscreen: true,
   presets: [
     { label: "10×10 (standard)", values: [10, 10] },
     { label: "5×5 (easy)",       values: [5,  5]  },
@@ -62,8 +63,6 @@ let panOrigin = null;
 
 // View transform
 const _view = { x: 0, y: 0, z: 1 };
-
-const CANVAS = 440;
 
 function makeGrid() {
   board = [];
@@ -358,18 +357,23 @@ function clamp() {
 }
 
 // Square cells sized so the clue gutters fit: clue numbers sit in slots of
-// CLUE_U cells, and the whole thing is centred in the canvas.
+// CLUE_U cells, and the whole thing is centred in the space below the top bar.
 const CLUE_U = 0.62;
+function uiHeight() {
+  return document.getElementById("ui-overlay")?.offsetHeight ?? 60;
+}
 function computeLayout() {
   const maxR = Math.max(...cluesR.map(c => c.length));
   const maxC = Math.max(...cluesC.map(c => c.length));
-  const M = 12;
-  const cs = Math.floor(Math.min(
+  const uiH = uiHeight();
+  const M = 20;
+  const availH = height - uiH;
+  const cs = Math.max(8, Math.floor(Math.min(
     (width - 2 * M) / (cols + (maxR + 0.4) * CLUE_U),
-    (height - 2 * M) / (rows + (maxC + 0.4) * CLUE_U)));
+    (availH - 2 * M) / (rows + (maxC + 0.4) * CLUE_U))));
   const totW = cs * (cols + (maxR + 0.4) * CLUE_U), totH = cs * (rows + (maxC + 0.4) * CLUE_U);
-  const ox = (width - totW) / 2, oy = (height - totH) / 2;
-  L = { cs, gx: Math.round(ox + (maxR + 0.4) * CLUE_U * cs), gy: Math.round(oy + (maxC + 0.4) * CLUE_U * cs), u: cs * CLUE_U };
+  const ox = (width - totW) / 2, oy = uiH + (availH - totH) / 2;
+  L = { cs, uiH, gx: Math.round(ox + (maxR + 0.4) * CLUE_U * cs), gy: Math.round(oy + (maxC + 0.4) * CLUE_U * cs), u: cs * CLUE_U };
 }
 
 // Ink dust puffs where a cell was toggled (screen space, so view-transformed)
@@ -504,15 +508,21 @@ function infoAnim(p, w, h, frame) {
 // ---- p5 lifecycle ----
 
 function setup() {
-  const c = createCanvas(CANVAS, CANVAS);
+  const c = createCanvas(windowWidth, windowHeight);
   c.parent("canvas-wrap");
   document.getElementById("canvas-wrap").addEventListener("contextmenu", e => e.preventDefault());
   newGame();
 }
 
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  L = null;
+  resetView();
+}
+
 function draw() {
   background(...PAL.board);
-  if (!L) computeLayout();
+  if (!L || L.uiH !== uiHeight()) computeLayout();
   const { cs, gx, gy, u } = L;
   const bw = cols * cs, bh = rows * cs;
 
@@ -600,7 +610,9 @@ function _getGridPos() {
   return c >= 0 && c < cols && r >= 0 && r < rows ? { c, r } : null;
 }
 
-function mousePressed() {
+function mousePressed(e) {
+  // only clicks on the board itself, not on the top bar or its panels
+  if (e && e.target && e.target.tagName !== "CANVAS") return;
   if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) return;
   if (keyIsDown(SHIFT) || mouseButton === CENTER) {
     panActive = true;
@@ -672,6 +684,7 @@ function keyPressed() {
 }
 
 function mouseWheel(e) {
+  if (e && e.target && e.target.tagName !== "CANVAS") return;
   if (mouseX < 0 || mouseY < 0 || mouseX > width || mouseY > height) return;
   const zoomFactor = e.delta < 0 ? 1.08 : 1 / 1.08;
   const mx = mouseX, my = mouseY;

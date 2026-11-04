@@ -493,7 +493,13 @@ function drawNetwalk(p, w, h) {
 }
 
 function drawBlackjack(p, w, h) {
-  previewBg(p, w, h);
+  // 90s casino: carpet, brass-framed felt
+  p.background(34, 10, 44);
+  p.noStroke();
+  for (let k = 0; k < 14; k++) for (let m = 0; m < 9; m++) { p.fill(236, 86, 170, 38); p.quad(k * 48 + 24, m * 48 - 6, k * 48 + 30, m * 48, k * 48 + 24, m * 48 + 6, k * 48 + 18, m * 48); }
+  p.fill(244, 200, 92); p.rect(18, 14, w - 36, h - 28, 22);
+  p.fill(160, 112, 28); p.rect(21, 17, w - 42, h - 34, 20);
+  for (let k = 12; k >= 0; k--) { p.fill(14 + k * 2, 100 + k * 5, 66 + k * 3); p.rect(26 + k * 6, 22 + k * 4, w - 52 - k * 12, h - 44 - k * 8, 16); }
   const cw = 70, ch = 98;
   const RANK = [null, "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
   const suit = (s, cx, cy, z, col) => {
@@ -513,9 +519,9 @@ function drawBlackjack(p, w, h) {
     }
   };
   const face = (x, y, r, s) => {
-    const col = (s === 1 || s === 2) ? PAL.rose : PAL.onLight;
+    const col = (s === 1 || s === 2) ? [200, 28, 44] : [28, 26, 36];
     p.fill(0, 0, 0, 40); p.noStroke(); p.rect(x + 1, y + 4, cw, ch, 9);
-    p.stroke(...PAL.lineHi, 120); p.strokeWeight(1); p.fill(250, 247, 240); p.rect(x, y, cw, ch, 9);
+    p.stroke(70, 56, 36, 190); p.strokeWeight(1); p.fill(252, 249, 240); p.rect(x, y, cw, ch, 9);
     p.noStroke(); p.fill(...col); p.textAlign(p.LEFT, p.TOP); p.textStyle(p.BOLD); p.textSize(r === 10 ? 18 : 20);
     p.text(RANK[r], x + 7, y + 6);
     suit(s, x + 14, y + 37, 13, col);
@@ -523,17 +529,17 @@ function drawBlackjack(p, w, h) {
     else suit(s, x + cw / 2 + 6, y + ch / 2 + 9, r === 1 ? 38 : 32, col);
   };
   const back = (x, y) => {
-    p.stroke(...PAL.lineHi, 120); p.strokeWeight(1); p.fill(...PAL.lilac); p.rect(x, y, cw, ch, 9);
-    p.noFill(); p.stroke(...PAL.onDark, 150); p.strokeWeight(1.5); p.rect(x + 6, y + 6, cw - 12, ch - 12, 6);
-    p.noStroke(); p.fill(...PAL.onDark, 120); p.quad(x + cw / 2, y + ch / 2 - 18, x + cw / 2 + 13, y + ch / 2, x + cw / 2, y + ch / 2 + 18, x + cw / 2 - 13, y + ch / 2);
+    p.stroke(70, 56, 36, 190); p.strokeWeight(1); p.fill(252, 249, 240); p.rect(x, y, cw, ch, 9); p.noStroke(); p.fill(168, 22, 44); p.rect(x + 5, y + 5, cw - 10, ch - 10, 5);
+    p.noFill(); p.stroke(244, 200, 92, 220); p.strokeWeight(1.5); p.rect(x + 9, y + 9, cw - 18, ch - 18, 4);
+    p.noStroke(); p.fill(244, 200, 92); p.quad(x + cw / 2, y + ch / 2 - 18, x + cw / 2 + 13, y + ch / 2, x + cw / 2, y + ch / 2 + 18, x + cw / 2 - 13, y + ch / 2);
   };
   const chip = (cx, cy, rad, v, col) => {
     p.noStroke(); p.fill(0, 0, 0, 40); p.circle(cx + 1, cy + 3, rad * 2);
     p.fill(...col); p.circle(cx, cy, rad * 2);
-    p.stroke(...PAL.onLight, 140); p.strokeWeight(rad * 0.16); p.strokeCap(p.SQUARE);
+    p.stroke(250, 248, 240, 230); p.strokeWeight(rad * 0.2); p.strokeCap(p.SQUARE);
     for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; p.line(cx + Math.cos(a) * rad * 0.82, cy + Math.sin(a) * rad * 0.82, cx + Math.cos(a) * rad * 0.98, cy + Math.sin(a) * rad * 0.98); }
-    p.noFill(); p.stroke(...PAL.onLight, 120); p.strokeWeight(1.2); p.circle(cx, cy, rad * 1.3);
-    p.noStroke(); p.fill(...PAL.onLight); p.textAlign(p.CENTER, p.CENTER); p.textStyle(p.BOLD); p.textSize(rad * (v >= 100 ? 0.62 : 0.72)); p.text(v, cx, cy + 1);
+    p.noFill(); p.stroke(250, 248, 240, 220); p.strokeWeight(1.2); p.circle(cx, cy, rad * 1.3);
+    p.noStroke(); p.fill(250, 248, 240); p.textAlign(p.CENTER, p.CENTER); p.textStyle(p.BOLD); p.textSize(rad * (v >= 100 ? 0.62 : 0.72)); p.text(v, cx, cy + 1);
   };
   const badge = (cx, cy, txt, col, ink) => {
     p.textSize(15); p.textStyle(p.BOLD);
@@ -546,10 +552,10 @@ function drawBlackjack(p, w, h) {
   const dx = w / 2 - cw - 6, dy = 62, py = 188;
   face(dx, dy, 9, 2); back(dx + cw + 12, dy);
   face(dx - 6, py, 13, 0); face(dx + cw + 6, py - 4, 1, 1);
-  badge(dx - 40, dy + 14, "9", PAL.panel, PAL.ink);
-  badge(dx - 40, py + 14, "21", PAL.mint, PAL.onLight);
+  badge(dx - 40, dy + 14, "9", [10, 10, 12], [255, 176, 40]);
+  badge(dx - 40, py + 14, "21", [10, 10, 12], [120, 255, 160]);
   // chip stack bottom-left, shoe top-right
-  chip(150, 270, 24, 100, PAL.mint); chip(150, 261, 24, 50, PAL.rose); chip(150, 252, 24, 10, PAL.sky);
+  chip(150, 270, 24, 100, [36, 36, 44]); chip(150, 261, 24, 50, [200, 32, 46]); chip(150, 252, 24, 10, [40, 100, 214]);
   back(430, 62); back(432, 64);
   p.pop();
 }

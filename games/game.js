@@ -73,6 +73,35 @@ function _slidersHTML(applyLabel) {
     </div>`;
 }
 
+// The canvas keeps its logical size (e.g. 440×440) and is scaled up by CSS to fill the
+// available space. Two things follow from the scaling:
+//  - --ar (height/width) lets the stylesheet size the board by viewport height, too;
+//  - p5's pixel density is raised to match, so the drawing stays sharp instead of blurry.
+function _watchCanvas() {
+  const wrap = document.getElementById("canvas-wrap");
+  const root = document.documentElement;
+  let canvas = null;
+  let lastAr = 0;
+  const fit = () => {
+    if (!canvas || typeof pixelDensity !== "function" || !window.width) return;
+    const cssW = canvas.clientWidth; // layout width, unaffected by the wrap-in animation transform
+    if (!cssW) return;
+    const ar = Math.round((canvas.height / canvas.width) * 1000) / 1000;
+    if (ar !== lastAr) { lastAr = ar; root.style.setProperty("--ar", ar); }
+    // device pixels per logical pixel, rounded up to quarter steps and capped for memory
+    const want = Math.min(3, Math.ceil((cssW / window.width) * (window.devicePixelRatio || 1) * 4) / 4);
+    if (Math.abs(pixelDensity() - want) > 0.01) {
+      pixelDensity(want); // clears the canvas ...
+      if (typeof redraw === "function") redraw(); // ... so repaint right away instead of showing a blank frame
+    }
+  };
+  const ro = new ResizeObserver(fit);
+  new MutationObserver(() => {
+    const c = wrap.querySelector("canvas");
+    if (c && c !== canvas) { canvas = c; ro.observe(c); fit(); }
+  }).observe(wrap, { childList: true });
+}
+
 function _buildShell() {
   const app = document.getElementById("app");
 
@@ -144,15 +173,20 @@ function _buildShell() {
         <h1>${_cfg.title}</h1>
         <span class="tag">${_cfg.tag}</span>
       </header>
-      <div id="canvas-wrap"></div>
-      <div class="status" id="status"><span class="dot"></span><span id="status-text">in progress</span></div>
-      <div class="preset-row">
-        <select id="preset-select">${_presetOptionsHTML()}</select>
+      <div class="stage">
+        <div class="stage-main"><div id="canvas-wrap"></div></div>
+        <div class="stage-side">
+          <div class="status" id="status"><span class="dot"></span><span id="status-text">in progress</span></div>
+          <div class="preset-row">
+            <select id="preset-select">${_presetOptionsHTML()}</select>
+          </div>
+          <div class="row tight" id="btn-row">${_buttonsHTML()}</div>
+          <div class="hint-note" id="note"></div>
+          <div class="controls" id="controls" style="display:none">${_slidersHTML("Apply &amp; generate")}</div>
+        </div>
       </div>
-      <div class="row tight" id="btn-row">${_buttonsHTML()}</div>
-      <div class="hint-note" id="note"></div>
-      <div class="controls" id="controls" style="display:none">${_slidersHTML("Apply &amp; generate")}</div>
     `;
+    _watchCanvas();
   }
 
   document.getElementById("preset-select").selectedIndex = 0;
