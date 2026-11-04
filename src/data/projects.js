@@ -98,8 +98,8 @@ export const FEATURED = [
       en: 'Local forecasts with a 48-hour chart, 14-day outlook, air quality, pollen and official severe-weather warnings, a live global weather map with radar, satellite, animated wind and natural events, and an interactive 3D solar system you can fast-forward through time.',
       de: 'Lokale Vorhersagen mit 48-Stunden-Diagramm, 14-Tage-Ausblick, Luftqualität, Pollenflug und amtlichen Unwetterwarnungen, eine Live-Wetterkarte mit Radar, Satellit, animiertem Wind und Naturereignissen und ein interaktives 3D-Sonnensystem, in dem man die Zeit vor- und zurückspulen kann.',
     },
-    url: 'https://malte9799.github.io/orbis/',
-    urlLabel: 'malte9799.github.io/orbis',
+    url: 'https://maltee.dev/orbis/',
+    urlLabel: 'maltee.dev/orbis',
     repo: 'https://github.com/malte9799/orbis',
     screenshots: [
       {
@@ -113,8 +113,8 @@ export const FEATURED = [
       {
         src: `${BASE}img/orbis-map-wind.webp`,
         label: { en: 'Weather map', de: 'Wetterkarte' },
-        url: 'https://malte9799.github.io/orbis/#/karte',
-        urlLabel: 'malte9799.github.io/orbis/#/karte',
+        url: 'https://maltee.dev/orbis/#/karte',
+        urlLabel: 'maltee.dev/orbis/#/karte',
         alt: {
           en: 'Orbis weather map on a 3D globe showing wind gusts as a colour layer with animated wind particles, plus a layer list with wildfires, storms and tornado warnings',
           de: 'Orbis-Wetterkarte auf einem 3D-Globus mit Windböen als Farbebene und animierten Windpartikeln, links die Ebenenliste mit Waldbränden, Stürmen und Tornadowarnungen',
@@ -123,8 +123,8 @@ export const FEATURED = [
       {
         src: `${BASE}img/orbis-map-satellite.webp`,
         label: { en: 'Live satellite', de: 'Live-Satellit' },
-        url: 'https://malte9799.github.io/orbis/#/karte',
-        urlLabel: 'malte9799.github.io/orbis/#/karte',
+        url: 'https://maltee.dev/orbis/#/karte',
+        urlLabel: 'maltee.dev/orbis/#/karte',
         alt: {
           en: 'Orbis globe with the NASA daily satellite image over the Americas, cloud cover and tropical storm markers',
           de: 'Orbis-Globus mit dem NASA-Tagesbild über Amerika, Wolkendecke und Sturm-Markierungen',
@@ -133,8 +133,8 @@ export const FEATURED = [
       {
         src: `${BASE}img/orbis-space.webp`,
         label: { en: 'Solar system', de: 'Sonnensystem' },
-        url: 'https://malte9799.github.io/orbis/#/weltall',
-        urlLabel: 'malte9799.github.io/orbis/#/weltall',
+        url: 'https://maltee.dev/orbis/#/weltall',
+        urlLabel: 'maltee.dev/orbis/#/weltall',
         alt: {
           en: 'Orbis solar system view: a 3D Earth in space with the list of planets and moons on the left and a fact sheet on the right',
           de: 'Orbis-Sonnensystem: eine 3D-Erde im All, links die Liste der Planeten und Monde, rechts ein Steckbrief',
