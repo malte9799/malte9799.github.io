@@ -6,7 +6,7 @@ import CountUp from '../components/reactbits/CountUp';
 import ShinyText from '../components/reactbits/ShinyText';
 import Magnet from '../components/reactbits/Magnet';
 import { ArrowRight, GitHubIcon } from '../components/Icons';
-import { GITHUB_URL } from '../data/projects';
+import { CARD_ORDER, GITHUB_URL } from '../data/projects';
 import { localePath, useLang, useT } from '../i18n';
 
 export function Statement() {
@@ -31,10 +31,10 @@ export function Statement() {
 
 // `label` is a key into the numbers strings.
 const STATS = [
-  { to: 33, label: 'effects', span: 'wide', accent: '#4f8cff' },
-  { to: 20, label: 'blendModes', accent: '#36d1ff' },
-  { to: 16, suffix: '×', label: 'fastForward', accent: '#ffb547' },
-  { to: 11, label: 'games', span: 'wide', accent: '#b4f461' },
+  { to: 90, suffix: '+', label: 'layers', span: 'wide', accent: '#4f8cff' },
+  { to: CARD_ORDER.length, label: 'projects', accent: '#36d1ff' },
+  { to: 12, label: 'games', accent: '#ffb547' },
+  { to: 50, suffix: 'k+', label: 'radio', span: 'wide', accent: '#b4f461' },
   // CountUp's "down" runs from `to` back to `from`, so this lands on 0.
   { to: 100, direction: 'down', label: 'servers', span: 'full', accent: '#f0abfc' },
 ];
