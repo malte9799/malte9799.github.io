@@ -39,6 +39,22 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+      # Cloudflare Workers Static Assets (wrangler.jsonc, Worker `maltee-site`): main -> https://maltee.dev/.
+      # Branch previews stay on GitHub Pages only (.assetsignore). Skipped on non-main pushes and without
+      # the secrets; a failure here must not block GitHub Pages, hence continue-on-error (shows up as annotation).
+      - name: Cloudflare (maltee.dev)
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::warning::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID nicht gesetzt – Cloudflare-Deploy übersprungen"; exit 0
+          fi
+          printf 'previews\n.nojekyll\n' > site/.assetsignore
+          npx --yes wrangler@4 deploy
+          echo "Cloudflare: https://maltee.dev/" >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
     needs: build

@@ -1,0 +1,20 @@
+// Assets-only Worker: serves the built site (scripts/build-pages.mjs -> site/) at https://maltee.dev/.
+// The route is `maltee.dev/*`; the more specific Orbis route (`maltee.dev/orbis*`, Worker `orbis-site`
+// in the orbis repo) still wins, so /orbis/ keeps being served by Orbis. See README "Hosting maltee.dev".
+// site/previews/ is excluded via site/.assetsignore (branch previews stay on GitHub Pages only).
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "maltee-site",
+  "compatibility_date": "2026-10-01",
+  "account_id": "6b3e7dfbc4ebf1d464dc32024e0e338f",
+  "assets": {
+    "directory": "./site",
+    // /projects -> /projects/ (redirect), /projects/ -> projects/index.html
+    "html_handling": "auto-trailing-slash",
+    // unknown paths are real 404s (the React pages are separate HTML entries, no SPA fallback)
+    "not_found_handling": "none"
+  },
+  "routes": [{ "pattern": "maltee.dev/*", "zone_name": "maltee.dev" }],
+  "workers_dev": true,
+  "preview_urls": false
+}

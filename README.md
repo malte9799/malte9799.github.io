@@ -21,6 +21,15 @@ npm run build     # static site in dist/
 Pushing to `main` builds and deploys via `.github/workflows/deploy.yml`
 (Settings → Pages → Source must be set to **GitHub Actions**).
 
+**maltee.dev.** The same `main` build is also served at https://maltee.dev/ by a Cloudflare
+assets-only Worker (`maltee-site`, `wrangler.jsonc`, route `maltee.dev/*`), deployed by the
+"Cloudflare (maltee.dev)" step of the workflow (main only; `previews/` is left out). Orbis keeps its own
+more specific route `maltee.dev/orbis*`, so `/orbis/` is unaffected. GitHub Pages stays live in parallel.
+One-time setup: repo secrets `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit + Zone → Workers Routes: Edit for
+maltee.dev, same as in the orbis repo) and `CLOUDFLARE_ACCOUNT_ID`; and the Cloudflare redirect rule that sends
+`maltee.dev/` to `/orbis/` must be removed (Dashboard → maltee.dev → Rules), otherwise it fires before the Worker.
+Without the secrets the step is skipped with a warning.
+
 **Branch previews.** The same workflow also builds every other branch (newest 12) into
 `/previews/<branch>/`, e.g. `https://malte9799.github.io/previews/my-branch/`; the list is at
 `/previews/`. `scripts/build-pages.mjs` does the work (`node scripts/build-pages.mjs` locally,
