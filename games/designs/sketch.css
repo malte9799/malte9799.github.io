@@ -125,10 +125,10 @@ html[data-theme="sketch"] #home .card:hover canvas { transform: none; }
 html[data-theme="sketch"] #home .card-text { border: 0; padding: 12px 6px 4px; }
 html[data-theme="sketch"] #home .card-title {
   font-family: var(--font-display); font-size: 25px; font-weight: 400; color: #222228; display: inline; letter-spacing: 0.01em;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='10' viewBox='0 0 24 10'%3E%3Cpath d='M0 5Q6 -1 12 5T24 5' fill='none' stroke='%23e63946' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x 0 100% / 24px 8px;
-  background-size: 0 8px; transition: background-size 0.5s ease-out; padding-bottom: 5px;
+  /* the wave runs under the whole title, always (stretched, one piece) */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='10' viewBox='0 0 300 10' preserveAspectRatio='none'%3E%3Cpath d='M2 5Q40 -1 75 5T150 5T225 5T298 5' fill='none' stroke='%23e63946' stroke-width='2.6' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat 0 100% / 100% 8px;
+  padding-bottom: 5px;
 }
-html[data-theme="sketch"] #home .card:hover .card-title { background-size: 100% 8px; }
 html[data-theme="sketch"] #home .card-desc { font-size: 17px; color: var(--muted); margin-top: 2px; }
 html[data-theme="sketch"] #home .star-btn { top: 20px; right: 20px; border: 2.5px solid #222228; background: #fff; border-radius: 50% 45% 55% 50%; z-index: 4; }
 html[data-theme="sketch"] #home .star-btn.starred { background: var(--hl-y); }
