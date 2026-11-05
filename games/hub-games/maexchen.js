@@ -49,7 +49,7 @@ const roll2 = () => [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.rand
 
 // ---- colours of the canvas table (the game's own look) ----
 const CLR = {
-  woodLo: [64, 41, 27], woodHi: [128, 85, 55],
+  wood: [98, 63, 41], woodLo: [64, 41, 27], woodHi: [128, 85, 55],
   feltLo: [19, 53, 41], feltHi: [43, 95, 72],
   chalk: [238, 232, 212], red: [198, 62, 50], brass: [214, 176, 104],
   die: [246, 237, 213], dieLo: [212, 197, 166], pip: [56, 46, 38],
@@ -297,7 +297,7 @@ export default {
     // ---- DOM ----
     ctx.root.innerHTML = `<div class="mx" tabindex="-1">
       <div class="mx-head"><div class="mx-seats"></div><span class="mx-meta"></span></div>
-      <div class="mx-board"><canvas aria-label="Der Spieltisch"></canvas></div>
+      <div class="mx-board"></div>
       <div class="mx-status" aria-live="polite"></div>
       <div class="mx-act"></div>
       <div class="mx-table"></div>
@@ -393,8 +393,7 @@ export default {
           p.noStroke();
           p.fill(...CLR.chalk, 140);
           p.textSize(11); p.textStyle(p.NORMAL);
-          p.text(cupsLeft ? "Noch " + cupsLeft + "× nachwürfeln" : "Becher aus", cx + 82, cy + 46);
-          if (cupsLeft) drawCup(p, cx + 58, cy + 44, 18, false);
+          p.text(cupsLeft ? "Noch " + cupsLeft + "× nachwürfeln" : "Becher aus", cx + 84, cy + 46);
         } else {
           drawCup(p, cx - 46, cy, 56, true);
           drawCup(p, cx + 46, cy, 56, true);
@@ -754,12 +753,12 @@ export default {
     sndBtn.className = "mx-snd";
     sndBtn.setAttribute("aria-label", "Sound umschalten");
     sndBtn.title = "Sound an/aus";
-    sndBtn.textContent = sound ? "🔊" : "🔇";
+    sndBtn.textContent = sound ? "Ton an" : "Ton aus";
     sndBtn.addEventListener("click", () => {
       sound = !sound;
       try { localStorage.setItem("mx_sound", sound ? "1" : "0"); } catch {}
       if (!sound && AC) { try { AC.close(); } catch {} AC = null; }
-      sndBtn.textContent = sound ? "🔊" : "🔇";
+      sndBtn.textContent = sound ? "Ton an" : "Ton aus";
       click();
     });
     rootEl.appendChild(sndBtn);
