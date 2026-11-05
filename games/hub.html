@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#0f101e" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<title>Mehrspieler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="themes.css" />
+<link rel="stylesheet" href="shared.css" />
+<link rel="stylesheet" href="multiplayer.css" />
+<link rel="stylesheet" href="hub.css" />
+<script src="themes.js"></script>
+<script src="multiplayer.js"></script>
+<script type="module" src="hub.js"></script>
+</head>
+<body>
+<div id="hub">
+  <a class="back-link" href="index.html">← Games</a>
+  <header class="hub-bar">
+    <h1>Mehrspieler</h1>
+    <div id="hub-tools" class="hub-tools"></div>
+  </header>
+  <section id="hub-lobby" aria-live="polite"></section>
+  <section id="hub-stage" hidden></section>
+</div>
+</body>
+</html>

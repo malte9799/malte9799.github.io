@@ -16,6 +16,8 @@ themes.js       designs: canvas palettes (PAL), fonts, render effects, picker
 themes.css      designs: the page styling per theme (html[data-theme=…])
 game.js         shared shell (header, presets, buttons, sliders, info modal)
                 + shared helpers every game uses — loaded on every page
+multiplayer.js  global multiplayer hub (window.Multiplayer) + lobby window,
+multiplayer.css loaded by index.html next to game.js, idle until used
 manifest.js     GAMES registry + one static preview renderer per game
 home.js         builds the home cards from GAMES (stars, sorting, p5 previews)
 shared.css      all shell styling, reading only theme variables
@@ -223,3 +225,104 @@ function drawMyGame(p, w, h) {
 - **Right-click** on the canvas: add a `contextmenu` preventDefault on
   `#canvas-wrap` if the game uses it.
 - **Win**: `setStatus(..., "solved")` + `celebrate(tier)` exactly once per win.
+
+## Multiplayer
+
+`multiplayer.js` (+ `multiplayer.css`) is a game-independent room for 2–6 players, loaded on every
+game page as `window.Multiplayer`. It uses Trystero 0.26 (Nostr relays for the handshake, then direct
+WebRTC), so there is no server and no account. Nothing is downloaded until someone opens a room.
+A game only sends its own messages; room, player list, host, invite link, QR code and the lobby
+window are handled here. Try it: open `mp-demo.html` in two tabs.
+
+```js
+Multiplayer.configure({ game: "tictactoe", min: 2, max: 2 });   // optional, before opening a room
+Multiplayer.mountButton(document.querySelector(".row"));        // "Mehrspieler" button → lobby window
+Multiplayer.openFromUrl();                                      // opened via …?room=CODE → join form pre-filled
+
+Multiplayer.on("start", ({ game, options, players }) => { /* host pressed "Spiel starten" */ });
+Multiplayer.on("message", ({ type, data, from, player }) => {});
+Multiplayer.onMessage("move", ({ data, from }) => applyMove(data));   // one message type only
+
+Multiplayer.send("move", { x, y });              // to everybody else in the room
+Multiplayer.send("hand", cards, playerId);       // to one player only
+```
+
+### Functions
+
+| Call | |
+|---|---|
+| `host({ name })` → Promise | open a new room, you become the host (state `lobby` when resolved) |
+| `join(code, { name })` → Promise | join by code; resolves when the host answered, `null` if it never does (20 s) |
+| `leave()` | leave the room (the others keep playing) |
+| `send(type, data, toId?)` | game message; `type` is any string, `data` any JSON. Returns `false` while not connected |
+| `on(event, fn)` → `off()` | subscribe to an event (`"*"` gets `(event, data)` for all), `onMessage(type, fn)` is shorthand for `"message:<type>"` |
+| `setGame(id, { min, max })` | host: choose the game the room plays next (everybody gets a `game` event, the lobby shows it); `min`/`max` limit when `start()` works |
+| `start(options?)` | host: start for everybody (needs `min` players). `options` is any JSON every client receives |
+| `endGame()` | host: game over, everybody is back in the lobby, the room stays open |
+| `configure({ game, min, max, lang, startOptions })` | defaults; `startOptions()` supplies `options` when the lobby's own "Spiel starten" button is used |
+| `openUI(prefill?)` / `closeUI()` / `mountButton(el, { label })` / `openFromUrl()` | the shared lobby window with QR board |
+| `roomUrl()` | invite link `…?game=<id>&room=<CODE>` |
+
+Read-only: `state` (`{ code, selfId, hostId, isHost, status, game, options, min, max, players }` or
+`null`), `players`, `me`, `isHost`, `connected`, `error`. A player is `{ id, name, host, you }`; `id` is
+the peer id and the address for `send(…, id)`. `status` is `connecting` → `lobby` ⇄ `playing`.
+
+### Events
+
+| Event | Payload |
+|---|---|
+| `join` / `leave` | the player. Fires for everybody, also for yourself on `join` as host |
+| `players` | the full player list after any change |
+| `host` | `{ hostId, previous, you }` — the host left; the player who has been in the room longest takes over automatically (everyone computes the same), so a room survives its host |
+| `game` | game id the host picked (or `null`) |
+| `start` | `{ game, options, players, isHost }` |
+| `end` | host called `endGame()` |
+| `status` | `"lobby"` / `"playing"` |
+| `message` | `{ type, data, from, player }` — only from players in the room |
+| `close` | `{ reason: "left" \| "error", message? }` — you are out of the room |
+| `error` | `{ message }` — connect failed, room not found, room full / already playing |
+
+### Rules of thumb
+
+- Who decides what is up to the game. The typical pattern (Kniffel, Blackjack, …): the host's client
+  owns the rules, others send intents and apply what they receive. `Multiplayer.isHost` and the `host`
+  event tell you who that is, also after a host change.
+- Joining is only possible in the lobby; during `playing` the host refuses new players.
+- A player who leaves mid-game disappears from `players` (event `leave`); the game decides what that means
+  (skip their turn, end the round, …).
+- Messages are not queued: nothing is delivered to players who join later. Send state on `join`
+  if a game allows late joiners.
+- Games are classic scripts. The module itself loads Trystero with `new Function("u","return import(u)")`
+  because a literal `import()` is rewritten by the Vite dev server. Do the same if you need another ESM from a CDN.
+- Lobby text is German; the English dictionary is in `multiplayer.js` (`configure({ lang: "en" })`).
+
+### The hub: switching games without leaving the room
+
+`hub.html` (+ `hub.js`, `hub.css`) is the shell for multiplayer games: one page, one room. The host
+picks a game card, presses start, and later "Zurück zur Lobby" to pick another – the page never reloads,
+so the WebRTC connection (and every player's peer id) survives. Games here are **ES modules** in
+`hub-games/` (not the old global scripts in `games/`), registered in the `GAMES` list at the top of `hub.js`:
+
+```js
+// hub-games/mygame.js
+export default {
+  min: 2, max: 4,                                   // players needed / allowed (the start button respects it)
+  mount(ctx) {
+    ctx.root.innerHTML = `…`;                       // build your UI here; the shell empties ctx.root afterwards
+    ctx.onMessage("move", ({ data, from }) => {});  // namespaced per game run, removed automatically
+    ctx.onEvent("leave", (player) => {});           // also "host" ({ you }), "join", "players"
+    return {
+      go() { /* every client starts now (after all have mounted) */ },
+      destroy() { /* clear your own timers, canvases, window listeners */ },
+    };
+  },
+};
+```
+
+`ctx`: `root`, `players` (frozen at start), `me`, `isHost` and `hostId` (live, change after a host
+migration), `options`, `send(type, data, toId?)`, `onMessage`, `onEvent`, `addCleanup(fn)`, `end()` (host).
+Rules: no globals, no top-level side effects (the module is imported once and kept), everything you
+start in `mount`/`go` is stopped in `destroy`. The host's client owns the rules and broadcasts state;
+see `hub-games/tictactoe.js` (turns, host authority, host migration) and `hub-games/clickrace.js`
+(`go()`, host announces the result). Canvas/p5 games should use p5 instance mode inside `ctx.root`.
+To add a game: write the module, add one line to `GAMES` in `hub.js`.
