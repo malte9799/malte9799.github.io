@@ -539,10 +539,19 @@ export default {
         const shown = forced ? null : (myPick == null ? min : myPick);
         const roll = cups > 0 && !forced
           ? `<button type="button" class="mx-sec" data-roll>🎲 Nachwürfeln · noch ${cups}×</button>` : "";
-        const pick = forced ? "" : `<div class="mx-claim">
-            <button type="button" data-dec aria-label="Weniger laut" ${shown == null || shown <= min ? "disabled" : ""}>−</button>
-            <span class="mx-claim-v">${claim ? `<i>${esc(rankName(claim.rank))} überbieten mit</i>` : `<i>Deine Ankündigung</i>`}<b>${shown == null ? (claim ? esc(rankName(claim.rank)) : "—") : esc(rankName(shown))}</b></span>
-            <button type="button" data-inc aria-label="Höher rauf" ${shown == null || shown >= TOP ? "disabled" : ""}>+</button>
+        // one chip per rank, low → high: first tap picks, second tap calls
+        const groups = [];
+        for (let r = 0; r <= TOP; r++) {
+          const g = r === TOP ? "Mäxle" : (RANKS[r][0] === RANKS[r][1] ? "Pasch" : "Leiter");
+          const row = groups[groups.length - 1];
+          if (!row || row.g !== g) groups.push({ g, chips: [r] });
+          else row.chips.push(r);
+        }
+        const pick = forced ? "" : `<div class="mx-ranks" role="group" aria-label="Ankündigung wählen">
+            <p class="mx-ranks-hint">${claim ? `${esc(rankName(claim.rank))} schlagen mit …` : "Deine erste Ankündigung …"} <span>Tippen wählt · nochmal tippen ruft</span></p>
+            ${groups.map(({ g, chips }) =>
+              `<div class="mx-grp"><span class="mx-grp-t">${g}</span>${chips.map((r) =>
+                `<button type="button" class="mx-rank${shown === r ? " sel" : ""}" data-rank="${r}" aria-pressed="${shown === r}"${r < min ? " disabled" : ""} title="${esc(rankName(r))}">${rankShort(r)}</button>`).join("")}</div>`).join("")}
           </div>`;
         const say = shown != null
           ? `<button type="button" class="primary" data-say>„${esc(rankName(shown))}“ rufen</button>` : "";
@@ -666,7 +675,7 @@ export default {
     ctx.onMessage("roll", ({ from }) => reroll(from));
     ctx.onMessage("claim", ({ data, from }) => announce(data && data.rank, from));
     ctx.onMessage("doubt", ({ from }) => doubt(from));
-    ctx.onMessage("go", ({ from }) => { if (from === ctx.hostId) go(); });
+    ctx.onMessage("go", ({ from }) => { if (ctx.isHost && st.phase === "over" && seatOf(from) >= 0) go(); });
     ctx.onMessage("state", ({ data, from }) => {
       if (from !== ctx.hostId) return;
       const next = clean(data, ids);
@@ -704,14 +713,10 @@ export default {
       if (b.dataset.t !== undefined) { if (ctx.isHost) { st.target = +b.dataset.t; push(); } return; }
       if (b.dataset.go !== undefined) { if (ctx.isHost) go(); else ctx.send("go", null, ctx.hostId); return; }
       if (b.dataset.roll !== undefined) { if (ctx.isHost) reroll(me()); else ctx.send("roll", null, ctx.hostId); return; }
-      if (b.dataset.dec !== undefined) {
-        myPick = Math.max(st.claim ? st.claim.rank + 1 : 0, (myPick == null ? (st.claim ? st.claim.rank + 1 : 0) : myPick) - 1);
-        paintDOM();
-        return;
-      }
-      if (b.dataset.inc !== undefined) {
-        myPick = Math.min(TOP, (myPick == null ? (st.claim ? st.claim.rank : 0) : myPick) + 1);
-        paintDOM();
+      if (b.dataset.rank !== undefined) {
+        const r = +b.dataset.rank;
+        if (myPick != null && myPick === r) { ctx.isHost ? announce(r, me()) : ctx.send("claim", { rank: r }, ctx.hostId); }
+        else { myPick = r; paintDOM(); }
         return;
       }
       if (b.dataset.say !== undefined) {
