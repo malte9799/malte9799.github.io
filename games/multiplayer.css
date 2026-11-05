@@ -107,3 +107,5 @@ button.mp-launch.mp-live::after { content: ""; width: 7px; height: 7px; margin-l
 #mp-dock .mp-crown { position: absolute; top: -9px; left: 50%; width: 18px; height: 18px; transform: translateX(-50%) rotate(-8deg); color: #ffc93c; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
 #mp-dock .mp-dock-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
 #mp-dock .mp-dock-nm em { margin-left: 6px; font-size: 11px; color: var(--muted); }
+
+#mp-ui button.mp-copy + button.mp-copy { margin-top: 8px; }

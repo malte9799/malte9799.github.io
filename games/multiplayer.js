@@ -29,7 +29,7 @@
     de: {
       title: "Mehrspieler", sub: "Bis zu {max} Freunde – ohne Konto, direkte Verbindung.", yourName: "Dein Name", player: "Spieler",
       create: "Raum erstellen", join: "Beitreten", or: "oder", hostT: "Neuen Raum öffnen", hostS: "Du bekommst Code, Link und QR-Code zum Einladen.",
-      joinT: "Mit Code beitreten", roomCode: "Raumcode", copyLink: "Einladungslink kopieren", copied: "Link kopiert!",
+      joinT: "Mit Code beitreten", roomCode: "Raumcode", copyLink: "Einladungslink kopieren", copied: "Link kopiert!", share: "Teilen …", shareText: "Komm in meinen Raum ({code})",
       players: "Spieler", start: "Spiel starten", pick: "Spiel auswählen", needMore: "Warte auf weitere Spieler …", tooMany: "Zu viele Spieler für dieses Spiel (max. {n}).", waitHost: "Warte auf den Start durch den Host …",
       connecting: "Verbinde …", leave: "Raum verlassen", you: "du", host: "Host", game: "Spiel",
       full: "Der Raum ist voll oder das Spiel läuft schon.", noRoom: "Kein Raum mit diesem Code gefunden.",
@@ -40,7 +40,7 @@
     en: {
       title: "Multiplayer", sub: "Up to {max} friends — no account, direct connection.", yourName: "Your name", player: "Player",
       create: "Create room", join: "Join", or: "or", hostT: "Open a new room", hostS: "You get a code, a link and a QR code to invite friends.",
-      joinT: "Join with a code", roomCode: "Room code", copyLink: "Copy invite link", copied: "Link copied!",
+      joinT: "Join with a code", roomCode: "Room code", copyLink: "Copy invite link", copied: "Link copied!", share: "Share…", shareText: "Join my room ({code})",
       players: "Players", start: "Start game", pick: "Choose game", needMore: "Waiting for more players…", tooMany: "Too many players for this game (max {n}).", waitHost: "Waiting for the host to start…",
       connecting: "Connecting…", leave: "Leave room", you: "you", host: "host", game: "Game",
       full: "That room is full or already playing.", noRoom: "No room found with that code.",
@@ -386,7 +386,9 @@
       const codeBlock = (c) => `<div class="mp-lbl">${t("roomCode")}</div><div class="mp-code">${esc(c)}</div>`;
       const leaveBtn = `<button class="mp-sec" data-act="leave">${t("leave")}</button>`;
       const copyIco = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/></svg>`;
-      const linkBtn = `<button class="mp-sec mp-wide mp-copy" data-act="copy">${copyIco}${this.copied ? t("copied") : t("copyLink")}</button>`;
+      const shareIco = `<svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"/></svg>`;
+      const shareBtn = navigator.share ? `<button class="mp-sec mp-wide mp-copy" data-act="share">${shareIco}${t("share")}</button>` : "";   // native share sheet (AirDrop, Messages, …) where the browser has one
+      const linkBtn = shareBtn + `<button class="mp-sec mp-wide mp-copy" data-act="copy">${copyIco}${this.copied ? t("copied") : t("copyLink")}</button>`;
       let h;
       if (!R) {
         h = `${head}<p class="mp-sub">${t("sub", { max: cfg.max })}</p></div>
@@ -441,6 +443,9 @@
         case "end": endGame(); break;
         case "pick": this.hide(); emit("pick", {}); break;       // host wants to choose the game: back to the page that shows the picker
         case "leave": leave(); break;
+        case "share":
+          navigator.share({ title: t("title"), text: t("shareText", { code: R.code }), url: roomUrl() }).catch(() => {});   // user cancelling the sheet rejects: ignore
+          break;
         case "copy": {
           (navigator.clipboard ? navigator.clipboard.writeText(roomUrl()) : Promise.reject()).catch(() => {});
           this.copied = true; this.render(); setTimeout(() => { this.copied = false; this.render(); }, 1800);
