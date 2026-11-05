@@ -14,7 +14,7 @@
 // go() is called on every client at the same moment, after all clients have mounted. See README.md.
 
 const MP_GAMES = [
-  { id: "tictactoe", title: "Tic Tac Toe", desc: "Drei in einer Reihe", min: 2, max: 2, preview: (p, w, h) => drawTicTacToe(p, w, h), load: () => import("./hub-games/tictactoe.js") },
+  { id: "tictactoe", title: "Tic Tac Toe", desc: "Normal oder Super – zu zweit am Brett, der Rest schaut zu und rotiert", min: 2, max: 6, preview: (p, w, h) => drawTicTacToe(p, w, h), load: () => import("./hub-games/tictactoe.js") },
   { id: "kniffel", title: "Kniffel", desc: "Würfeln, halten, aufschreiben – Kniffel, Yahtzee, Yatzy, Generala", min: 2, max: 6, preview: (p, w, h) => drawKniffel(p, w, h), load: () => import("./hub-games/kniffel.js") },
   { id: "clickrace", title: "Klick-Rennen", desc: "15 Sekunden, wer klickt mehr?", min: 2, max: 6, preview: (p, w, h) => drawClickRace(p, w, h), load: () => import("./hub-games/clickrace.js") },
 ];

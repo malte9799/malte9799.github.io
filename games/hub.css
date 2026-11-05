@@ -31,13 +31,83 @@
 
 /* Tic Tac Toe */
 .ttt { display: grid; justify-items: center; gap: 16px; }
-.ttt-status { font-size: 17px; min-height: 26px; } .ttt-status::after { content: attr(data-score); display: block; margin-top: 4px; font-size: 12px; text-align: center; color: var(--muted); }
-.ttt-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: min(320px, 100%); }
-.ttt-cell { aspect-ratio: 1; padding: 0; font: 800 clamp(34px, 12vw, 54px) var(--font); border-radius: var(--r-md); background: var(--panel); }
-.ttt-cell[data-m="X"] { color: var(--sky); } .ttt-cell[data-m="O"] { color: var(--rose); }
-.ttt-cell:disabled { opacity: 1; cursor: default; } .ttt-cell:disabled:not([data-m=""]):not(.win) { opacity: .85; }
-.ttt-cell.win { background: color-mix(in srgb, var(--mint) 22%, var(--panel)); border-color: var(--mint); }
-.ttt-act { min-height: 44px; } .ttt-act button { flex: none; padding: 11px 26px; }
+.ttt-head { display: grid; gap: 8px; justify-items: center; width: 100%; }
+.ttt-seats { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.ttt-vs { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: .12em; }
+.ttt-seat { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px; border: var(--border-w) solid var(--hairline); background: var(--chip-bg); transition: border-color .2s, box-shadow .2s; }
+.ttt-seat.x { --c: var(--tx); } .ttt-seat.o { --c: var(--to); }
+.ttt-seat.turn { border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent); }
+.ttt-seat.gone { opacity: .45; text-decoration: line-through; }
+.ttt-seat.won { border-color: var(--tx); }
+.ttt-badge { width: 22px; height: 22px; display: block; } .ttt-badge .mk { width: 100%; height: 100%; }
+.ttt-wins { min-width: 20px; text-align: center; font-variant-numeric: tabular-nums; color: var(--muted); }
+.ttt-status { font-size: 17px; min-height: 26px; text-align: center; } .ttt-status.mine { color: var(--ink); font-weight: 600; }
+.ttt-status b { font-weight: 700; }
+
+/* the board looks like the single-player canvas: framed like #canvas-wrap, thin grid lines, mint X / sky O */
+.mk { display: block; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.mk.x { stroke: var(--tx); stroke-width: 12; } .mk.o { stroke: var(--to); stroke-width: 10; }
+.mk path, .mk circle { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.fresh .mk path, .fresh .mk circle { animation: ttt-draw .32s ease-out backwards; }
+.fresh .mk path + path { animation-delay: .14s; }
+@keyframes ttt-draw { from { stroke-dashoffset: 1; } }
+
+.ttt-stage { width: min(480px, 100%); padding: 6%; box-sizing: border-box; background: var(--board); border: var(--border-w) solid var(--hairline); border-radius: var(--r-lg); box-shadow: var(--wrap-shadow); }
+.ttt-board { position: relative; display: grid; aspect-ratio: 1; }
+.ttt-board.super { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.ttt-board.normal { grid-template-columns: minmax(0, 1fr); }
+.ttt-board.idle { opacity: .55; }
+.tb { position: relative; box-sizing: border-box; border-radius: 4px; transition: background .25s, box-shadow .25s; }
+.super .tb { padding: 3%; }
+.sep { position: absolute; background: var(--tlh); pointer-events: none; border-radius: 2px; }
+.sep.v { top: -1.5%; bottom: -1.5%; width: 2px; margin-left: -1px; } .sep.h { left: -1.5%; right: -1.5%; height: 2px; margin-top: -1px; }
+.tb-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); height: 100%; }
+.tc { position: relative; aspect-ratio: 1; display: grid; place-items: center; cursor: default; outline: none; -webkit-tap-highlight-color: transparent; }
+.tc[data-ok="1"] { cursor: pointer; }
+.tc:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tc .mk { width: 62%; height: 62%; }
+/* thin lines between the cells, none on the outside */
+.tc:not(:nth-child(3n)) { border-right: 1px solid var(--tl); }
+.tc:nth-child(-n+6) { border-bottom: 1px solid var(--tl); }
+.normal .tc:not(:nth-child(3n)) { border-right: 5px solid var(--tlh); }
+.normal .tc:nth-child(-n+6) { border-bottom: 5px solid var(--tlh); }
+.normal .tc .mk { width: 56%; height: 56%; }
+.super .tc .mk.x, .super .tc .mk.o { stroke-width: 11; }
+/* hover: a faint copy of my mark, like the canvas version */
+.tc .gh { display: none; width: 100%; height: 100%; place-items: center; opacity: .32; pointer-events: none; }
+.tc .gh .mk { width: 62%; height: 62%; } .normal .tc .gh .mk { width: 56%; height: 56%; }
+.tc[data-ok="1"]:hover .gh { display: grid; }
+.tc[data-ok="1"]:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.tb[data-t="x"] { --c: var(--tx); } .tb[data-t="o"] { --c: var(--to); }
+.tc.win { background: color-mix(in srgb, var(--tx) 18%, transparent); }
+/* the board you have to play in */
+.tb.hot { z-index: 1; background: color-mix(in srgb, var(--c) 14%, var(--panel)); outline: 2px solid var(--c); outline-offset: 0; box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 26%, transparent); animation: ttt-pulse 1.6s ease-in-out infinite; }
+@keyframes ttt-pulse { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--c) 8%, transparent); } }
+/* a decided small board: tinted, with one big mark on top */
+.tb[data-w="x"] { background: color-mix(in srgb, var(--tx) 10%, transparent); } .tb[data-w="o"] { background: color-mix(in srgb, var(--to) 10%, transparent); }
+.tb[data-w="d"] { background: color-mix(in srgb, var(--tl) 35%, transparent); }
+.tb-big { position: absolute; inset: 0; display: none; place-items: center; pointer-events: none; border-radius: inherit; background: color-mix(in srgb, var(--panel) 82%, transparent); }
+.tb[data-w="x"] .tb-big, .tb[data-w="o"] .tb-big { display: grid; }
+.tb-big .mk { width: 80%; height: 80%; } .tb-big .mk.x, .tb-big .mk.o { stroke-width: 8; }
+.tb.inwin .tb-big { background: color-mix(in srgb, var(--txh) 22%, var(--panel)); }
+.ttt-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.ttt-line path { fill: none; stroke: var(--txh); stroke-width: 1.8; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; }
+.ttt-line path[data-m="o"] { stroke: var(--toh); }
+.ttt-line path.on { opacity: .95; stroke-dashoffset: 0; transition: stroke-dashoffset .5s .25s ease-out, opacity .1s .25s; }
+.normal .ttt-line path { stroke-width: 2.6; }
+
+.ttt-act { display: grid; justify-items: center; gap: 12px; width: 100%; min-height: 8px; } .ttt-act > button.primary { flex: none; padding: 11px 26px; }
+.ttt-modes { display: flex; gap: 10px; width: min(480px, 100%); }
+.ttt-mode { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 12px 14px; text-align: left; white-space: normal; border-radius: var(--r-md); }
+.ttt-mode span { font-size: 12px; font-weight: 400; color: var(--muted); }
+.ttt-mode.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
+.ttt-mode:disabled { opacity: 1; cursor: default; } .ttt-mode:disabled:not(.sel) { opacity: .6; }
+.ttt-table { display: grid; gap: 6px; justify-items: center; width: min(380px, 100%); }
+.ttt-score { width: 100%; margin: 0; padding: 0; list-style: none; display: grid; gap: 5px; }
+.ttt-score li { display: flex; justify-content: space-between; padding: 6px 12px; border-radius: var(--r-sm); background: var(--chip-bg); border: var(--border-w) solid var(--hairline); font-size: 14px; }
+.ttt-score li.me { border-color: color-mix(in srgb, var(--accent) 55%, transparent); } .ttt-score b { font-variant-numeric: tabular-nums; }
+.ttt-note { margin: 0; font-size: 13px; color: var(--muted); text-align: center; }
+@media (prefers-reduced-motion: reduce) { .tb.hot, .fresh .mk path, .fresh .mk circle { animation: none; } }
 
 /* click race */
 .cr { display: grid; justify-items: center; gap: 16px; }
