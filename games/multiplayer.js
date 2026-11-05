@@ -371,9 +371,10 @@
     },
 
     show(prefill) { this.ensure(); this.open = true; this.el.classList.add("show"); this.render(prefill); },
-    hide() { this.open = false; if (this.el) this.el.classList.remove("show"); this.renderQR(); },
+    hide() { this.open = false; this.linkJoin = false; if (this.el) this.el.classList.remove("show"); this.renderQR(); },
 
     render(prefill) {
+      if (R) this.linkJoin = false;
       dock.render();
       for (const b of this.buttons) b.classList.toggle("mp-live", !!R && R.status !== "connecting");
       if (!this.el || !this.open) return;
@@ -393,8 +394,8 @@
       if (!R) {
         h = `${head}<p class="mp-sub">${t("sub", { max: cfg.max })}</p></div>
           <div class="mp-field"><label for="mp-name">${t("yourName")}</label><input id="mp-name" maxlength="12" autocomplete="off" spellcheck="false" value="${esc(keepName ?? store.get(cfg.nameKey))}" placeholder="${esc(t("player"))}"></div>
-          <div class="mp-section"><b>${t("hostT")}</b><small>${t("hostS")}</small><button class="mp-primary mp-wide" data-act="host">${t("create")}</button></div>
-          <div class="mp-or"><span>${t("or")}</span></div>
+          ${this.linkJoin && !lastError ? "" : `<div class="mp-section"><b>${t("hostT")}</b><small>${t("hostS")}</small><button class="mp-primary mp-wide" data-act="host">${t("create")}</button></div>
+          <div class="mp-or"><span>${t("or")}</span></div>`}
           <div class="mp-section"><b>${t("joinT")}</b><div class="mp-row"><input id="mp-code" maxlength="${CODE_LEN}" autocomplete="off" spellcheck="false" placeholder="ABCDE" aria-label="${t("roomCode")}" value="${esc(keepCode)}"><button class="mp-primary" data-act="join">${t("join")}</button></div></div>
           ${lastError ? `<p class="mp-err">${esc(lastError)}</p>` : ""}`;
       } else if (R.status === "connecting") {
@@ -456,7 +457,7 @@
   };
 
   const gameTitle = (id) => {
-    try { const g = (typeof GAMES !== "undefined" ? GAMES : []).find((x) => x.id === id); return g ? g.title : id; } catch { return id; }
+    try { const g = (window.MP_GAMES || (typeof GAMES !== "undefined" ? GAMES : [])).find((x) => x.id === id); return g ? g.title : id; } catch { return id; }
   };
 
   // the dock in the top left corner: the Mehrspieler button and, once you are in a room, the players below it
@@ -507,6 +508,7 @@
   function openFromUrl() {
     const c = urlRoom();
     if (!c || R) return false;
+    ui.linkJoin = true;                      // an invitation: just offer joining, not "open a new room"
     ui.show(c);
     return true;
   }

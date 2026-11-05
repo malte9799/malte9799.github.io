@@ -13,7 +13,7 @@
 // Everything lives in one closure so none of it can collide with the shell.
 
 // The game is a factory: createKniffel({ root?, net? }). Solo (the games page) it runs on its own and mounts into the shell's
-// #canvas-wrap; inside the multiplayer hub (hub.html) it gets the hub's `root` and `net` (room messages, players, host).
+// #canvas-wrap; inside the multiplayer hub (index.html) it gets the hub's `root` and `net` (room messages, players, host).
 window.createKniffel = (env = {}) => {
 
 const NET = env.net || null, HUB = !!NET;
@@ -2082,7 +2082,7 @@ function onMenuClick(e) {
   switch (b.dataset.act) {
     case "resume": menuClose(); break;
     case "solo": menuSolo(); break;
-    case "multi": location.href = "hub.html"; break;                 // rooms and game switching live in the multiplayer hub
+    case "multi": location.href = "index.html?mode=multi"; break;                 // rooms and game switching live in the multiplayer hub
     case "rules": { if (!MP && b.dataset.id !== S.rules && (!HUB || NET.isHost)) setRules(b.dataset.id); menuRender(); break; }
     case "begin": if (HUB && NET.isHost && hubReady && !MP) mpBegin(hubPlayers(), S.rules); break;
     case "lobby": if (HUB && NET.isHost) NET.end(); break;

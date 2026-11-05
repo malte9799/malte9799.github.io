@@ -1,8 +1,7 @@
 // Home grid — builds the game cards from the GAMES registry in manifest.js.
-// Starred games persist in localStorage and sort to the front.
+// buildHome(grid) fills the given element (hub.js passes #grid). Starred games persist in localStorage and sort to the front.
 
-function buildHome() {
-  const grid = document.getElementById("grid");
+function buildHome(grid) {
   let stars = loadStarSet();
 
   function loadStarSet() {
@@ -97,5 +96,4 @@ function buildHome() {
   // and redraw them whenever the design changes
   themeFontReady().then(buildCards);
   window.addEventListener("themechange", () => themeFontReady().then(buildCards));
-  mountThemePicker(document.getElementById("home"));
 }

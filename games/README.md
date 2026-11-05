@@ -10,8 +10,9 @@ The `<id>` is what appears in the URL: `index.html?game=<id>`.
 ## How it fits together
 
 ```
-index.html      router: ?game=<id> loads games/<id>.js into the shell,
-                no param loads manifest.js + home.js (the card grid)
+index.html      the start page and router: ?game=<id> loads games/<id>.js into the shell,
+                no param shows the hub (hub.js): "Mehrspieler" / "Einzelspieler" switch,
+                multiplayer cards + the single-player card grid (manifest.js + home.js)
 themes.js       designs: canvas palettes (PAL), fonts, render effects, picker
 themes.css      designs: the page styling per theme (html[data-theme=…])
 game.js         shared shell (header, presets, buttons, sliders, info modal)
@@ -299,10 +300,13 @@ the peer id and the address for `send(…, id)`. `status` is `connecting` → `l
 
 ### The hub: switching games without leaving the room
 
-`hub.html` (+ `hub.js`, `hub.css`) is the shell for multiplayer games: one page, one room. The host
+`index.html` (+ `hub.js`, `hub.css`) is the start page and the shell for multiplayer games: one page, one room.
+Outside a room the heading is a "Mehrspieler / Einzelspieler" switch (`?mode=solo|multi`, remembered); an invite link
+(`?room=CODE`) opens the join window without the "open a new room" parts. Each hub game needs a `preview(p, w, h)`
+(same 600×360 p5 function style as in `manifest.js`) for its card. The host
 picks a game card, presses start, and later "Zurück zur Lobby" to pick another – the page never reloads,
 so the WebRTC connection (and every player's peer id) survives. Games here are **ES modules** in
-`hub-games/` (not the old global scripts in `games/`), registered in the `GAMES` list at the top of `hub.js`:
+`hub-games/` (not the old global scripts in `games/`), registered in the `MP_GAMES` list at the top of `hub.js`:
 
 ```js
 // hub-games/mygame.js
