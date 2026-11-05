@@ -19,6 +19,7 @@ const GAMES = [
   { id: "sudoku",      title: "Sudoku",        desc: "9×9 · 6×6 · 4×4",             preview: drawSudoku },
   { id: "netwalk",     title: "Netwalk",       desc: "rotate pipes · power the grid", preview: drawNetwalk },
   { id: "blackjack",   title: "Blackjack",     desc: "hit · stand · beat the dealer", preview: drawBlackjack },
+  { id: "kniffel",     title: "Kniffel · Yahtzee", desc: "roll · hold · write it down", preview: drawKniffel },
 ];
 
 // ---- preview renderers ----
@@ -557,5 +558,67 @@ function drawBlackjack(p, w, h) {
   // chip stack bottom-left, shoe top-right
   chip(150, 270, 24, 100, [36, 36, 44]); chip(150, 261, 24, 50, [200, 32, 46]); chip(150, 252, 24, 10, [40, 100, 214]);
   back(430, 62); back(432, 64);
+  p.pop();
+}
+
+function drawKniffel(p, w, h) {
+  // wooden table, felt tray with a rack of held dice, hand-written score card
+  const ctx = p.drawingContext;
+  p.background(58, 36, 20);
+  p.noStroke();
+  for (let i = 0; i < 12; i++) { p.fill(i % 2 ? 80 : 46, i % 2 ? 50 : 28, i % 2 ? 28 : 15, 150); p.rect(0, i * 31 - 4, w, 15 + (i * 7) % 9); }
+  // tray
+  p.fill(0, 0, 0, 70); p.rect(26, 66, 322, 206, 22);
+  p.fill(120, 62, 32); p.rect(22, 58, 322, 206, 22);
+  p.fill(176, 98, 52); p.rect(22, 58, 322, 12, 22, 22, 0, 0);
+  p.fill(30, 98, 64); p.rect(36, 72, 294, 178, 12);
+  for (let i = 0; i < 500; i++) { p.fill(60 + (i * 37) % 30, 140, 96, 60); p.rect(40 + (i * 53) % 286, 76 + (i * 29) % 170, 1.5, 1.5); }
+  // rack
+  p.fill(0, 0, 0, 60); p.rect(70, 284, 240, 56, 10);
+  p.fill(112, 58, 30); p.rect(66, 278, 240, 56, 10);
+  p.noFill(); p.stroke(20, 8, 2, 130); p.strokeWeight(1.4);
+  for (let i = 0; i < 5; i++) p.rect(78 + i * 45, 290, 36, 36, 6);
+  const PIP = { 1: [[.5, .5]], 2: [[.28, .28], [.72, .72]], 3: [[.28, .28], [.5, .5], [.72, .72]], 4: [[.28, .28], [.72, .28], [.28, .72], [.72, .72]], 5: [[.28, .28], [.72, .28], [.5, .5], [.28, .72], [.72, .72]], 6: [[.28, .28], [.28, .5], [.28, .72], [.72, .28], [.72, .5], [.72, .72]] };
+  const die = (x, y, s, n, rot, col, pip) => {
+    p.push(); p.translate(x, y); p.rotate(rot);
+    const d = s * 0.22;
+    p.noStroke(); p.fill(0, 0, 0, 70); p.rect(-s / 2 + 5, -s / 2 + 8, s, s, s * 0.2);
+    p.fill(col[0] * 0.72, col[1] * 0.72, col[2] * 0.72); p.quad(s / 2, -s / 2 + 3, s / 2 + d, -s / 2 - d * 0.6, s / 2 + d, s / 2 - d * 1.1, s / 2, s / 2 - 2);
+    p.fill(Math.min(255, col[0] * 1.06), Math.min(255, col[1] * 1.06), Math.min(255, col[2] * 1.06)); p.quad(-s / 2 + 3, -s / 2, -s / 2 + 3 + d, -s / 2 - d * 0.6, s / 2 + d, -s / 2 - d * 0.6, s / 2, -s / 2);
+    p.fill(...col); p.rect(-s / 2, -s / 2, s, s, s * 0.18);
+    p.fill(...pip);
+    for (const [px, py] of PIP[n]) p.circle((px - 0.5) * s, (py - 0.5) * s, s * 0.17);
+    p.pop();
+  };
+  const W = [248, 243, 228], K = [24, 24, 30];
+  die(104, 140, 50, 5, -0.18, W, K); die(176, 176, 50, 3, 0.22, W, K); die(246, 128, 50, 5, 0.1, W, K);
+  die(214, 214, 50, 6, -0.3, W, K); die(142, 222, 50, 2, 0.4, W, K);
+  die(98 + 45 * 0, 308, 30, 4, 0, W, K); die(98 + 45 * 3, 308, 30, 4, 0, W, K);
+  // the card
+  p.push(); p.translate(470, 180); p.rotate(0.03);
+  p.fill(0, 0, 0, 80); p.rect(-102, -150, 210, 312, 4);
+  p.fill(236, 230, 214); p.rect(-108, -154, 210, 312, 3);
+  p.fill(252, 253, 255); p.rect(-104, -158, 210, 312, 3);
+  p.fill(21, 151, 191); p.textStyle(p.BOLD); p.textAlign(p.LEFT, p.CENTER); p.textSize(26); p.text("Kniffel", -92, -134);
+  p.stroke(29, 147, 184); p.strokeWeight(1.2);
+  p.line(-92, -112, 94, -112);
+  const x0 = -94, x1 = 94, cols = [-14.5, 16.5, 47.5, 78.5];          // centres of the four game columns
+  for (let r = 0; r < 14; r++) p.line(x0, -98 + r * 17.2, x1, -98 + r * 17.2);
+  for (const x of [x0, -30, 1, 32, 63, x1]) p.line(x, -98, x, -98 + 14 * 17.2);
+  p.noStroke(); p.fill(29, 147, 184, 140);
+  for (let r = 0; r < 13; r++) p.rect(x0 + 5, -98 + r * 17.2 + 7, 24 + (r * 11) % 12, 2.4, 1.2);
+  // handwritten numbers
+  const DIG = { 0: "M3.2.5C1.4.3.5 2.8.5 5c0 2.4 1 4.9 2.6 4.9 1.8 0 2.8-2.5 2.8-4.9C5.9 2.6 5 .6 3.3.4", 1: "M1.2 2.6 3.6.6 3.5 9.9", 2: "M.8 2.5C1 1.2 2 .4 3.1.4c1.5 0 2.4 1 2.3 2.4-.1 1.4-1.8 2.8-3 4.3C1.7 8 1 8.8.6 9.8L5.9 9.6", 3: "M.8 1.7C1.4.7 2.2.4 3 .4c1.4 0 2.2.9 2.2 2.1 0 1.4-1.2 2.2-2.7 2.3 1.8 0 3.1.9 3.1 2.5 0 1.6-1.2 2.6-2.7 2.6C1.8 9.9 1 9.4.4 8.6", 4: "M4.3.4.4 6.6h5.4M4.5 2.6V9.9", 5: "M5.2.5H1.3L.9 4.6C1.7 4 2.6 3.8 3.3 3.8c1.6 0 2.5 1.3 2.5 2.9 0 1.9-1.2 3.1-2.8 3.1C1.8 9.8.9 9.3.4 8.5", 6: "M5 1C4.1.4 3.3.3 2.7.5 1.3 1.1.6 3.6.6 6.2.6 8.4 1.5 9.9 3.1 9.9c1.6 0 2.5-1.2 2.5-2.8 0-1.7-1-2.7-2.4-2.7C2 4.4 1 5.2.7 6.4", 8: "M3.1 4.7C1.6 4.5.9 3.5.9 2.5.9 1.3 1.8.4 3.1.4c1.3 0 2.1.9 2.1 2.1 0 1.1-.8 2-2.1 2.2C1.5 5 .5 6.1.5 7.4c0 1.5 1.1 2.5 2.6 2.5 1.5 0 2.7-1 2.7-2.5 0-1.3-1.1-2.4-2.7-2.7", 9: "M5.6 4.1C5.4 2 4.5.5 3.1.5 1.6.5.6 1.6.6 3.2c0 1.5 1.1 2.5 2.5 2.5 1.4 0 2.4-1 2.5-2.4C5.6 5.7 5.4 8.3 3.9 9.4c-.6.4-1.5.5-2.3.2" };
+  const write = (txt, col, row, tint) => {
+    let x = cols[col] - txt.length * 4 + 0.6;
+    for (const ch of txt) {
+      ctx.save(); ctx.translate(x, -98 + row * 17.2 + 3.4); ctx.scale(1.15, 1.15); ctx.lineWidth = 1.1; ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.strokeStyle = tint; ctx.stroke(new Path2D(DIG[ch])); ctx.restore(); x += 8;
+    }
+  };
+  const ink = "#1a36a6";
+  [["3", 0], ["6", 1], ["9", 2], ["12", 3], ["15", 4], ["18", 5], ["63", 6], ["35", 7], ["98", 8]].forEach(([n, r]) => write(n, 0, r, ink));
+  [["2", 0], ["8", 1], ["6", 2], ["8", 3], ["20", 4], ["12", 5]].forEach(([n, r]) => write(n, 1, r, ink));
+  write("25", 0, 10, ink); write("30", 0, 11, ink); write("24", 0, 12, ink); write("0", 1, 9, ink);
   p.pop();
 }

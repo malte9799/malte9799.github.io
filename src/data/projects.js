@@ -153,8 +153,8 @@ export const FEATURED = [
     eyebrow: { en: 'Puzzle arcade', de: 'Rätselsammlung' },
     tagline: { en: 'Small puzzles.\nBig rabbit holes.', de: 'Kleine Rätsel.\nGroßer Sog.' },
     description: {
-      en: 'Twelve hand-built games, from Minesweeper and Sudoku to Netwalk, Blackjack and Conway’s Life. Nonograms are generated so they never need a guess, and most come with presets, hints and a confetti finish.',
-      de: 'Zwölf selbst gebaute Spiele, von Minesweeper und Sudoku bis Netwalk, Blackjack und Conways Spiel des Lebens. Nonogramme werden so erzeugt, dass man nie raten muss, und die meisten haben Voreinstellungen, Hinweise und ein Konfetti-Finale.',
+      en: 'Thirteen hand-built games, from Minesweeper and Sudoku to Netwalk, Blackjack, a 3D-dice Kniffel and Conway’s Life. Nonograms are generated so they never need a guess, and most come with presets, hints and a confetti finish.',
+      de: 'Dreizehn selbst gebaute Spiele, von Minesweeper und Sudoku bis Netwalk, Blackjack, Kniffel mit 3D-Würfeln und Conways Spiel des Lebens. Nonogramme werden so erzeugt, dass man nie raten muss, und die meisten haben Voreinstellungen, Hinweise und ein Konfetti-Finale.',
     },
     url: `${BASE}games/`,
     urlLabel: 'malte9799.github.io/games',

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Multiplayer-Demo</title>
+<link rel="stylesheet" href="themes.css" />
+<link rel="stylesheet" href="shared.css" />
+<link rel="stylesheet" href="multiplayer.css" />
+<style>
+  #demo { max-width: 640px; margin: 0 auto; padding: 56px 18px; display: grid; gap: 16px; }
+  #demo .card { padding: 16px; border: var(--border-w) solid var(--hairline); border-radius: var(--r-lg); background: var(--card-bg); }
+  #demo h2 { margin: 0 0 10px; font-size: 16px; }
+  #demo .row { display: flex; gap: 8px; margin: 0; }
+  #demo input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; font: inherit; color: var(--ink); background: var(--board); border: var(--border-w) solid var(--panel-edge); border-radius: var(--r-sm); }
+  #demo ul { list-style: none; margin: 10px 0 0; padding: 0; font-size: 14px; display: grid; gap: 4px; }
+  #demo pre { margin: 0; font-size: 12px; color: var(--muted); white-space: pre-wrap; }
+  #demo [hidden] { display: none; }
+</style>
+<script src="themes.js"></script>
+<script src="multiplayer.js"></script>
+</head>
+<body>
+<main id="demo">
+  <h1>Multiplayer-Demo</h1>
+  <p style="margin:0;color:var(--muted)">Testseite für <code>multiplayer.js</code>: zwei Tabs öffnen, im einen einen Raum erstellen, im anderen per Code beitreten. Der Host wählt ein Mini-Spiel und kann beliebig zwischen den Spielen wechseln – der Raum bleibt bestehen.</p>
+  <div class="row" id="launch"></div>
+
+  <section class="card" id="lobby-card" hidden>
+    <h2>Lobby</h2>
+    <div class="row" id="picker" hidden>
+      <button data-g="counter">Zähler</button><button data-g="chat">Chat</button>
+    </div>
+    <p id="lobby-hint" style="margin:8px 0 0;color:var(--muted);font-size:14px"></p>
+  </section>
+
+  <section class="card" id="counter" hidden>
+    <h2>Spiel: Zähler</h2>
+    <button id="inc">+1</button>
+    <ul id="scores"></ul>
+  </section>
+
+  <section class="card" id="chat" hidden>
+    <h2>Spiel: Chat</h2>
+    <div class="row"><input id="msg" placeholder="Nachricht" maxlength="80"><button id="say" style="flex:none">Senden</button></div>
+    <ul id="log"></ul>
+  </section>
+
+  <section class="card"><h2>Zustand</h2><pre id="state">–</pre></section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const GAMES_DEMO = { counter: "Zähler", chat: "Chat" };
+const scores = {};
+window.demoEvents = [];                                   // for the headless test
+
+Multiplayer.configure({ game: "counter" });
+Multiplayer.mountButton($("launch"), { className: "primary" });
+
+const show = (game) => { for (const g of ["counter", "chat"]) $(g).hidden = g !== game; };
+function refresh() {
+  const s = Multiplayer.state;
+  $("state").textContent = s ? JSON.stringify({ ...s, players: s.players.map((p) => p.name + (p.host ? " (Host)" : "") + (p.you ? " (du)" : "")) }, null, 1) : "nicht verbunden";
+  $("lobby-card").hidden = !s || s.status === "connecting";
+  if (!s) { show(null); return; }
+  $("picker").hidden = !s.isHost || s.status !== "lobby";
+  $("lobby-hint").textContent = s.status === "lobby" ? "Gewählt: " + (GAMES_DEMO[s.game] || "–") : "Spiel läuft";
+  $("scores").innerHTML = Object.entries(scores).map(([id, n]) => `<li>${(s.players.find((p) => p.id === id) || { name: id }).name}: <b>${n}</b></li>`).join("");
+}
+
+for (const ev of ["join", "leave", "host", "players", "status", "game", "start", "end", "close", "error"]) {
+  Multiplayer.on(ev, (d) => { window.demoEvents.push([ev, d]); refresh(); });
+}
+Multiplayer.on("start", ({ game, players }) => { for (const k in scores) delete scores[k]; for (const p of players) scores[p.id] = 0; show(game); Multiplayer.closeUI(); refresh(); });
+Multiplayer.on("end", () => { show(null); refresh(); });
+Multiplayer.on("close", () => { show(null); refresh(); });
+
+$("picker").addEventListener("click", (e) => { const g = e.target.dataset.g; if (g) Multiplayer.setGame(g); });
+$("inc").onclick = () => { const me = Multiplayer.me.id; scores[me]++; Multiplayer.send("inc", scores[me]); refresh(); };
+Multiplayer.onMessage("inc", ({ from, data }) => { scores[from] = data; refresh(); });
+$("say").onclick = () => { const v = $("msg").value.trim(); if (!v) return; Multiplayer.send("say", v); addLog(Multiplayer.me.name, v); $("msg").value = ""; };
+Multiplayer.onMessage("say", ({ player, data }) => addLog(player.name, data));
+function addLog(who, text) { const li = document.createElement("li"); li.textContent = who + ": " + text; $("log").prepend(li); }
+
+Multiplayer.openFromUrl();                                // …?room=CODE opens the join form with the code filled in
+refresh();
+</script>
+</body>
+</html>

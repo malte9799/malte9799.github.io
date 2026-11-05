@@ -1,0 +1,62 @@
+/* Multiplayer hub shell + the example games. Theme variables only (themes.css). */
+#hub { max-width: 760px; margin: 0 auto; padding: 64px 18px 56px; }
+#hub > .theme-picker { position: fixed; top: 14px; right: 16px; }
+#hub > .back-link { position: fixed; top: 24px; right: 150px; z-index: 11; }
+@media (min-width: 1100px) { #hub { padding-left: 18px; } }
+.hub-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.hub-tools { display: flex; gap: 8px; }
+.hub-tools button { flex: none; padding: 10px 16px; }
+.hub-tools button.mp-live::after { content: ""; width: 7px; height: 7px; margin-left: 8px; border-radius: 50%; background: var(--mint); display: inline-block; vertical-align: middle; }
+
+.hub-card { padding: 20px; border: var(--border-w) solid var(--hairline); border-radius: var(--r-xl); background: var(--card-bg); box-shadow: var(--card-shadow); }
+.hub-card h2 { margin: 0; font: var(--title-weight) 20px var(--font-display); letter-spacing: var(--title-tracking); text-transform: var(--title-transform); }
+.hub-welcome { text-align: center; padding: 36px 24px; }
+.hub-welcome p { max-width: 460px; margin: 12px auto 22px; line-height: 1.55; color: var(--muted); }
+.hub-welcome button { flex: none; padding: 12px 24px; font-size: 15px; }
+.hub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.hub-meta { font-size: 13px; color: var(--muted); } .hub-meta b { font-family: "Space Mono", ui-monospace, Menlo, monospace; letter-spacing: .12em; color: var(--ink); }
+.hub-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+button.hub-game { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px 16px; text-align: left; white-space: normal; border-radius: var(--r-md); }
+button.hub-game b { font-size: 16px; } button.hub-game span { font-size: 13px; color: var(--muted); } button.hub-game em { margin-top: 6px; font: 600 11px var(--font); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); font-style: normal; }
+button.hub-game.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
+button.hub-game:disabled { opacity: 1; cursor: default; }
+button.hub-game:disabled:not(.sel) { opacity: .65; }
+.hub-act { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.hub-act button { flex: none; padding: 11px 22px; } .hub-act p, .hub-wait { margin: 0; font-size: 14px; color: var(--muted); }
+.hub-wait { margin-top: 16px; }
+.hub-stage { padding: 20px; border: var(--border-w) solid var(--hairline); border-radius: var(--r-xl); background: var(--card-bg); box-shadow: var(--card-shadow); }
+.hub-loading { margin: 24px; text-align: center; color: var(--muted); }
+
+/* Tic Tac Toe */
+.ttt { display: grid; justify-items: center; gap: 16px; }
+.ttt-status { font-size: 17px; min-height: 26px; } .ttt-status::after { content: attr(data-score); display: block; margin-top: 4px; font-size: 12px; text-align: center; color: var(--muted); }
+.ttt-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: min(320px, 100%); }
+.ttt-cell { aspect-ratio: 1; padding: 0; font: 800 clamp(34px, 12vw, 54px) var(--font); border-radius: var(--r-md); background: var(--panel); }
+.ttt-cell[data-m="X"] { color: var(--sky); } .ttt-cell[data-m="O"] { color: var(--rose); }
+.ttt-cell:disabled { opacity: 1; cursor: default; } .ttt-cell:disabled:not([data-m=""]):not(.win) { opacity: .85; }
+.ttt-cell.win { background: color-mix(in srgb, var(--mint) 22%, var(--panel)); border-color: var(--mint); }
+.ttt-act { min-height: 44px; } .ttt-act button { flex: none; padding: 11px 26px; }
+
+/* click race */
+.cr { display: grid; justify-items: center; gap: 16px; }
+.cr-clock { font: 800 44px var(--font-display); font-variant-numeric: tabular-nums; }
+.cr-btn { flex: none; width: min(320px, 100%); min-height: 120px; font-size: 24px; border-radius: var(--r-lg); touch-action: manipulation; user-select: none; }
+.cr-btn:disabled { opacity: .5; cursor: default; }
+.cr-board { width: min(380px, 100%); margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.cr-board li { display: flex; justify-content: space-between; padding: 8px 14px; border-radius: var(--r-sm); background: var(--chip-bg); border: var(--border-w) solid var(--hairline); }
+.cr-board li.me { border-color: color-mix(in srgb, var(--accent) 55%, transparent); } .cr-board b { font-variant-numeric: tabular-nums; }
+.cr-note { min-height: 22px; color: var(--muted); } .cr-note b { color: var(--ink); }
+
+.hub-preview { margin-top: 16px; }
+button.hub-game[data-open] { cursor: pointer; }
+
+.hub-foot { margin-top: 28px; text-align: center; }
+button.hub-link { flex: none; padding: 8px 14px; background: none; border-color: transparent; box-shadow: none; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+button.hub-link:hover { background: none; border-color: transparent; color: var(--ink); }
+.hub-how { max-width: 560px; }
+.hub-how .hub-how-x { position: absolute; top: 12px; right: 12px; }
+.hub-how section { margin: 0 2px; }
+.hub-how h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; font-size: 15px; }
+.hub-how h3 i { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; font: 700 12px var(--font); font-style: normal; color: var(--primary-fg); background: var(--primary-bg); }
+.hub-how .info-text { margin: 0 0 0 34px; }
+.hub-how { gap: 12px; }
