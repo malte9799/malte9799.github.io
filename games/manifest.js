@@ -360,6 +360,24 @@ function drawTicTacToe(p, w, h) {
   }
 }
 
+// Klick-Rennen (hub only): a big button and a live scoreboard
+function drawClickRace(p, w, h) {
+  previewBg(p, w, h);
+  p.textAlign(p.CENTER, p.CENTER); p.textStyle(p.BOLD);
+  p.noStroke(); p.fill(...PAL.mint, 40); p.rect(w / 2 - 130, 70, 260, 120, 22);
+  p.stroke(...PAL.mint); p.strokeWeight(3); p.noFill(); p.rect(w / 2 - 130, 70, 260, 120, 22);
+  p.noStroke(); p.fill(...PAL.mint); p.textSize(44); p.text("KLICK!", w / 2, 130);
+  p.fill(...PAL.ink); p.textSize(30); p.text("0:09", w / 2, 40);
+  const rows = [["Mia", 64, PAL.sky], ["Ben", 51, PAL.rose], ["Du", 47, PAL.lilac]];
+  rows.forEach(([n, v, c], i) => {
+    const y = 226 + i * 38;
+    p.fill(...PAL.panel); p.rect(w / 2 - 170, y, 340, 30, 8);
+    p.fill(...c, 90); p.rect(w / 2 - 170, y, 340 * v / 64, 30, 8);
+    p.fill(...PAL.ink); p.textSize(15); p.textAlign(p.LEFT, p.CENTER); p.text(n, w / 2 - 158, y + 15);
+    p.textAlign(p.RIGHT, p.CENTER); p.text(v, w / 2 + 158, y + 15);
+  });
+}
+
 function drawFlood(p, w, h) {
   previewBg(p, w, h);
   const N = 10, cs = 26, SW = 44;

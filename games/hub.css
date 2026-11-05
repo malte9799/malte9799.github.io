@@ -1,9 +1,17 @@
 /* Multiplayer hub shell + the example games. Theme variables only (themes.css). */
-#hub { max-width: 760px; margin: 0 auto; padding: 64px 18px 56px; }
+#hub { max-width: 1080px; min-height: 100vh; min-height: 100dvh; margin: 0 auto; padding: 64px 24px 20px; display: flex; flex-direction: column; }
 #hub > .theme-picker { position: fixed; top: 14px; right: 16px; }
 #hub > .back-link { position: fixed; top: 24px; right: 150px; z-index: 11; }
-@media (min-width: 1100px) { #hub { padding-left: 18px; } }
-.hub-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+#hub > * { min-width: 0; }
+@media (max-width: 640px) { #hub { padding: 64px 14px 16px; } }
+.hub-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+.hub-bar h1 { margin: 0; font: var(--title-weight) 30px/1.1 var(--font-display); letter-spacing: var(--title-tracking); text-transform: var(--title-transform); }
+.hub-modes { display: flex; gap: 8px; flex-wrap: wrap; }
+.hub-modes button { flex: none; padding: 11px 22px; font: var(--title-weight) 18px var(--font-display); letter-spacing: var(--title-tracking); text-transform: var(--title-transform); }
+.hub-modes button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
+#hub-top, #hub-act, .hub-stage { max-width: 760px; margin-left: auto; margin-right: auto; }
+#hub-top:not(:empty) { margin-bottom: 20px; }
+#hub-act { margin-top: 20px; }
 .hub-tools { display: flex; gap: 8px; }
 .hub-tools button { flex: none; padding: 10px 16px; }
 .hub-tools button.mp-live::after { content: ""; width: 7px; height: 7px; margin-left: 8px; border-radius: 50%; background: var(--mint); display: inline-block; vertical-align: middle; }
@@ -15,12 +23,6 @@
 .hub-welcome button { flex: none; padding: 12px 24px; font-size: 15px; }
 .hub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; }
 .hub-meta { font-size: 13px; color: var(--muted); } .hub-meta b { font-family: "Space Mono", ui-monospace, Menlo, monospace; letter-spacing: .12em; color: var(--ink); }
-.hub-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
-button.hub-game { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 14px 16px; text-align: left; white-space: normal; border-radius: var(--r-md); }
-button.hub-game b { font-size: 16px; } button.hub-game span { font-size: 13px; color: var(--muted); } button.hub-game em { margin-top: 6px; font: 600 11px var(--font); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); font-style: normal; }
-button.hub-game.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
-button.hub-game:disabled { opacity: 1; cursor: default; }
-button.hub-game:disabled:not(.sel) { opacity: .65; }
 .hub-act { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
 .hub-act button { flex: none; padding: 11px 22px; } .hub-act p, .hub-wait { margin: 0; font-size: 14px; color: var(--muted); }
 .hub-wait { margin-top: 16px; }
@@ -30,7 +32,7 @@ button.hub-game:disabled:not(.sel) { opacity: .65; }
 /* Tic Tac Toe */
 .ttt { display: grid; justify-items: center; gap: 16px; }
 .ttt-status { font-size: 17px; min-height: 26px; } .ttt-status::after { content: attr(data-score); display: block; margin-top: 4px; font-size: 12px; text-align: center; color: var(--muted); }
-.ttt-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: min(320px, 100%); }
+.ttt-board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: min(320px, 100%); }
 .ttt-cell { aspect-ratio: 1; padding: 0; font: 800 clamp(34px, 12vw, 54px) var(--font); border-radius: var(--r-md); background: var(--panel); }
 .ttt-cell[data-m="X"] { color: var(--sky); } .ttt-cell[data-m="O"] { color: var(--rose); }
 .ttt-cell:disabled { opacity: 1; cursor: default; } .ttt-cell:disabled:not([data-m=""]):not(.win) { opacity: .85; }
@@ -47,12 +49,11 @@ button.hub-game:disabled:not(.sel) { opacity: .65; }
 .cr-board li.me { border-color: color-mix(in srgb, var(--accent) 55%, transparent); } .cr-board b { font-variant-numeric: tabular-nums; }
 .cr-note { min-height: 22px; color: var(--muted); } .cr-note b { color: var(--ink); }
 
-.hub-preview { margin-top: 16px; }
-button.hub-game[data-open] { cursor: pointer; }
 
-.hub-foot { margin-top: 28px; text-align: center; }
-button.hub-link { flex: none; padding: 8px 14px; background: none; border-color: transparent; box-shadow: none; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
-button.hub-link:hover { background: none; border-color: transparent; color: var(--ink); }
+.hub-foot { margin-top: auto; padding-top: 48px; display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }
+.hub-foot .hub-link { flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; background: none; border: 1px solid transparent; box-shadow: none; color: var(--muted); font: 500 14px var(--font); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.hub-foot .hub-link:hover { background: none; border-color: transparent; color: var(--ink); }
+.hub-foot .hub-link svg { width: 16px; height: 16px; }
 .hub-how { max-width: 560px; }
 .hub-how .hub-how-x { position: absolute; top: 12px; right: 12px; }
 .hub-how section { margin: 0 2px; }
@@ -60,3 +61,129 @@ button.hub-link:hover { background: none; border-color: transparent; color: var(
 .hub-how h3 i { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; font: 700 12px var(--font); font-style: normal; color: var(--primary-fg); background: var(--primary-bg); }
 .hub-how .info-text { margin: 0 0 0 34px; }
 .hub-how { gap: 12px; }
+
+/* ---- game card grids (Mehrspieler + Einzelspieler share the card look of the old start page) ---- */
+#home .card-meta { margin-top: 8px; font: 600 11px var(--font); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+#home .card[data-game] { cursor: pointer; }
+#home .card[aria-disabled="true"] { cursor: default; }
+#home .card[aria-disabled="true"]:not(.sel) { opacity: .65; }
+#home .card.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
+.hub-roomhead .hub-head { margin-bottom: 0; }
+
+#home .grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+@media (max-width: 640px) { #home .grid { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 641px) and (max-width: 900px) { #home .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+#home .card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  border: var(--border-w) solid var(--hairline);
+  background: var(--card-bg);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.25s var(--ease), border-color 0.2s, box-shadow 0.25s var(--ease);
+  box-shadow: var(--card-shadow);
+}
+#home .card:hover {
+  transform: var(--card-hover-lift);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--hairline));
+  box-shadow: var(--card-hover-shadow);
+}
+#home .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+#home .card .preview {
+  position: relative;
+  aspect-ratio: 5 / 3;
+  background: var(--board);
+  overflow: hidden;
+}
+#home .card canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  position: absolute;
+  inset: 0;
+  transition: transform 0.4s var(--ease);
+}
+#home .card:hover canvas { transform: scale(1.035); }
+#home .card-text {
+  padding: 14px 18px 16px;
+  border-top: var(--border-w) solid var(--hairline);
+}
+#home .card-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: var(--title-tracking);
+  color: var(--ink);
+  line-height: 1.25;
+}
+#home .card-desc {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+#home .star-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--chip-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease), background-color 0.2s, border-color 0.2s, color 0.2s;
+  color: var(--muted);
+  padding: 0;
+}
+#home .card:hover .star-btn { opacity: 0.85; transform: scale(1); }
+#home .star-btn:hover {
+  opacity: 1 !important;
+  color: var(--sun);
+  background: var(--chip-bg);
+  border-color: color-mix(in srgb, var(--sun) 45%, transparent);
+  transform: scale(1.08) !important;
+}
+#home .star-btn.starred {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+  color: var(--sun);
+  border-color: color-mix(in srgb, var(--sun) 30%, transparent);
+}
+#home .star-btn:active { transform: scale(0.95) !important; }
+#home .star-btn:focus-visible {
+  outline: 2px solid var(--sun);
+  outline-offset: 2px;
+  opacity: 1 !important;
+  transform: scale(1) !important;
+}
+#home .star-btn .star-icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  transition: fill 0.25s var(--ease), transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#home .star-btn.starred .star-icon { fill: var(--sun); transform: scale(1.1); }
+#home .star-btn:active .star-icon { transform: scale(0.85); }
+@media (hover: none) {
+  #home .star-btn { opacity: 0.7; transform: scale(1); }
+}

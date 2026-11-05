@@ -13,16 +13,17 @@
 //      onEvent("leave" | "host" | "join" | "players", fn), addCleanup(fn), end() (host: back to lobby).
 // go() is called on every client at the same moment, after all clients have mounted. See README.md.
 
-const GAMES = [
-  { id: "tictactoe", title: "Tic Tac Toe", desc: "Drei in einer Reihe", min: 2, max: 2, load: () => import("./hub-games/tictactoe.js") },
-  { id: "kniffel", title: "Kniffel", desc: "Würfeln, halten, aufschreiben – Kniffel, Yahtzee, Yatzy, Generala", min: 2, max: 6, load: () => import("./hub-games/kniffel.js") },
-  { id: "clickrace", title: "Klick-Rennen", desc: "15 Sekunden, wer klickt mehr?", min: 2, max: 6, load: () => import("./hub-games/clickrace.js") },
+const MP_GAMES = [
+  { id: "tictactoe", title: "Tic Tac Toe", desc: "Drei in einer Reihe", min: 2, max: 2, preview: (p, w, h) => drawTicTacToe(p, w, h), load: () => import("./hub-games/tictactoe.js") },
+  { id: "kniffel", title: "Kniffel", desc: "Würfeln, halten, aufschreiben – Kniffel, Yahtzee, Yatzy, Generala", min: 2, max: 6, preview: (p, w, h) => drawKniffel(p, w, h), load: () => import("./hub-games/kniffel.js") },
+  { id: "clickrace", title: "Klick-Rennen", desc: "15 Sekunden, wer klickt mehr?", min: 2, max: 6, preview: (p, w, h) => drawClickRace(p, w, h), load: () => import("./hub-games/clickrace.js") },
 ];
+window.MP_GAMES = MP_GAMES;                        // multiplayer.js reads the game titles from here
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const MP = window.Multiplayer;
-const def = (id) => GAMES.find((g) => g.id === id);
+const def = (id) => MP_GAMES.find((g) => g.id === id);
 const READY_TIMEOUT = 10000;
 
 // every game run gets an id; messages are namespaced with it so a late message of the last game can't reach the next one
@@ -33,32 +34,116 @@ mountThemePicker($("hub"));                       // the design button, top righ
 
 let run = null;          // the game that is running (or loading) right now; null in the lobby
 
-// ---- lobby: welcome screen and game picker ----
+// ---- mode: Mehrspieler / Einzelspieler ----
+// Not in a room: the heading is two buttons. In a room (or while a game runs) it is the plain "Mehrspieler" heading.
+// The choice is remembered; ?mode=solo|multi overrides it, and an invite link (?room=CODE) always means multi.
+
+const params = new URLSearchParams(location.search);
+let fromLink = !!params.get("room");              // opened through an invite link: no "open a new room" card until you are in a room
+let mode = "multi";
+try { if (localStorage.getItem("games_mode") === "solo") mode = "solo"; } catch {}
+if (params.get("mode") === "solo" || params.get("mode") === "multi") mode = params.get("mode");
+if (fromLink) mode = "multi";
+const inRoom = () => { const s = MP.state; return !!s && s.status !== "connecting"; };
+
+function setMode(m) {
+  mode = m;
+  try { localStorage.setItem("games_mode", m); } catch {}
+  renderLobby();
+}
+
+// ---- Einzelspieler: the card grid of the old start page (home.js) ----
+
+let soloBuilt = false;
+function ensureSolo() {
+  if (soloBuilt || typeof buildHome !== "function") return;
+  soloBuilt = true;
+  buildHome($("grid"));
+}
+
+// ---- Mehrspieler: game cards with p5 previews, built once; renderLobby only toggles their state ----
 
 const players = (x) => (x.min === x.max ? x.min : x.min + "–" + x.max) + " Spieler";
-const gameCard = (x, sel, enabled) => `<button class="hub-game${sel ? " sel" : ""}"${enabled === undefined ? ' data-open="1"' : ` data-game="${x.id}" ${enabled ? "" : "disabled"}`}>
-  <b>${esc(x.title)}</b><span>${esc(x.desc)}</span><em>${players(x)}</em></button>`;
+let mpSketches = [];
+let mpBuilt = false;
+
+function buildMpCards() {
+  const grid = $("hub-grid");
+  mpSketches.forEach((sk) => sk.remove());
+  mpSketches = [];
+  grid.innerHTML = "";
+  MP_GAMES.forEach((game, idx) => {
+    const c = document.createElement("div");
+    c.className = "card";
+    c.style.setProperty("--i", idx % 3);
+    c.dataset.game = game.id;
+    c.tabIndex = 0;
+    c.setAttribute("role", "button");
+    c.innerHTML = `<div class="preview"></div>
+      <div class="card-text">
+        <div class="card-title">${esc(game.title)}</div>
+        <div class="card-desc">${esc(game.desc)}</div>
+        <div class="card-meta">${players(game)}</div>
+      </div>`;
+    grid.appendChild(c);
+    mpSketches.push(new p5(function (p) {
+      p.setup = function () {
+        p.createCanvas(600, 360).parent(c.querySelector(".preview"));
+        p.noLoop();
+        themeSketch(p);
+        game.preview(p, 600, 360);
+      };
+    }));
+  });
+  mpBuilt = true;
+  syncCards();
+}
+
+function syncCards() {
+  const s = MP.state, room = inRoom();
+  for (const c of $("hub-grid").children) {
+    const sel = room && s.game === c.dataset.game;
+    c.classList.toggle("sel", sel);
+    c.setAttribute("aria-pressed", sel ? "true" : "false");
+    c.setAttribute("aria-disabled", room && !s.isHost ? "true" : "false");   // guests only watch the host choose
+  }
+}
+
+// previews are drawn once, so wait for the canvas font and redraw them whenever the design changes
+themeFontReady().then(buildMpCards);
+window.addEventListener("themechange", () => themeFontReady().then(buildMpCards));
 
 function renderLobby() {
-  const el = $("hub-lobby");
-  el.hidden = !!run;
-  if (run) return;
-  const s = MP.state;
-  if (!s || s.status === "connecting") {
-    el.innerHTML = `<div class="hub-card hub-welcome"><h2>Spielt gemeinsam</h2>
+  const s = MP.state, room = inRoom();
+  if (room) fromLink = false;
+  const view = run || room ? "multi" : mode;
+  const showMulti = !run && view === "multi", showSolo = !run && view === "solo";
+
+  $("hub-lobby").hidden = !showMulti;
+  $("hub-solo").hidden = !showSolo;
+  if (showSolo) ensureSolo();
+  $("hub-title").hidden = !room;                  // heading while in a room …
+  $("hub-modes").hidden = room;                   // … two buttons otherwise
+  for (const b of $("hub-modes").children) b.setAttribute("aria-pressed", String(b.dataset.mode === view));
+
+  const top = $("hub-top"), act = $("hub-act");
+  if (!showMulti) return;
+  if (!room) {
+    act.innerHTML = "";
+    top.innerHTML = fromLink ? "" : `<div class="hub-card hub-welcome"><h2>Spielt gemeinsam</h2>
       <p>Raum erstellen, Code oder Link an Freunde schicken, ein Spiel wählen – und zwischen den Spielen wechseln, ohne dass der Raum auseinanderfällt. Kein Konto, direkte Verbindung.</p>
-      <button class="primary" id="hub-open">${s ? "Verbinde …" : "Raum erstellen oder beitreten"}</button></div>
-      <div class="hub-card hub-preview"><div class="hub-head"><h2>Spiele</h2></div><div class="hub-games">${GAMES.map((x) => gameCard(x)).join("")}</div></div>`;
+      <button class="primary" id="hub-open">${s ? "Verbinde …" : "Raum erstellen oder beitreten"}</button></div>`;
+    syncCards();
     return;
   }
   const g = s.game && def(s.game);
   const n = s.players.length;
   const why = !g ? "Wähle ein Spiel." : n < g.min ? `Warte auf Mitspieler (mind. ${g.min}).` : n > g.max ? `Zu viele Spieler für dieses Spiel (max. ${g.max}).` : "";
-  el.innerHTML = `<div class="hub-card"><div class="hub-head"><h2>Spiel wählen</h2><span class="hub-meta">Raum <b>${esc(s.code)}</b> · ${n} Spieler</span></div>
-    <div class="hub-games">${GAMES.map((x) => gameCard(x, g && g.id === x.id, s.isHost)).join("")}</div>
-    ${s.isHost
-      ? `<div class="hub-act"><button class="primary" id="hub-start" ${why ? "disabled" : ""}>Spiel starten</button>${why ? `<p>${esc(why)}</p>` : ""}</div>`
-      : `<p class="hub-wait">Der Host wählt das Spiel${g ? ` – aktuell: <b>${esc(g.title)}</b>` : ""}.</p>`}</div>`;
+  top.innerHTML = `<div class="hub-card hub-roomhead"><div class="hub-head"><h2>Spiel wählen</h2><span class="hub-meta">Raum <b>${esc(s.code)}</b> · ${n} Spieler</span></div></div>`;
+  act.innerHTML = s.isHost
+    ? `<div class="hub-act"><button class="primary" id="hub-start" ${why ? "disabled" : ""}>Spiel starten</button>${why ? `<p>${esc(why)}</p>` : ""}</div>`
+    : `<p class="hub-wait">Der Host wählt das Spiel${g ? ` – aktuell: <b>${esc(g.title)}</b>` : ""}.</p>`;
+  syncCards();
 }
 
 function renderTools() {
@@ -98,13 +183,24 @@ function openHow() {
   b.querySelector(".hub-how-x").focus();
 }
 
+function pickCard(card) {
+  if (!inRoom()) MP.openUI();                      // no room yet: picking a game starts with opening one
+  else if (MP.isHost) { const g = def(card.dataset.game); if (g) MP.setGame(g.id, { min: g.min, max: g.max }); }
+}
+
 document.addEventListener("click", (e) => {
+  const card = e.target.closest("#hub-grid .card");
+  if (card) { pickCard(card); return; }
   const t = e.target.closest("button");
   if (!t) return;
   if (t.id === "hub-how") openHow();
-  else if (t.id === "hub-open" || t.dataset.open) MP.openUI();
+  else if (t.dataset.mode) setMode(t.dataset.mode);
+  else if (t.id === "hub-open") MP.openUI();
   else if (t.id === "hub-start") MP.start(startOpts());
-  else if (t.dataset.game) { const g = def(t.dataset.game); if (g) MP.setGame(g.id, { min: g.min, max: g.max }); }
+});
+document.addEventListener("keydown", (e) => {
+  const card = e.target.closest && e.target.closest("#hub-grid .card");
+  if (card && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pickCard(card); }
 });
 
 // ---- running a game ----
@@ -178,7 +274,7 @@ function stopGame() {
 }
 
 MP.on("start", startGame);
-MP.on("pick", () => { const el = document.querySelector(".hub-games"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); });
+MP.on("pick", () => { const el = $("hub-grid"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); });
 for (const ev of ["end", "close"]) MP.on(ev, () => { stopGame(); renderLobby(); renderTools(); });
 for (const ev of ["players", "game", "status", "host", "join", "error"]) MP.on(ev, () => { renderLobby(); renderTools(); });
 
