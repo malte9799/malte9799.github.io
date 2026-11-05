@@ -96,7 +96,9 @@ html[data-theme="sketch"] #home h1 {
 }
 @keyframes sk-swipe { to { background-size: 100% 100%; } }
 html[data-theme="sketch"] #home h1::after {
-  content: ""; display: block; height: 14px; margin: 2px 6% 0; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='12' viewBox='0 0 40 12'%3E%3Cpath d='M0 6Q10 -2 20 6T40 6' fill='none' stroke='%23e63946' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x 0 0 / 40px 12px;
+  /* one continuous hand-drawn wave under the title (stretched, not tiled) */
+  content: ""; display: block; height: 12px; margin: 4px 6% 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='12' viewBox='0 0 300 12' preserveAspectRatio='none'%3E%3Cpath d='M2 6Q40 0 75 6T150 6T225 6T298 6' fill='none' stroke='%23e63946' stroke-width='3' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat 0 0 / 100% 100%;
 }
 @keyframes sk-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
 html[data-theme="sketch"] #home .subtitle { font-size: 22px; font-weight: 400; color: var(--ink); rotate: 1deg; margin-top: 14px; }
