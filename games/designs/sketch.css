@@ -96,10 +96,10 @@ html[data-theme="sketch"] #home h1 {
 }
 @keyframes sk-swipe { to { background-size: 100% 100%; } }
 html[data-theme="sketch"] #home h1::after {
-  /* one continuous hand-drawn wave under the title (stretched, not tiled) */
-  content: ""; display: block; height: 12px; margin: 4px 6% 0;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='12' viewBox='0 0 300 12' preserveAspectRatio='none'%3E%3Cpath d='M2 6Q40 0 75 6T150 6T225 6T298 6' fill='none' stroke='%23e63946' stroke-width='3' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat 0 0 / 100% 100%;
+  content: ""; display: block; height: 14px; margin: 2px 6% 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='14' viewBox='0 0 40 14'%3E%3Cpath d='M0 8Q10 0 20 7T40 7' fill='none' stroke='%23e63946' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x 0 100% / 40px 14px; animation: sk-wave 1.4s linear infinite;
 }
+@keyframes sk-wave { to { background-position: 40px 100%; } }
 @keyframes sk-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
 html[data-theme="sketch"] #home .subtitle { font-size: 22px; font-weight: 400; color: var(--ink); rotate: 1deg; margin-top: 14px; }
 html[data-theme="sketch"] #home .site-link { display: flex; width: fit-content; margin: 0 auto 16px; }
@@ -125,9 +125,9 @@ html[data-theme="sketch"] #home .card:hover canvas { transform: none; }
 html[data-theme="sketch"] #home .card-text { border: 0; padding: 12px 6px 4px; }
 html[data-theme="sketch"] #home .card-title {
   font-family: var(--font-display); font-size: 25px; font-weight: 400; color: #222228; display: inline; letter-spacing: 0.01em;
-  /* the wave runs under the whole title, always (stretched, one piece) */
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='10' viewBox='0 0 300 10' preserveAspectRatio='none'%3E%3Cpath d='M2 5Q40 -1 75 5T150 5T225 5T298 5' fill='none' stroke='%23e63946' stroke-width='2.6' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") no-repeat 0 100% / 100% 8px;
-  padding-bottom: 5px;
+  /* a wavy red line under the whole title, moving */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='14' viewBox='0 0 40 14'%3E%3Cpath d='M0 8Q10 0 20 7T40 7' fill='none' stroke='%23e63946' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x 0 100% / 40px 14px; animation: sk-wave 1.4s linear infinite;
+  padding-bottom: 6px;
 }
 html[data-theme="sketch"] #home .card-desc { font-size: 17px; color: var(--muted); margin-top: 2px; }
 html[data-theme="sketch"] #home .star-btn { top: 20px; right: 20px; border: 2.5px solid #222228; background: #fff; border-radius: 50% 45% 55% 50%; z-index: 4; }
