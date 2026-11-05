@@ -257,3 +257,12 @@
 @media (hover: none) {
   #home .star-btn { opacity: 0.7; transform: scale(1); }
 }
+
+/* the Games banner (restored from the old start page): centred, big title, tagline under it */
+#home .hero { display: block; text-align: center; margin-bottom: 44px; }
+#home h1 {
+  font-family: var(--font-display); font-weight: var(--title-weight); letter-spacing: var(--title-tracking);
+  text-transform: var(--title-transform); font-size: var(--hero-size); line-height: 1.05; margin: 0 0 12px;
+  background: var(--hero-fill); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+#home .subtitle { font-size: 17px; color: var(--muted); margin: 0; }
