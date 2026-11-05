@@ -77,7 +77,8 @@ DESIGN_FX.flap = {
     const cleanups = [], rows = [];
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const home = document.getElementById("home");
-    const onHome = home && home.style.display !== "none";
+    // the hub's solo grid has no .hero: only the old start page gets the big title treatment
+    const onHome = !!home && home.style.display !== "none" && !!home.querySelector(".hero");
 
     if (onHome) {
       const hero = home.querySelector(".hero");
