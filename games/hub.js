@@ -34,23 +34,12 @@ mountThemePicker($("hub"));                       // the design button, top righ
 
 let run = null;          // the game that is running (or loading) right now; null in the lobby
 
-// ---- mode: Mehrspieler / Einzelspieler ----
-// Not in a room: the heading is two buttons. In a room (or while a game runs) it is the plain "Mehrspieler" heading.
-// The choice is remembered; ?mode=solo|multi overrides it, and an invite link (?room=CODE) always means multi.
+// ---- views: no room → the single-player grid; in a room (or while a game runs) → only multiplayer games ----
+// The global multiplayer button (MP dock) is the way into a room. An invite link (?room=CODE) opens the room view.
 
 const params = new URLSearchParams(location.search);
 let fromLink = !!params.get("room");              // opened through an invite link: no "open a new room" card until you are in a room
-let mode = "multi";
-try { if (localStorage.getItem("games_mode") === "solo") mode = "solo"; } catch {}
-if (params.get("mode") === "solo" || params.get("mode") === "multi") mode = params.get("mode");
-if (fromLink) mode = "multi";
 const inRoom = () => { const s = MP.state; return !!s && s.status !== "connecting"; };
-
-function setMode(m) {
-  mode = m;
-  try { localStorage.setItem("games_mode", m); } catch {}
-  renderLobby();
-}
 
 // ---- Einzelspieler: the card grid of the old start page (home.js) ----
 
@@ -116,15 +105,12 @@ window.addEventListener("themechange", () => themeFontReady().then(buildMpCards)
 function renderLobby() {
   const s = MP.state, room = inRoom();
   if (room) fromLink = false;
-  const view = run || room ? "multi" : mode;
-  const showMulti = !run && view === "multi", showSolo = !run && view === "solo";
+  const showMulti = !!run || room;                // in a room: multiplayer games only
+  const showSolo = !showMulti;                    // outside a room: single-player games
 
   $("hub-lobby").hidden = !showMulti;
   $("hub-solo").hidden = !showSolo;
   if (showSolo) ensureSolo();
-  $("hub-title").hidden = !room;                  // heading while in a room …
-  $("hub-modes").hidden = room;                   // … two buttons otherwise
-  for (const b of $("hub-modes").children) b.setAttribute("aria-pressed", String(b.dataset.mode === view));
 
   const top = $("hub-top"), act = $("hub-act");
   if (!showMulti) return;
@@ -194,7 +180,6 @@ document.addEventListener("click", (e) => {
   const t = e.target.closest("button");
   if (!t) return;
   if (t.id === "hub-how") openHow();
-  else if (t.dataset.mode) setMode(t.dataset.mode);
   else if (t.id === "hub-open") MP.openUI();
   else if (t.id === "hub-start") MP.start(startOpts());
 });
