@@ -33,7 +33,7 @@ export function Statement() {
 const STATS = [
   { to: 90, suffix: '+', label: 'layers', span: 'wide', accent: '#4f8cff' },
   { to: CARD_ORDER.length, label: 'projects', accent: '#36d1ff' },
-  { to: 12, label: 'games', accent: '#ffb547' },
+  { to: 13, label: 'games', accent: '#ffb547' },
   { to: 50, suffix: 'k+', label: 'radio', span: 'wide', accent: '#b4f461' },
   // CountUp's "down" runs from `to` back to `from`, so this lands on 0.
   { to: 100, direction: 'down', label: 'servers', span: 'full', accent: '#f0abfc' },
