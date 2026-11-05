@@ -164,3 +164,7 @@ html[data-theme="neobrutal"] .info-text { color: #000; font-weight: 500; }
 html[data-theme="neobrutal"] .theme-opt:hover { background: #ffde59; }
 html[data-theme="neobrutal"] .theme-opt:hover .theme-sub { color: #000; }
 @media (prefers-reduced-motion: reduce) { .nb-marq div, .nb-badge, .nb-badge span, html[data-theme="neobrutal"] #home .hero::before, html[data-theme="neobrutal"] #home .hero::after { animation: none; } }
+
+/* cards in a row share one height: the coloured text panel fills the rest of the card */
+html[data-theme="neobrutal"] #home .card { display: flex; flex-direction: column; }
+html[data-theme="neobrutal"] #home .card-text { flex: 1; }
