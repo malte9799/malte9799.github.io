@@ -100,7 +100,6 @@ html[data-theme="sketch"] #home h1::after {
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='14' viewBox='0 0 40 14'%3E%3Cpath d='M0 8Q10 0 20 7T40 7' fill='none' stroke='%23e63946' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") repeat-x 0 100% / 40px 14px;
 }
 @keyframes sk-wave { to { background-position: 40px 100%; } }
-html[data-theme="sketch"] #home .card:hover .card-title { animation: sk-wave 1.4s linear infinite; }
 @keyframes sk-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
 html[data-theme="sketch"] #home .subtitle { font-size: 22px; font-weight: 400; color: var(--ink); rotate: 1deg; margin-top: 14px; }
 html[data-theme="sketch"] #home .site-link { display: flex; width: fit-content; margin: 0 auto 16px; }
