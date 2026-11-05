@@ -26,13 +26,17 @@ const READY_TIMEOUT = 10000;
 
 // every game run gets an id; messages are namespaced with it so a late message of the last game can't reach the next one
 const startOpts = () => ({ run: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) });
-MP.configure({ gameParam: false, startOptions: startOpts });
+MP.configure({ gameParam: false, lobbyStart: false, startOptions: startOpts });
 MP.mountDock();
 mountThemePicker($("hub"));                       // the design button, top right like on the other pages
 
 let run = null;          // the game that is running (or loading) right now; null in the lobby
 
 // ---- lobby: welcome screen and game picker ----
+
+const players = (x) => (x.min === x.max ? x.min : x.min + "–" + x.max) + " Spieler";
+const gameCard = (x, sel, enabled) => `<button class="hub-game${sel ? " sel" : ""}"${enabled === undefined ? ' data-open="1"' : ` data-game="${x.id}" ${enabled ? "" : "disabled"}`}>
+  <b>${esc(x.title)}</b><span>${esc(x.desc)}</span><em>${players(x)}</em></button>`;
 
 function renderLobby() {
   const el = $("hub-lobby");
@@ -42,15 +46,15 @@ function renderLobby() {
   if (!s || s.status === "connecting") {
     el.innerHTML = `<div class="hub-card hub-welcome"><h2>Spielt gemeinsam</h2>
       <p>Raum erstellen, Code oder Link an Freunde schicken, ein Spiel wählen – und zwischen den Spielen wechseln, ohne dass der Raum auseinanderfällt. Kein Konto, direkte Verbindung.</p>
-      <button class="primary" id="hub-open">${s ? "Verbinde …" : "Raum erstellen oder beitreten"}</button></div>`;
+      <button class="primary" id="hub-open">${s ? "Verbinde …" : "Raum erstellen oder beitreten"}</button></div>
+      <div class="hub-card hub-preview"><div class="hub-head"><h2>Spiele</h2></div><div class="hub-games">${GAMES.map((x) => gameCard(x)).join("")}</div></div>`;
     return;
   }
   const g = s.game && def(s.game);
   const n = s.players.length;
   const why = !g ? "Wähle ein Spiel." : n < g.min ? `Warte auf Mitspieler (mind. ${g.min}).` : n > g.max ? `Zu viele Spieler für dieses Spiel (max. ${g.max}).` : "";
   el.innerHTML = `<div class="hub-card"><div class="hub-head"><h2>Spiel wählen</h2><span class="hub-meta">Raum <b>${esc(s.code)}</b> · ${n} Spieler</span></div>
-    <div class="hub-games">${GAMES.map((x) => `<button class="hub-game${g && g.id === x.id ? " sel" : ""}" data-game="${x.id}" ${s.isHost ? "" : "disabled"}>
-      <b>${esc(x.title)}</b><span>${esc(x.desc)}</span><em>${x.min === x.max ? x.min : x.min + "–" + x.max} Spieler</em></button>`).join("")}</div>
+    <div class="hub-games">${GAMES.map((x) => gameCard(x, g && g.id === x.id, s.isHost)).join("")}</div>
     ${s.isHost
       ? `<div class="hub-act"><button class="primary" id="hub-start" ${why ? "disabled" : ""}>Spiel starten</button>${why ? `<p>${esc(why)}</p>` : ""}</div>`
       : `<p class="hub-wait">Der Host wählt das Spiel${g ? ` – aktuell: <b>${esc(g.title)}</b>` : ""}.</p>`}</div>`;
@@ -67,10 +71,38 @@ function renderTools() {
   } else if (!need && b) b.remove();
 }
 
+// ---- "Wie funktioniert’s?" modal ----
+
+const HOW = [
+  ["So geht’s", "Oben links auf „Mehrspieler“, Raum erstellen, den 5-stelligen Code (oder Link/QR-Code) teilen. Fertig."],
+  ["Peer-to-Peer", "Kein Spiel-Server. Die Browser sind direkt per WebRTC verbunden, jeder mit jedem (max. 6 Spieler)."],
+  ["Verbindungsaufbau", "Über öffentliche Nostr-Relays, nur einmal zum Finden. Spielzüge laufen nie darüber."],
+  ["Verschlüsselung", "Die Datenkanäle sind DTLS-verschlüsselt. Mitspieler sehen deine IP-Adresse."],
+  ["Raumcode", "Das einzige Geheimnis: 5 Zeichen, kein Login. Wer den Code kennt, kommt rein."],
+  ["Eingaben", "Nachrichten gelten als unsicher: geprüft, nur von Raummitgliedern, Namen gekürzt und escaped."],
+];
+
+function openHow() {
+  if (document.getElementById("hub-how-modal")) return;
+  const b = document.createElement("div");
+  b.className = "info-backdrop"; b.id = "hub-how-modal";
+  b.innerHTML = `<div class="info-modal hub-how" role="dialog" aria-modal="true" aria-labelledby="hub-how-t">
+    <button class="info-btn hub-how-x" type="button" aria-label="Schließen">✕</button>
+    <h2 class="info-title" id="hub-how-t">Technik und Sicherheit</h2>
+    ${HOW.map(([h, p], i) => `<section><h3><i>${i + 1}</i>${esc(h)}</h3><p class="info-text">${esc(p)}</p></section>`).join("")}</div>`;
+  const close = () => { b.remove(); document.removeEventListener("keydown", onKey); };
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  b.addEventListener("click", (e) => { if (e.target === b || e.target.closest(".hub-how-x")) close(); });
+  document.addEventListener("keydown", onKey);
+  document.body.appendChild(b);
+  b.querySelector(".hub-how-x").focus();
+}
+
 document.addEventListener("click", (e) => {
   const t = e.target.closest("button");
   if (!t) return;
-  if (t.id === "hub-open") MP.openUI();
+  if (t.id === "hub-how") openHow();
+  else if (t.id === "hub-open" || t.dataset.open) MP.openUI();
   else if (t.id === "hub-start") MP.start(startOpts());
   else if (t.dataset.game) { const g = def(t.dataset.game); if (g) MP.setGame(g.id, { min: g.min, max: g.max }); }
 });
@@ -146,6 +178,7 @@ function stopGame() {
 }
 
 MP.on("start", startGame);
+MP.on("pick", () => { const el = document.querySelector(".hub-games"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); });
 for (const ev of ["end", "close"]) MP.on(ev, () => { stopGame(); renderLobby(); renderTools(); });
 for (const ev of ["players", "game", "status", "host", "join", "error"]) MP.on(ev, () => { renderLobby(); renderTools(); });
 

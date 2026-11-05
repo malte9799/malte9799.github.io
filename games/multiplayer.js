@@ -30,7 +30,7 @@
       title: "Mehrspieler", sub: "Bis zu {max} Freunde – ohne Konto, direkte Verbindung.", yourName: "Dein Name", player: "Spieler",
       create: "Raum erstellen", join: "Beitreten", or: "oder", hostT: "Neuen Raum öffnen", hostS: "Du bekommst Code, Link und QR-Code zum Einladen.",
       joinT: "Mit Code beitreten", roomCode: "Raumcode", copyLink: "Einladungslink kopieren", copied: "Link kopiert!",
-      players: "Spieler", start: "Spiel starten", needMore: "Warte auf weitere Spieler …", tooMany: "Zu viele Spieler für dieses Spiel (max. {n}).", waitHost: "Warte auf den Start durch den Host …",
+      players: "Spieler", start: "Spiel starten", pick: "Spiel auswählen", needMore: "Warte auf weitere Spieler …", tooMany: "Zu viele Spieler für dieses Spiel (max. {n}).", waitHost: "Warte auf den Start durch den Host …",
       connecting: "Verbinde …", leave: "Raum verlassen", you: "du", host: "Host", game: "Spiel",
       full: "Der Raum ist voll oder das Spiel läuft schon.", noRoom: "Kein Raum mit diesem Code gefunden.",
       netFail: "Verbindung fehlgeschlagen. Prüfe deine Internetverbindung.", hostLeft: "Der Host hat den Raum verlassen.",
@@ -41,7 +41,7 @@
       title: "Multiplayer", sub: "Up to {max} friends — no account, direct connection.", yourName: "Your name", player: "Player",
       create: "Create room", join: "Join", or: "or", hostT: "Open a new room", hostS: "You get a code, a link and a QR code to invite friends.",
       joinT: "Join with a code", roomCode: "Room code", copyLink: "Copy invite link", copied: "Link copied!",
-      players: "Players", start: "Start game", needMore: "Waiting for more players…", tooMany: "Too many players for this game (max {n}).", waitHost: "Waiting for the host to start…",
+      players: "Players", start: "Start game", pick: "Choose game", needMore: "Waiting for more players…", tooMany: "Too many players for this game (max {n}).", waitHost: "Waiting for the host to start…",
       connecting: "Connecting…", leave: "Leave room", you: "you", host: "host", game: "Game",
       full: "That room is full or already playing.", noRoom: "No room found with that code.",
       netFail: "Couldn't connect. Check your internet connection.", hostLeft: "The host left the room.",
@@ -51,7 +51,7 @@
   };
 
   // ---- configuration (games may override via configure()) ----
-  const cfg = { lang: "de", game: null, min: 2, max: 6, gameMax: null, gameParam: true, appId: APP_ID, nameKey: "mp_name" };
+  const cfg = { lang: "de", game: null, min: 2, max: 6, gameMax: null, gameParam: true, lobbyStart: true, appId: APP_ID, nameKey: "mp_name" };
 
   const t = (k, vars) => {
     let s = (TXT[cfg.lang] || TXT.de)[k] ?? TXT.de[k] ?? k;
@@ -402,6 +402,7 @@
         const list = S.players.map((p) => `<li class="${p.you ? "me" : ""}"><i class="mp-av">${initial(p.name)}</i><span class="mp-nm">${esc(p.name)}${p.you ? `<em>${t("you")}</em>` : ""}${p.host ? `<em>${t("host")}</em>` : ""}</span></li>`).join("");
         let act;
         if (playing) act = `<p class="mp-hint">${t("inGame")}</p>${isHost ? `<button class="mp-primary mp-wide" data-act="end">${t("back")}</button>` : ""}`;
+        else if (isHost && !cfg.lobbyStart) act = `<button class="mp-primary mp-wide" data-act="pick">${t("pick")}</button>`;
         else if (isHost) act = `<button class="mp-primary mp-wide" data-act="start" ${enough ? "" : "disabled"}>${t("start")}</button>${enough ? "" : `<p class="mp-hint">${tooMany ? t("tooMany", { n: cfg.gameMax }) : t("needMore")}</p>`}`;
         else act = `<p class="mp-hint">${t("waitHost")}</p>`;
         h = `${head}</div>${codeBlock(R.code)}${linkBtn}
@@ -438,6 +439,7 @@
         case "join": join(val("#mp-code"), { name: val("#mp-name") }).catch(() => {}); break;
         case "start": start(cfg.startOptions ? cfg.startOptions() : null); break;
         case "end": endGame(); break;
+        case "pick": this.hide(); emit("pick", {}); break;       // host wants to choose the game: back to the page that shows the picker
         case "leave": leave(); break;
         case "copy": {
           (navigator.clipboard ? navigator.clipboard.writeText(roomUrl()) : Promise.reject()).catch(() => {});

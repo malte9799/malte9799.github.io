@@ -276,6 +276,7 @@ the peer id and the address for `send(…, id)`. `status` is `connecting` → `l
 | `host` | `{ hostId, previous, you }` — the host left; the player who has been in the room longest takes over automatically (everyone computes the same), so a room survives its host |
 | `game` | game id the host picked (or `null`) |
 | `start` | `{ game, options, players, isHost }` |
+| `pick` | host pressed "Spiel auswählen" in the lobby window (only with `configure({ lobbyStart: false })`, which replaces its "Spiel starten" button; the hub uses this) |
 | `end` | host called `endGame()` |
 | `status` | `"lobby"` / `"playing"` |
 | `message` | `{ type, data, from, player }` — only from players in the room |
