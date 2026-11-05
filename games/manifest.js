@@ -640,3 +640,67 @@ function drawKniffel(p, w, h) {
   write("25", 0, 10, ink); write("30", 0, 11, ink); write("24", 0, 12, ink); write("0", 1, 9, ink);
   p.pop();
 }
+
+// Mäxchen (hub only): the pub table — covered cups, one open claim, chalk marks
+function drawMaexchen(p, w, h) {
+  previewBg(p, w, h);
+  const CLR = {
+    woodLo: [64, 41, 27], wood: [98, 63, 41], woodHi: [128, 85, 55],
+    feltLo: [19, 53, 41], feltHi: [43, 95, 72], chalk: [238, 232, 212],
+    red: [198, 62, 50], brass: [214, 176, 104], die: [246, 237, 213], dieLo: [212, 197, 166], pip: [56, 46, 38],
+  };
+  p.textAlign(p.CENTER, p.CENTER);
+  const die = (x, y, s, v, ang) => {
+    p.push(); p.translate(x, y); p.rotate(ang); p.noStroke();
+    p.fill(0, 0, 0, 26); p.rect(-s / 2 + 2, -s / 2 + 4, s, s, s * 0.22);
+    p.fill(...CLR.dieLo); p.rect(-s / 2, -s / 2 + 2, s, s, s * 0.22);
+    p.fill(...CLR.die); p.rect(-s / 2, -s / 2, s, s, s * 0.22);
+    p.fill(255, 255, 255, 20); p.rect(-s / 2, -s / 2, s, s * 0.42, s * 0.22, s * 0.22, 0, 0);
+    const PIPS = { 1: [[0, 0]], 2: [[-.27, -.27], [.27, .27]], 3: [[-.27, -.27], [0, 0], [.27, .27]], 4: [[-.27, -.27], [.27, -.27], [-.27, .27], [.27, .27]], 5: [[-.27, -.27], [.27, -.27], [0, 0], [-.27, .27], [.27, .27]], 6: [[-.27, -.27], [.27, -.27], [-.27, 0], [.27, 0], [-.27, .27], [.27, .27]] };
+    p.fill(v === 1 ? CLR.red[0] : CLR.pip[0], v === 1 ? CLR.red[1] : CLR.pip[1], v === 1 ? CLR.red[2] : CLR.pip[2]);
+    for (const [fx, fy] of PIPS[v] || []) p.circle(fx * s, fy * s, s * 0.13);
+    p.pop();
+  };
+  const cup = (x, y, s) => {
+    p.push(); p.translate(x, y); p.noStroke();
+    p.fill(0, 0, 0, 18); p.ellipse(0, s * 0.46, s * 1.0, s * 0.24);
+    p.fill(...CLR.dieLo); p.rect(-s * 0.36, -s * 0.42, s * 0.72, s * 0.84, s * 0.15);
+    p.fill(...CLR.die); p.rect(-s * 0.36, -s * 0.46, s * 0.72, s * 0.84, s * 0.15);
+    p.fill(...CLR.red); p.rect(-s * 0.36, s * 0.06, s * 0.72, s * 0.15);
+    p.fill(255, 255, 255, 26); p.rect(-s * 0.36, -s * 0.46, s * 0.72, s * 0.28, s * 0.15, s * 0.15, 0, 0);
+    p.fill(...CLR.chalk); p.textSize(s * 0.42); p.textStyle(p.BOLD); p.text("?", 0, s * 0.05);
+    p.pop();
+  };
+  // the table
+  for (let i = 8; i >= 0; i--) {
+    const t = 1 - i / 8;
+    p.fill(CLR.woodLo[0] + (CLR.woodHi[0] - CLR.woodLo[0]) * t, CLR.woodLo[1] + (CLR.woodHi[1] - CLR.woodLo[1]) * t, CLR.woodLo[2] + (CLR.woodHi[2] - CLR.woodLo[2]) * t);
+    p.rect(20 + i, 26 + i, w - 40 - i * 2, h - 52 - i * 2, 20 - i * 1.2);
+  }
+  for (let i = 6; i >= 0; i--) {
+    const t = 1 - i / 6;
+    p.fill(CLR.feltLo[0] + (CLR.feltHi[0] - CLR.feltLo[0]) * t, CLR.feltLo[1] + (CLR.feltHi[1] - CLR.feltLo[1]) * t, CLR.feltLo[2] + (CLR.feltHi[2] - CLR.feltLo[2]) * t);
+    p.rect(28 + i, 34 + i, w - 56 - i * 2, h - 68 - i * 2, 13 - i * 0.9);
+  }
+  p.noStroke(); p.textStyle(p.BOLD);
+  // top: the opponent's covered cups
+  cup(w / 2 - 46, 92, 62); cup(w / 2 + 46, 92, 62);
+  p.fill(...CLR.chalk, 170); p.textSize(12); p.text("MIA · 2 STRICHE", w / 2, 58);
+  // centre: the plaque with the live claim
+  p.fill(0, 0, 0, 55); p.rect(w / 2 - 128, 152, 256, 74, 14);
+  p.fill(...CLR.wood); p.rect(w / 2 - 132, 148, 256, 74, 14);
+  p.fill(...CLR.woodHi); p.rect(w / 2 - 132, 148, 256, 38, 14, 14, 10, 10);
+  p.noFill(); p.stroke(...CLR.brass, 180); p.strokeWeight(2); p.rect(w / 2 - 127, 153, 246, 64, 11);
+  p.noStroke(); p.fill(...CLR.chalk); p.textSize(30); p.text("5·5", w / 2, 174);
+  p.textSize(12); p.fill(...CLR.chalk, 190); p.text("PASCH 5ER · VON BEN", w / 2, 200);
+  p.stroke(...CLR.brass, 110); p.strokeWeight(4); p.strokeCap(p.ROUND);
+  p.line(w / 2 - 96, 214, w / 2 + 96, 214);
+  p.stroke(...(CLR.red)); p.line(w / 2 - 96, 214, w / 2 - 96 + 0.6 * 192, 214);
+  p.noStroke();
+  // bottom: my dice, one #pip in red
+  die(w / 2 - 46, 272, 62, 5, -0.04); die(w / 2 + 46, 272, 62, 3, 0.04);
+  p.fill(...CLR.chalk, 170); p.textSize(12); p.text("DU · 1 STRICH", w / 2, 318);
+  // strike chips
+  for (let k = 0; k < 2; k++) { p.fill(...CLR.red, 220); p.circle(w / 2 + 130 + k * 16, 58, 12); }
+  p.fill(...PAL.sky, 220); p.circle(w / 2 + 130, 318, 12);
+}
