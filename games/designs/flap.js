@@ -128,13 +128,18 @@ DESIGN_FX.flap = {
   card(el) {
     const tEl = el.querySelector(".card-title"), dEl = el.querySelector(".card-desc");
     if (!tEl || !dEl) return;
-    const title = _flRow(tEl, tEl.textContent, {});
-    const desc = _flRow(dEl, dEl.textContent, { cls: "amber" });
-    const go = () => { title.play(9, 55, 80); desc.play(5, 16, 400); };
+    // tiles are built only when the card is near the viewport, not all at page load
+    let title = null, desc = null;
+    const build = () => {
+      if (title) return;
+      title = _flRow(tEl, tEl.textContent, {});
+      desc = _flRow(dEl, dEl.textContent, { cls: "amber" });
+    };
+    const go = () => { build(); title.play(9, 55, 80); desc.play(5, 16, 400); };
     if ("IntersectionObserver" in window) {
-      const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); go(); } }, { threshold: 0.25 });
+      const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); go(); } }, { threshold: 0.25, rootMargin: "200px" });
       io.observe(el);
     } else go();
-    el.addEventListener("pointerenter", () => title.shuffle(4));
+    el.addEventListener("pointerenter", () => { if (title) title.shuffle(4); });
   },
 };

@@ -6,7 +6,7 @@ const _ASC_RAMP = " .,:;i1tfLCG08@";
 
 // Re-draw `src` (a canvas) as characters onto `dst`. cell = [w, h] in src pixels.
 // `cache` (optional) lets the live view skip cells that did not change.
-function _ascRender(src, dst, bg, cw, ch, cache) {
+function _ascRender(src, dst, bg, cw, ch, cache, scale = 2) {
   const cols = Math.max(8, Math.round(src.width / cw)), rows = Math.max(4, Math.round(src.height / ch));
   const tiny = _ascRender.tiny || (_ascRender.tiny = document.createElement("canvas"));
   tiny.width = cols; tiny.height = rows;
@@ -14,7 +14,7 @@ function _ascRender(src, dst, bg, cw, ch, cache) {
   t.imageSmoothingEnabled = true; t.imageSmoothingQuality = "high";
   t.drawImage(src, 0, 0, cols, rows);
   const px = t.getImageData(0, 0, cols, rows).data;
-  const scale = 2, W = cols * 7 * scale, H = rows * 12 * scale;
+  const W = cols * 7 * scale, H = rows * 12 * scale;
   if (dst.width !== W || dst.height !== H) { dst.width = W; dst.height = H; if (cache) cache.length = 0; }
   const g = dst.getContext("2d");
   g.font = `700 ${12 * scale}px "JetBrains Mono", monospace`;
@@ -121,14 +121,5 @@ DESIGN_FX.ascii = {
     return () => cleanups.forEach((c) => c());
   },
 
-  // the preview canvas is redrawn as text
-  card(el) {
-    previewCanvas(el, (src) => {
-      const dst = document.createElement("canvas");
-      dst.className = "asc";
-      _ascRender(src, dst, PAL.board, 5, 9);
-      src.classList.add("src");
-      src.parentNode.appendChild(dst);
-    });
-  },
+  // card previews keep their real canvas; the ASCII look is a CSS overlay (ascii.css)
 };

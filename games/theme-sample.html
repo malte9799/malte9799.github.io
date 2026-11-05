@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Design sample</title>
+<link rel="stylesheet" href="themes.css" />
+<link rel="stylesheet" href="shared.css" />
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  #home { display: block; padding: 20px 12px; box-sizing: border-box; }
+  #home .hero { margin: 0; }
+  #home .flrow { flex-wrap: nowrap !important; }
+  #home h1, #home .subtitle { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="home">
+  <div class="hero">
+    <h1></h1>
+    <p class="subtitle"></p>
+  </div>
+  <!-- invisible card: the menu reads its border and radius from here -->
+  <div class="card probe" style="position:absolute;left:-9999px;top:0;width:200px;height:100px"></div>
+</div>
+<script>
+window.THEME_SAMPLE = true;
+</script>
+<script src="themes.js"></script>
+<script>
+// Renders one design's look. Only the helpers from themes.js are used here:
+// no saved theme, no event listeners, no saved state.
+(function () {
+  const id = new URLSearchParams(location.search).get("design");
+  const t = THEMES.find((x) => x.id === id) || THEMES[0];
+  THEME = t;
+  FONT = t.font;
+  THEME_FX = { corners: 1, text: 1, ...t.fx };
+  _deepAssign(PAL, _BASE);
+  _deepAssign(PAL, t.pal);
+  document.documentElement.dataset.theme = t.id;
+  document.querySelector("#home h1").textContent = t.name;
+  document.querySelector("#home .subtitle").textContent = t.sub;
+  _loadFonts(t);
+  if (!t.assets) return;
+  const css = document.createElement("link");
+  css.rel = "stylesheet";
+  css.href = "designs/" + t.id + ".css";
+  document.head.appendChild(css);
+  if (!t.script) return;
+  // run the design's own decoration (letters, rows, banner), so the sample matches the page
+  const js = document.createElement("script");
+  js.src = "designs/" + t.id + ".js";
+  js.onload = () => {
+    try { const fx = DESIGN_FX[t.id]; if (fx && fx.enter) fx.enter(); } catch (e) { console.error(e); }
+    fit();
+  };
+  document.body.appendChild(js);
+})();
+
+// shrink the hero so long titles stay inside the tile
+function fit() {
+  const hero = document.querySelector("#home .hero");
+  hero.style.transform = "";
+  // natural width of the text itself (nowrap), so a wide title scales only as much as needed
+  const natural = (el) => { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width; };
+  const w = Math.max(natural(hero.querySelector("h1")), natural(hero.querySelector(".subtitle")), hero.scrollWidth);
+  const h = hero.getBoundingClientRect().height;
+  const k = Math.min(1, (innerWidth - 24) / w, (innerHeight - 40) / h);
+  hero.style.transformOrigin = "0 0";
+  hero.style.transform = k < 1 ? `scale(${k.toFixed(3)})` : "";
+}
+// flip-letter designs widen while they animate in, so measure again a few times
+addEventListener("load", () => { fit(); [400, 1500, 3000].forEach((ms) => setTimeout(fit, ms)); });
+</script>
+</body>
+</html>

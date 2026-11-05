@@ -103,8 +103,12 @@ html[data-theme="ascii"] #home .card::after { right: -0.5ch; bottom: -9px; }
 html[data-theme="ascii"] #home .card:hover { background: #46ff78; border-style: solid; border-color: #46ff78; box-shadow: var(--card-hover-shadow); transform: none; text-shadow: none; }
 html[data-theme="ascii"] #home .card .preview { background: var(--board); border-bottom: 1px dashed #2fa04c; }
 html[data-theme="ascii"] #home .card:hover .preview { border-bottom: 1px solid #02100a; }
-html[data-theme="ascii"] #home .card canvas.src { opacity: 0; }
-html[data-theme="ascii"] #home .card .asc { position: absolute; inset: 0; width: 100% !important; height: 100% !important; image-rendering: pixelated; }
+/* card preview: CRT filter over the live canvas (no per-frame text rendering) */
+html[data-theme="ascii"] #home .card .preview { position: relative; }
+html[data-theme="ascii"] #home .card .preview::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: repeating-linear-gradient(transparent 0 2px, rgba(0, 0, 0, 0.3) 2px 3px), linear-gradient(rgba(70, 255, 120, 0.1), rgba(70, 255, 120, 0.1));
+}
 html[data-theme="ascii"] #home .card:hover canvas { transform: none; }
 html[data-theme="ascii"] #home .card-text { border: 0; padding: 12px 14px 14px; }
 html[data-theme="ascii"] #home .card-title { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #acffbe; }

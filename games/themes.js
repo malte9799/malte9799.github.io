@@ -381,7 +381,7 @@ function applyTheme(id, { save = true } = {}) {
 
 // apply the saved theme immediately (this file loads in <head>, before paint);
 // ?design=<id> in the URL wins and is remembered
-(function () {
+if (!window.THEME_SAMPLE) (function () {   // theme-sample.html loads this file only for its helpers
   let saved = null;
   try { saved = new URLSearchParams(location.search).get("design"); } catch {}
   if (saved && !THEMES.some((t) => t.id === saved)) saved = null;
@@ -453,26 +453,36 @@ function themeSketch(p) {
 
 function _rgb(c) { return "rgb(" + c.join(",") + ")"; }
 
-// A miniature of the design: a framed board with a few tiles, a title bar and
-// a button in the theme's own colours, font and corner radius.
-function _themePreview(t, P) {
-  const c = (k) => _rgb(P[k]);
-  const r = Math.round(7 * (t.fx.corners ?? 1));
-  const cells = ["well", "panel", "mint", "panel", "sun", "well", "mint", "well", "panel"];
-  const hard = (t.id === "pop" || t.hardShadow) ? `box-shadow:2px 2px 0 ${c("ink")};` : "";
-  const edge = (t.id === "pop" || t.hardShadow) ? c("ink") : c(t.id === "brutal" ? "dim" : "line");
-  return `<span class="theme-prev" style="background:${c("bg")};border:1px solid ${edge};border-radius:${r}px;${hard}font-family:'${t.font}'">
-    <span class="tp-board" style="background:${c("board")};border:1px solid ${edge};border-radius:${Math.round(r / 2)}px">
-      ${cells.map(k => `<i style="background:${c(k)};border-radius:${Math.round(r / 4)}px"></i>`).join("")}
-    </span>
-    <span class="tp-side">
-      <b style="color:${c("ink")}">Aa</b>
-      <em style="background:${c("mint")};border-radius:${Math.round(r / 2)}px"></em>
-      <u style="background:${c("dim")}"></u>
-    </span>
-  </span>`;
+// Designs with continuous, heavy motion. With "reduce motion" on in the system
+// settings they are greyed out in the menu, and picking one asks first.
+const HEAVY_MOTION = new Set(["liquid", "neon", "y2k", "kinetic", "holo", "flap", "ascii", "comic", "sketch", "cutout"]);
+const _reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function _motionWarn(t, onConfirm) {
+  document.getElementById("motion-warn")?.remove();
+  const ov = document.createElement("div");
+  ov.id = "motion-warn";
+  ov.className = "motion-warn";
+  ov.innerHTML = `<div class="mw-box" role="alertdialog" aria-modal="true" aria-labelledby="mw-title">
+      <h2 id="mw-title">${t.name} is heavily animated</h2>
+      <p>"Reduce motion" is on in your system settings. This design moves a lot and may be uncomfortable.</p>
+      <div class="mw-actions">
+        <button type="button" class="mw-cancel">Cancel</button>
+        <button type="button" class="mw-ok primary">Apply anyway</button>
+      </div>
+    </div>`;
+  const close = () => { ov.remove(); document.removeEventListener("keydown", onKey, true); };
+  const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } };
+  ov.addEventListener("click", (e) => { e.stopPropagation(); if (e.target === ov) close(); });
+  ov.querySelector(".mw-cancel").addEventListener("click", (e) => { e.stopPropagation(); close(); });
+  ov.querySelector(".mw-ok").addEventListener("click", (e) => { e.stopPropagation(); close(); onConfirm(); });
+  document.addEventListener("keydown", onKey, true);
+  document.body.appendChild(ov);
+  ov.querySelector(".mw-cancel").focus();
 }
 
+// Each option shows "Games / small puzzles & toys" rendered in that design:
+// a lazy iframe running theme-sample.html with the design's real CSS.
 function mountThemePicker(container) {
   if (!container || container.querySelector(".theme-picker")) return;
   const wrap = document.createElement("div");
@@ -486,27 +496,46 @@ function mountThemePicker(container) {
       </svg><span>Design</span>
     </button>
     <div class="theme-menu" role="menu">
-      ${THEMES.map(t => {
-        const P = { ..._BASE, ...t.pal };
-        return `<button class="theme-opt" type="button" role="menuitemradio" data-theme="${t.id}" aria-checked="${t.id === THEME.id}">
-          ${_themePreview(t, P)}
-          <span><span class="theme-name" style="font-family:'${t.font}'">${t.name}</span><br><span class="theme-sub">${t.sub}</span></span>
-        </button>`;
-      }).join("")}
+      ${THEMES.map(t => `<button class="theme-opt" type="button" role="menuitemradio" data-theme="${t.id}" aria-label="${t.name}" aria-checked="${t.id === THEME.id}">
+          <span class="theme-frame"><iframe data-src="theme-sample.html?design=${t.id}" title="${t.name}" tabindex="-1" aria-hidden="true" loading="lazy"></iframe></span>
+        </button>`).join("")}
     </div>`;
   container.appendChild(wrap);
+  // each tile takes the border and corner radius of that design's card
+  wrap.querySelectorAll(".theme-frame iframe").forEach((f) => f.addEventListener("load", () => {
+    const probe = f.contentDocument?.querySelector("#home .card.probe");
+    if (!probe) return;
+    probe.style.animation = "none";                       // base radius, not a mid-morph value
+    const cs = f.contentWindow.getComputedStyle(probe);
+    const frame = f.parentElement;
+    frame.style.borderRadius = cs.borderRadius;
+    frame.style.border = parseFloat(cs.borderTopWidth) > 0
+      ? `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}` : "none";
+  }));
   const btn = wrap.querySelector(".theme-btn");
+  // grey out the heavy designs while the system asks for reduced motion
+  const syncMotion = () => {
+    const reduce = _reduceMotion();
+    wrap.querySelectorAll(".theme-opt").forEach((o) => o.classList.toggle("is-muted", reduce && HEAVY_MOTION.has(o.dataset.theme)));
+  };
+  syncMotion();
+  matchMedia("(prefers-reduced-motion: reduce)").addEventListener?.("change", syncMotion);
   const close = () => { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
     const open = !wrap.classList.contains("open");
     wrap.classList.toggle("open", open);
     btn.setAttribute("aria-expanded", String(open));
-    if (open) THEMES.forEach(_loadFonts); // so each name shows in its own font
+    if (open) {
+      syncMotion();
+      wrap.querySelectorAll("iframe[data-src]").forEach((f) => { f.src = f.dataset.src; f.removeAttribute("data-src"); });
+    }
   });
   wrap.querySelectorAll(".theme-opt").forEach(o => o.addEventListener("click", (e) => {
     e.stopPropagation();
-    applyTheme(o.dataset.theme);
+    const id = o.dataset.theme;
+    if (!o.classList.contains("is-muted")) return applyTheme(id);
+    _motionWarn(THEMES.find((x) => x.id === id), () => applyTheme(id));
   }));
   document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) close(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });

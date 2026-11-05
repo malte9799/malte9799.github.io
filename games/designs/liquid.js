@@ -34,7 +34,41 @@ DESIGN_FX.liquid = {
     if (!reduce) { addEventListener("pointermove", move, { passive: true }); tick(); }
     else ptr.style.display = "none";
 
-    return () => { cancelAnimationFrame(raf); removeEventListener("pointermove", move); fx.remove(); };
+    // background blobs: pairs drift together, fuse into a peanut shape, and part again
+    const blobs = [...fx.querySelectorAll(".liq-goo i")];
+    let sized = [], blobRaf = 0;
+    const measure = () => { sized = blobs.map((el) => ({ el, r: parseFloat(getComputedStyle(el).width) / 2 })); };
+    measure();
+    const t0 = performance.now();
+    const place = (el, x, y, r) => { el.style.transform = `translate(${(x - r).toFixed(1)}px, ${(y - r).toFixed(1)}px)`; };
+    const blobTick = (now) => {
+      blobRaf = requestAnimationFrame(blobTick);
+      const t = now - t0, W = innerWidth, H = innerHeight;
+      const pairs = [[0, 1], [2, 3]];
+      pairs.forEach(([a, b], k) => {
+        const A = sized[a], B = sized[b];
+        if (!A || !B) return;
+        const cx = W * (0.5 + 0.34 * Math.sin(t * 0.00004 + k * 2.1));
+        const cy = H * (0.5 + 0.28 * Math.sin(t * 0.000055 + k * 1.3 + 0.7));
+        const ang = t * 0.00012 + k * 1.7;
+        const reach = A.r + B.r;
+        const sep = 0.5 + 0.5 * Math.sin(t * 0.00028 + k * 2.4);   // 0 = fused, 1 = apart
+        const D = reach * (0.55 + 0.9 * sep);                       // < reach overlaps → neck
+        const ux = Math.cos(ang) * D / 2, uy = Math.sin(ang) * D / 2;
+        A.el.style.animation = "none"; B.el.style.animation = "none";
+        A.el.style.left = B.el.style.left = "0px"; A.el.style.top = B.el.style.top = "0px";
+        place(A.el, cx + ux, cy + uy, A.r);
+        place(B.el, cx - ux, cy - uy, B.r);
+      });
+      const L = sized[4];
+      if (L) {
+        L.el.style.animation = "none"; L.el.style.left = L.el.style.top = "0px";
+        place(L.el, W * (0.5 + 0.4 * Math.sin(t * 0.00003 + 4)), H * (0.5 + 0.32 * Math.cos(t * 0.00004 + 1)), L.r);
+      }
+    };
+    if (!reduce) { addEventListener("resize", measure, { passive: true }); blobRaf = requestAnimationFrame(blobTick); }
+
+    return () => { cancelAnimationFrame(raf); cancelAnimationFrame(blobRaf); removeEventListener("pointermove", move); removeEventListener("resize", measure); fx.remove(); };
   },
 
   // gloss that follows the pointer across each card
