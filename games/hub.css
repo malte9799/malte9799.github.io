@@ -284,12 +284,14 @@
 .mx-row button.danger { border-color: color-mix(in srgb, var(--rose) 55%, transparent); color: var(--rose); }
 .mx-row button.danger:hover { background: color-mix(in srgb, var(--rose) 12%, transparent); border-color: var(--rose); }
 .mx-sec { padding: 9px 16px !important; font-size: 14px !important; color: var(--muted); }
-.mx-claim { display: flex; align-items: center; gap: 4px; padding: 6px; border: var(--border-w) solid var(--hairline); border-radius: 14px; background: var(--chip-bg); }
-.mx-claim button { width: 42px; padding: 10px 0; font-size: 18px; line-height: 1; flex: none; }
-.mx-claim button:disabled { opacity: .35; cursor: default; }
-.mx-claim-v { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 168px; text-align: center; }
-.mx-claim-v i { font-style: normal; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
-.mx-claim-v b { font-size: 17px; }
+.mx-ranks { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 500px; padding: 10px 14px 12px; border: var(--border-w) solid var(--hairline); border-radius: 14px; background: var(--chip-bg); }
+.mx-ranks-hint { margin: 0; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; text-align: center; }
+.mx-ranks-hint span { color: var(--dim); text-transform: none; letter-spacing: 0; }
+.mx-grp { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mx-grp-t { flex: none; width: 44px; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; text-align: right; }
+.mx-rank { flex: none; min-width: 48px; padding: 9px 10px; font-size: 14px; line-height: 1; font-variant-numeric: tabular-nums; }
+.mx-rank:disabled { opacity: .25; cursor: default; }
+.mx-rank.sel { border-color: var(--mxp); background: color-mix(in srgb, var(--mxp) 15%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mxp) 25%, transparent); }
 .mx-pick { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .mx-opt { padding: 10px 18px; display: flex; flex-direction: column; gap: 2px; align-items: center; }
 .mx-opt b { font-size: 16px; }
@@ -303,6 +305,5 @@
 .mx-snd { position: absolute; top: 10px; right: 12px; z-index: 5; flex: none !important; width: auto !important; padding: 6px 12px !important; font-size: 12px !important; opacity: .85; }
 @media (max-width: 640px) {
   .mx-status { font-size: 15px; }
-  .mx-claim-v { min-width: 130px; }
   .mx-meta { width: 100%; text-align: center; margin-right: 0; }
 }
