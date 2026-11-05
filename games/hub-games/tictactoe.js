@@ -110,30 +110,37 @@ export default {
       <div class="ttt-stage"></div><div class="ttt-act"></div><div class="ttt-table"></div></div>`;
     const $ = (s) => ctx.root.querySelector(s);
     const seatsEl = $(".ttt-seats"), status = $(".ttt-status"), stage = $(".ttt-stage"), act = $(".ttt-act"), table = $(".ttt-table");
+    // colours come from the design's canvas palette (PAL), exactly like the single-player board
+    const rootEl = ctx.root.firstElementChild;
+    function paint() {
+      if (typeof PAL === "undefined") return;
+      const rgb = (a) => `rgb(${a.join(",")})`, set = (k, a) => rootEl.style.setProperty(k, rgb(a));
+      set("--tx", PAL.mint); set("--txh", PAL.mintHi); set("--to", PAL.sky); set("--toh", PAL.skyHi); set("--tl", PAL.line); set("--tlh", PAL.lineHi);
+    }
+    paint(); window.addEventListener("themechange", paint);
     const me = () => ctx.me.id;
     const seatOf = (id) => st.seats.indexOf(id);
     const nm = (id) => esc(names[id] || "?") + (id === me() ? " (du)" : "");
 
     // ---- board (built once per mode, then updated in place) ----
-    let builtMode = null, cellEls = [], boardEls = [], shown = null, lineEl = null;
+    let ghost = null, builtMode = null, cellEls = [], boardEls = [], shown = null, lineEl = null;
     function build() {
       builtMode = st.mode; shown = null;
       const sup = st.mode === "super";
       let h = "";
       for (let b = 0; b < (sup ? 9 : 1); b++) {
         h += `<div class="tb" data-b="${b}"><div class="tb-cells">`;
-        for (let i = 0; i < 9; i++) h += `<button type="button" class="tc" data-b="${b}" data-i="${i}" aria-label="Feld ${b * 9 + i + 1}"></button>`;
+        for (let i = 0; i < 9; i++) h += `<div class="tc" role="button" tabindex="-1" data-b="${b}" data-i="${i}" aria-label="Feld ${b * 9 + i + 1}"></div>`;
         h += `</div><div class="tb-big"></div></div>`;
       }
-      stage.innerHTML = `<div class="ttt-board ${sup ? "super" : "normal"}">${h}<svg class="ttt-line" viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1"/></svg></div>`;
+      stage.innerHTML = `<div class="ttt-board ${sup ? "super" : "normal"}">${h}${sup ? `<i class="sep v" style="left:33.333%"></i><i class="sep v" style="left:66.667%"></i><i class="sep h" style="top:33.333%"></i><i class="sep h" style="top:66.667%"></i>` : ""}<svg class="ttt-line" viewBox="0 0 100 100" aria-hidden="true"><path pathLength="1"/></svg></div>`;
       cellEls = [...stage.querySelectorAll(".tc")];
       boardEls = [...stage.querySelectorAll(".tb")];
       lineEl = stage.querySelector(".ttt-line path");
     }
 
-    function lineGeom(line) {                                    // centre of the winning line in the 100×100 board box
-      const sup = st.mode === "super", gap = 3, big = (100 - gap * 2) / 3;
-      const c = (k) => sup ? [(k % 3) * (big + gap) + big / 2, Math.floor(k / 3) * (big + gap) + big / 2] : [(k % 3) * 33.3 + 16.65, Math.floor(k / 3) * 33.3 + 16.65];
+    function lineGeom(line) {                                    // both modes lay out three equal columns / rows
+      const c = (k) => [(k % 3) * 33.333 + 16.667, Math.floor(k / 3) * 33.333 + 16.667];
       const a = c(line[0]), z = c(line[2]);
       return `M${a[0].toFixed(1)} ${a[1].toFixed(1)}L${z[0].toFixed(1)} ${z[1].toFixed(1)}`;
     }
@@ -143,16 +150,18 @@ export default {
       const mine = seatOf(me()), turnId = st.seats[st.turn], myTurn = st.phase === "play" && turnId === me();
       const sup = st.mode === "super", req = required(st);
       const prev = shown; shown = st.cells.map((r) => r.slice());
+      const ghostWas = ghost; ghost = mine;
 
       // cells
       cellEls.forEach((el) => {
         const b = +el.dataset.b, i = +el.dataset.i, v = st.cells[b][i];
-        if (!prev || prev[b][i] !== v) {
-          el.innerHTML = v ? mark(v) : "";
+        if (!prev || prev[b][i] !== v || (!v && ghostWas !== mine)) {
+          el.innerHTML = v ? mark(v) : mine >= 0 ? `<span class="gh">${mark(mine + 1)}</span>` : "";   // empty: faint preview of my mark on hover
           el.classList.toggle("fresh", !!v && !!prev);            // only newly played marks animate
         }
         const ok = myTurn && legal(st, b, i);
-        el.disabled = !ok;
+        el.dataset.ok = ok ? "1" : "";
+        el.tabIndex = ok ? 0 : -1;
         el.dataset.m = v ? "xo"[v - 1] : "";
         el.classList.toggle("last", !!st.last && st.last[0] === b && st.last[1] === i && st.phase !== "setup");
         el.dataset.me = mine === 0 ? "x" : "o";
@@ -232,11 +241,12 @@ export default {
 
     stage.addEventListener("click", (e) => {
       const c = e.target.closest(".tc");
-      if (!c || c.disabled) return;
+      if (!c || !c.dataset.ok) return;
       const b = +c.dataset.b, i = +c.dataset.i;
       if (ctx.isHost) move(b, i, me());
       else ctx.send("move", [b, i], ctx.hostId);
     });
+    stage.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.classList.contains("tc")) { e.preventDefault(); e.target.click(); } });
     act.addEventListener("click", (e) => {
       const m = e.target.closest("[data-mode]");
       if (m) return ctx.isHost ? setMode(m.dataset.mode) : undefined;
@@ -267,6 +277,6 @@ export default {
     ctx.onEvent("host", ({ you }) => { if (you) push(); });     // new host: re-broadcast what I know
 
     render();
-    return {};
+    return { destroy() { window.removeEventListener("themechange", paint); } };
   },
 };

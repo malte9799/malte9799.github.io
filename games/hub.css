@@ -35,57 +35,66 @@
 .ttt-seats { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .ttt-vs { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: .12em; }
 .ttt-seat { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px; border: var(--border-w) solid var(--hairline); background: var(--chip-bg); transition: border-color .2s, box-shadow .2s; }
-.ttt-seat.x { --c: var(--sky); } .ttt-seat.o { --c: var(--rose); }
+.ttt-seat.x { --c: var(--tx); } .ttt-seat.o { --c: var(--to); }
 .ttt-seat.turn { border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent); }
 .ttt-seat.gone { opacity: .45; text-decoration: line-through; }
-.ttt-seat.won { border-color: var(--mint); }
+.ttt-seat.won { border-color: var(--tx); }
 .ttt-badge { width: 22px; height: 22px; display: block; } .ttt-badge .mk { width: 100%; height: 100%; }
 .ttt-wins { min-width: 20px; text-align: center; font-variant-numeric: tabular-nums; color: var(--muted); }
 .ttt-status { font-size: 17px; min-height: 26px; text-align: center; } .ttt-status.mine { color: var(--ink); font-weight: 600; }
 .ttt-status b { font-weight: 700; }
 
+/* the board looks like the single-player canvas: framed like #canvas-wrap, thin grid lines, mint X / sky O */
 .mk { display: block; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.mk.x { stroke: var(--sky); stroke-width: 11; } .mk.o { stroke: var(--rose); stroke-width: 10; }
-.ttt-seat.o .mk, .ttt-board .mk.o { stroke: var(--rose); }
+.mk.x { stroke: var(--tx); stroke-width: 12; } .mk.o { stroke: var(--to); stroke-width: 10; }
 .mk path, .mk circle { stroke-dasharray: 1; stroke-dashoffset: 0; }
 .fresh .mk path, .fresh .mk circle { animation: ttt-draw .32s ease-out backwards; }
 .fresh .mk path + path { animation-delay: .14s; }
 @keyframes ttt-draw { from { stroke-dashoffset: 1; } }
 
-.ttt-stage { width: min(480px, 100%); }
-.ttt-board { position: relative; display: grid; gap: 3%; aspect-ratio: 1; }
+.ttt-stage { width: min(480px, 100%); padding: 6%; box-sizing: border-box; background: var(--board); border: var(--border-w) solid var(--hairline); border-radius: var(--r-lg); box-shadow: var(--wrap-shadow); }
+.ttt-board { position: relative; display: grid; aspect-ratio: 1; }
 .ttt-board.super { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .ttt-board.normal { grid-template-columns: minmax(0, 1fr); }
 .ttt-board.idle { opacity: .55; }
-.tb { position: relative; border-radius: var(--r-md); border: var(--border-w) solid transparent; transition: background .25s, border-color .25s, box-shadow .25s; }
-.super .tb { border-radius: var(--r-sm); padding: 3%; background: var(--chip-bg); border-color: var(--hairline); }
-.tb-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; height: 100%; }
-.normal .tb-cells { gap: 8px; }
-.tc { position: relative; aspect-ratio: 1; padding: 0; min-width: 0; display: grid; place-items: center; background: var(--panel); border-radius: calc(var(--r-sm) * .6); box-shadow: none; }
-.normal .tc { border-radius: var(--r-md); }
-.super .tc { background: var(--panel); border-color: transparent; }
+.tb { position: relative; box-sizing: border-box; border-radius: 4px; transition: background .25s, box-shadow .25s; }
+.super .tb { padding: 3%; }
+.sep { position: absolute; background: var(--tlh); pointer-events: none; border-radius: 2px; }
+.sep.v { top: -1.5%; bottom: -1.5%; width: 2px; margin-left: -1px; } .sep.h { left: -1.5%; right: -1.5%; height: 2px; margin-top: -1px; }
+.tb-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); height: 100%; }
+.tc { position: relative; aspect-ratio: 1; display: grid; place-items: center; cursor: default; outline: none; -webkit-tap-highlight-color: transparent; }
+.tc[data-ok="1"] { cursor: pointer; }
+.tc:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .tc .mk { width: 62%; height: 62%; }
-.normal .tc .mk { width: 58%; height: 58%; }
-.tc:disabled { opacity: 1; cursor: default; }
-.tc:disabled:hover { background: var(--panel); border-color: var(--panel-edge); }
-.super .tc:disabled:hover { background: var(--panel); border-color: transparent; }
-.tc:not(:disabled):hover { background: color-mix(in srgb, var(--c, var(--sky)) 22%, var(--panel)); }
-.tb[data-t="x"] { --c: var(--sky); } .tb[data-t="o"] { --c: var(--rose); }
-.tc.last { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--lilac) 70%, transparent); }
-.tc.win { background: color-mix(in srgb, var(--mint) 22%, var(--panel)); border-color: var(--mint); }
+/* thin lines between the cells, none on the outside */
+.tc:not(:nth-child(3n)) { border-right: 1px solid var(--tl); }
+.tc:nth-child(-n+6) { border-bottom: 1px solid var(--tl); }
+.normal .tc:not(:nth-child(3n)) { border-right: 5px solid var(--tlh); }
+.normal .tc:nth-child(-n+6) { border-bottom: 5px solid var(--tlh); }
+.normal .tc .mk { width: 56%; height: 56%; }
+.super .tc .mk.x, .super .tc .mk.o { stroke-width: 11; }
+/* hover: a faint copy of my mark, like the canvas version */
+.tc .gh { display: none; width: 100%; height: 100%; place-items: center; opacity: .32; pointer-events: none; }
+.tc .gh .mk { width: 62%; height: 62%; } .normal .tc .gh .mk { width: 56%; height: 56%; }
+.tc[data-ok="1"]:hover .gh { display: grid; }
+.tc[data-ok="1"]:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.tb[data-t="x"] { --c: var(--tx); } .tb[data-t="o"] { --c: var(--to); }
+.tc.win { background: color-mix(in srgb, var(--tx) 18%, transparent); }
 /* the board you have to play in */
-.tb.hot { border-color: var(--c); background: color-mix(in srgb, var(--c) 12%, var(--panel)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--c) 28%, transparent); animation: ttt-pulse 1.6s ease-in-out infinite; }
-@keyframes ttt-pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 10%, transparent); } }
-/* a decided small board gets one big mark on top */
-.tb-big { position: absolute; inset: 0; display: none; place-items: center; border-radius: inherit; pointer-events: none; }
-.tb[data-w="x"] .tb-big, .tb[data-w="o"] .tb-big { display: grid; background: color-mix(in srgb, var(--card-bg) 78%, transparent); backdrop-filter: blur(1px); }
-.tb[data-w="d"] { opacity: .45; }
-.tb-big .mk { width: 78%; height: 78%; } .tb-big .mk.x, .tb-big .mk.o { stroke-width: 8; }
-.tb.inwin { border-color: var(--mint); }
+.tb.hot { background: color-mix(in srgb, var(--c) 8%, transparent); outline: 1.5px solid color-mix(in srgb, var(--c) 55%, transparent); outline-offset: 1px; animation: ttt-pulse 1.6s ease-in-out infinite; }
+@keyframes ttt-pulse { 50% { outline-color: color-mix(in srgb, var(--c) 28%, transparent); } }
+/* a decided small board: tinted, with one big mark on top */
+.tb[data-w="x"] { background: color-mix(in srgb, var(--tx) 10%, transparent); } .tb[data-w="o"] { background: color-mix(in srgb, var(--to) 10%, transparent); }
+.tb[data-w="d"] { background: color-mix(in srgb, var(--tl) 35%, transparent); }
+.tb-big { position: absolute; inset: 0; display: none; place-items: center; pointer-events: none; opacity: .3; }
+.tb[data-w="x"] .tb-big, .tb[data-w="o"] .tb-big { display: grid; }
+.tb-big .mk { width: 88%; height: 88%; } .tb-big .mk.x, .tb-big .mk.o { stroke-width: 7; }
+.tb.inwin .tb-big { opacity: .5; }
 .ttt-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-.ttt-line path { fill: none; stroke: var(--mint); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; }
+.ttt-line path { fill: none; stroke: var(--txh); stroke-width: 1.8; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; }
+.ttt-line path[data-m="o"] { stroke: var(--toh); }
 .ttt-line path.on { opacity: .95; stroke-dashoffset: 0; transition: stroke-dashoffset .5s .25s ease-out, opacity .1s .25s; }
-.normal .ttt-line path { stroke-width: 3; }
+.normal .ttt-line path { stroke-width: 2.6; }
 
 .ttt-act { display: grid; justify-items: center; gap: 12px; width: 100%; min-height: 8px; } .ttt-act > button.primary { flex: none; padding: 11px 26px; }
 .ttt-modes { display: flex; gap: 10px; width: min(480px, 100%); }
