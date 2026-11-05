@@ -17,6 +17,7 @@ const MP_GAMES = [
   { id: "tictactoe", title: "Tic Tac Toe", desc: "Normal oder Super – zu zweit am Brett, der Rest schaut zu und rotiert", min: 2, max: 6, preview: (p, w, h) => drawTicTacToe(p, w, h), load: () => import("./hub-games/tictactoe.js") },
   { id: "kniffel", title: "Kniffel", desc: "Würfeln, halten, aufschreiben – Kniffel, Yahtzee, Yatzy, Generala", min: 2, max: 6, preview: (p, w, h) => drawKniffel(p, w, h), load: () => import("./hub-games/kniffel.js") },
   { id: "clickrace", title: "Klick-Rennen", desc: "15 Sekunden, wer klickt mehr?", min: 2, max: 6, preview: (p, w, h) => drawClickRace(p, w, h), load: () => import("./hub-games/clickrace.js") },
+  { id: "kritzel", title: "Kritzel-Revier", desc: "Echtzeit: kritzle das größte Revier – Flecken blockieren, Sterne geben Turbo", min: 2, max: 4, preview: (p, w, h) => drawKritzel(p, w, h), load: () => import("./hub-games/kritzel.js") },
 ];
 window.MP_GAMES = MP_GAMES;                        // multiplayer.js reads the game titles from here
 

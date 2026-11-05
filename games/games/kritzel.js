@@ -68,7 +68,8 @@ initGame({
 
 // ---- constants ----
 
-const FONT = "Comic Sans MS";
+// FONT is taken (themes.js provides the design's canvas font), so the crayon look carries its own
+const KR_FONT = "Comic Sans MS";
 const CELL = 28;
 const HUD_H = 56, PAD = 14, SCORE_H = 44;
 const STAIN = 255;
@@ -111,6 +112,16 @@ let lastPosSend = 0, pressing = false;
 let builtPortrait = null;
 let soundOn = true;
 let L = null;                    // stage layout, see layout()
+let lobbyAt = 0;                 // hub: when the game mounted (seed rescue timer)
+
+// flashNote from the shell writes into #note, which only exists on the game page — in the hub
+// notes are mirrored onto the canvas instead
+const _shellNote = flashNote;
+let noteMsg = "", noteAt = 0;
+function flashNote(msg) {
+  _shellNote(msg);
+  if (HUB()) { noteMsg = msg || ""; noteAt = typeof frameCount === "number" ? frameCount : 0; }
+}
 
 // ---- persistence ----
 
@@ -122,10 +133,14 @@ function loadState() {
   if (typeof d.best === "number" && d.best >= 0 && d.best <= 100) best = Math.round(d.best);
 }
 
-// ---- multiplayer wiring (window.Multiplayer, see README.md) ----
+// ---- multiplayer wiring (window.Multiplayer on the page, hub ctx adapter in the hub) ----
 
-const MP = window.Multiplayer;
-if (MP) {
+let MP = window.Multiplayer;
+const HUB = () => !!window.__KR_NET__;
+
+// Page mode: own the shell and open rooms directly. Hub mode: window.__KR_NET__ is an adapter
+// speaking the Multiplayer dialect over the hub's room ctx; it is wired in __kritzelHubInit().
+if (!HUB() && MP) {
   MP.configure({
     game: "kritzel",
     min: 2, max: 4,
@@ -135,25 +150,37 @@ if (MP) {
   if (row) MP.mountButton(row);
   MP.on("start", (ev) => onStart(ev));
   MP.on("end", () => flashNote(MP.isHost ? "Zurück in der Lobby — „Nochmal“ für eine neue Runde." : "Zurück in der Lobby."));
-  MP.on("host", (h) => { if (h.you) flashNote("Du bist jetzt der Host."); });
-  MP.on("join", (p) => { if (p.you && phase !== "over") flashNote("Im Raum " + (MP.state ? MP.state.code : "") + " — der Host startet die Runde."); });
-  MP.on("leave", (p) => onPlayerGone(p.id, p.name));
-  MP.on("close", (c) => onRoomClosed(c));
+  MP.openFromUrl();
+}
+wireNet();
+
+// (re)register the game's net handlers on whatever net MP currently is
+function wireNet() {
+  if (!MP) return;
   MP.onMessage("pos", (m) => onNetPos(m.from, m.data));
   MP.onMessage("pick", (m) => onNetPick(m.from, m.data));
   MP.onMessage("over", (m) => onNetOver(m.data));
-  MP.openFromUrl();
+  MP.onMessage("seed", (m) => { if (HUB() && m.data) beginWith(Number(m.data.seed) || ((Math.random() * 1e9) | 0), Number(m.data.secs)); });
+  MP.on("leave", (p) => onPlayerGone(p.id, p.name));
+  MP.on("host", (h) => { if (h.you) flashNote("Du bist jetzt der Host."); });
+  MP.on("join", (p) => { if (!HUB() && p.you && phase !== "over") flashNote("Im Raum " + (MP.state ? MP.state.code : "") + " — der Host startet die Runde."); });
+  MP.on("close", (c) => onRoomClosed(c));
 }
 
 function onStart(ev) {
   const opts = ev.options || {};
-  seed = Number(opts.seed) || ((Math.random() * 1e9) | 0);
-  if ([45, 75, 120].includes(opts.secs)) secs = opts.secs;
   const list = (ev.players && ev.players.length ? ev.players : (MP ? MP.players : []));
   mode = "mp";
   painters = list.map((p, i) => makePainter(i, p.id, p.name || "Spieler", p.you));
   meIdx = Math.max(0, painters.findIndex((p) => p.you));
   syncPresetLabel();
+  beginWith(Number(opts.seed) || ((Math.random() * 1e9) | 0), opts.secs);
+}
+
+// (re)start a round on a fresh seed; newSecs keeps every client on the same clock
+function beginWith(s, newSecs) {
+  if ([45, 75, 120].includes(newSecs)) secs = newSecs;
+  seed = s;
   startRound();
 }
 
@@ -223,8 +250,17 @@ function startRound() {
   clearParticles();
 }
 
-// host presses "Nochmal" (or N): a fresh practice round, or a new online round via the room
+// host presses "Nochmal" (or N): a fresh practice round, a new online round via the room, or a
+// new sheet in the hub (broadcast as a "seed" message, so nobody has to leave the game)
 function again() {
+  if (HUB()) {
+    if (phase !== "over") { flashNote("Die Runde läuft schon."); return; }
+    if (!MP.isHost) { flashNote("Nur der Host startet das nächste Blatt."); return; }
+    const s = (Math.random() * 1e9) | 0;
+    MP.send("seed", { seed: s, secs });
+    beginWith(s);
+    return;
+  }
   if (mode === "mp" && MP && MP.connected) {
     if (phase === "run" || phase === "countdown") { flashNote("Die Runde läuft schon."); return; }
     if (MP.state && MP.state.status !== "lobby") { flashNote("Einen Moment — zurück in die Lobby …"); return; }
@@ -630,8 +666,13 @@ function pct() { return Math.round((100 * counts[1]) / Math.max(1, freeCells)); 
 // Fixed virtual stage (landscape 980×668 or portrait 616×976), scaled to fit below the top bar.
 
 function layout() {
+  let uiH = 56;
   const ui = document.getElementById("ui-overlay");
-  const uiH = ui ? ui.offsetHeight : 56;
+  if (ui) uiH = ui.offsetHeight;
+  else if (HUB()) {
+    const bar = document.querySelector(".hub-bar");
+    if (bar) uiH = bar.offsetHeight + 2;
+  }
   const availH = Math.max(160, height - uiH - 6);
   const portrait = width / availH < 1.05;
   const pfW = (portrait ? 21 : 34) * CELL, pfH = (portrait ? 30 : 19) * CELL;
@@ -708,13 +749,15 @@ function drawBoard() {
   if (paintCv) image(paintCv, f.x, f.y, f.w, f.h);
   for (const s of stains) drawStain(s);
   // wobbly ink border
-  noFill();
-  stroke(...INK, 230);
-  strokeWeight(3.5);
-  strokeJoin(ROUND);
-  beginShape();
-  for (const pt of borderPts) vertex(f.x + pt.x, f.y + pt.y);
-  endShape(CLOSE);
+  if (borderPts.length) {
+    noFill();
+    stroke(...INK, 230);
+    strokeWeight(3.5);
+    strokeJoin(ROUND);
+    beginShape();
+    for (const pt of borderPts) vertex(f.x + pt.x, f.y + pt.y);
+    endShape(CLOSE);
+  }
 }
 
 function blobShape(rad, n, ph, wob) {
@@ -850,7 +893,7 @@ function drawPainter(p) {
   // name tag
   if (mode === "mp") {
     const label = p.you ? p.name + " (du)" : p.name;
-    textFont(FONT);
+    textFont(KR_FONT);
     textStyle(BOLD);
     textSize(11);
     const tw = textWidth(label) + 14;
@@ -870,7 +913,7 @@ function drawScoreRow() {
   const f = L.field;
   const y0 = f.y + f.h + 10;
   const ps = painters.filter((p) => p.alive || mode === "mp");
-  textFont(FONT);
+  textFont(KR_FONT);
   // measure: drop names when the row would overflow the sheet
   textStyle(BOLD);
   textSize(16);
@@ -932,7 +975,7 @@ function fmtT(t) {
 function drawHud() {
   const f = L.field;
   const left = phase === "run" ? Math.max(0, secs - simT) : phase === "countdown" ? secs : 0;
-  textFont(FONT);
+  textFont(KR_FONT);
   textStyle(BOLD);
   textAlign(CENTER, CENTER);
   const hot = phase === "run" && left <= 10;
@@ -952,7 +995,7 @@ function drawHud() {
   textSize(12);
   textAlign(LEFT, CENTER);
   fill(...INK, 150);
-  const label = mode === "mp" && MP && MP.state ? "Raum " + MP.state.code : "Übungsblatt";
+  const label = HUB() ? "Gemeinsames Blatt" : mode === "mp" && MP && MP.state ? "Raum " + MP.state.code : "Übungsblatt";
   text(label, f.x, HUD_H * 0.46);
   if (mode === "mp" && painters.length) {
     textAlign(RIGHT, CENTER);
@@ -969,7 +1012,7 @@ function drawCountdown() {
   noStroke();
   fill(252, 246, 232, 120);
   circle(0, 0, 150);
-  textFont(FONT);
+  textFont(KR_FONT);
   textStyle(BOLD);
   textAlign(CENTER, CENTER);
   if (cd > 0.5) {
@@ -987,6 +1030,34 @@ function drawCountdown() {
     text("Los!", 0, 2);
   }
   pop();
+}
+
+// hub lobby: the game is mounted, the host hasn't broadcast the seed yet
+function drawHubWait() {
+  const f = L.field;
+  textFont(KR_FONT);
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  fill(...INK);
+  textSize(30);
+  text("Kritzel-Revier", f.x + f.w / 2, f.y + f.h / 2 - 16);
+  textStyle(NORMAL);
+  textSize(16);
+  fill(...INK, 180);
+  text("Der Host startet gleich das erste Blatt …", f.x + f.w / 2, f.y + f.h / 2 + 20);
+}
+
+// hub mode has no #note element — shell notes show on the paper instead
+function drawCanvasNote() {
+  if (!noteMsg || frameCount - noteAt >= 190) return;
+  const a = Math.min(1, (190 - (frameCount - noteAt)) / 40);
+  noStroke();
+  fill(...INK, 235 * a);
+  textFont(KR_FONT);
+  textStyle(BOLD);
+  textSize(14);
+  textAlign(CENTER, CENTER);
+  text(noteMsg, L.field.x + L.field.w / 2, L.field.y + L.field.h - 16);
 }
 
 function drawResult() {
@@ -1021,7 +1092,7 @@ function drawResult() {
   rect(-22, -9, 44, 18, 2);
   pop();
 
-  textFont(FONT);
+  textFont(KR_FONT);
   textAlign(CENTER, CENTER);
   if (mode === "solo") {
     fill(...INK);
@@ -1081,7 +1152,8 @@ function drawResult() {
     textSize(13);
     fill(...INK, 160);
     const host = MP && MP.connected && MP.isHost;
-    text(host ? "„Nochmal“ startet eine neue Runde." : "Der Host kann eine neue Runde starten.", x + wC / 2, y + hC - 20);
+    const note = !host ? "Der Host kann eine neue Runde starten." : HUB() ? "Neues Blatt: der Host drückt „N“." : "„Nochmal“ startet eine neue Runde.";
+    text(note, x + wC / 2, y + hC - 20);
   }
   pop();
 }
@@ -1089,6 +1161,7 @@ function drawResult() {
 // ---- status line ----
 
 function updateStatus() {
+  if (phase === "lobby") { setStatus("Warte auf den Start durch den Host …", null); return; }
   if (phase === "countdown") { setStatus(mode === "mp" ? "Mach dich bereit …" : "Bereit …", null); return; }
   if (phase === "run") {
     const left = fmtT(secs - simT);
@@ -1112,27 +1185,49 @@ function updateStatus() {
 
 // ---- p5 lifecycle ----
 
+// canvas box: the whole window on the game page, the hub stage inside the hub
+function stageSize() {
+  const r = HUB() && window.__KR_ROOT__ ? window.__KR_ROOT__ : null;
+  const w = r ? (r.clientWidth || windowWidth) : windowWidth;
+  const h = r ? (r.clientHeight || windowHeight) : windowHeight;
+  return [Math.max(320, w), Math.max(240, h)];
+}
+
 function setup() {
-  const cnv = createCanvas(windowWidth, windowHeight);
-  cnv.parent("canvas-wrap");
+  const [w, h] = stageSize();
+  const cnv = createCanvas(w, h);
+  cnv.parent(HUB() ? window.__KR_ROOT__ : "canvas-wrap");
   pixelDensity(Math.min(2, window.devicePixelRatio || 1));
   const wrap = document.getElementById("canvas-wrap");
   if (wrap) wrap.style.touchAction = "none";
   loadState();
   updateSoundLabel();
   layout();
-  newPractice();
-  syncPresetLabel();
+  if (!HUB()) {
+    newPractice();
+    syncPresetLabel();
+  } else {
+    phase = "lobby";
+  }
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+  const [w, h] = stageSize();
+  resizeCanvas(w, h);
 }
 
 function draw() {
   const dt = Math.min(0.05, (deltaTime || 16.7) / 1000);
   layout();
   drawPaper();
+
+  // hub rescue: if the host vanished before broadcasting the round seed, the new host steps in
+  if (phase === "lobby" && HUB() && MP.isHost && performance.now() - lobbyAt > 12000) {
+    lobbyAt = performance.now();
+    const s = (Math.random() * 1e9) | 0;
+    MP.send("seed", { seed: s, secs });
+    beginWith(s);
+  }
 
   // clock
   if (phase === "countdown") {
@@ -1180,8 +1275,10 @@ function draw() {
   for (const p of painters) drawPainter(p);
   drawScoreRow();
   drawHud();
+  if (phase === "lobby") drawHubWait();
   if (phase === "countdown") drawCountdown();
   if (phase === "over") drawResult();
+  drawCanvasNote();
   pop();
 
   // boost sparkles on my crayon (screen space)
@@ -1326,7 +1423,7 @@ function infoAnim(p, w, h, frame) {
   // clock
   const left = Math.max(0, 10 - t / 30);
   p.fill(...INK);
-  p.textFont(FONT);
+  p.textFont(KR_FONT);
   p.textStyle(p.BOLD);
   p.textAlign(p.CENTER, p.TOP);
   p.textSize(20);
@@ -1369,3 +1466,46 @@ function starPathSmall(p, rad) {
   }
   p.endShape(p.CLOSE);
 }
+
+// ---- hub integration (driven by hub-games/kritzel.js) ----
+// The game script runs in p5 global mode, so the hub module loads it once, points it at the hub
+// stage and the room, and starts/stops the one global sketch per game run. The host broadcasts
+// the round seed at go() ("seed" message); everybody builds the very same sheet from it.
+
+window.__kritzelHubInit = function () {
+  MP = window.__KR_NET__ || window.Multiplayer;
+  wireNet();
+  mode = "mp";
+  const list = window.__KR_PLAYERS__ || [];
+  painters = list.map((p, i) => makePainter(i, p.id, p.name || "Spieler", p.you));
+  meIdx = Math.max(0, painters.findIndex((p) => p.you));
+  phase = "lobby";
+  lobbyAt = performance.now();
+  overScores = null;
+  loadState();
+  clearParticles();
+  window.__KR_P5__ = new p5();           // global-mode sketch: picks up setup()/draw() above
+};
+
+window.__kritzelHubGo = function () {
+  if (!HUB()) return;
+  if (MP.isHost) {
+    const s = (Math.random() * 1e9) | 0;
+    MP.send("seed", { seed: s, secs });
+    beginWith(s);
+  }
+  // guests begin when the host's "seed" message arrives (see wireNet)
+};
+
+window.__kritzelHubDestroy = function () {
+  if (window.__KR_P5__) { try { window.__KR_P5__.remove(); } catch (e) { /* already gone */ } window.__KR_P5__ = null; }
+  window.__KR_NET__ = null;
+  window.__KR_ROOT__ = null;
+  window.__KR_PLAYERS__ = null;
+  MP = window.Multiplayer;
+  painters = [];
+  grid = null;
+  paintCv = null;
+  clearParticles();
+  phase = "countdown";
+};
