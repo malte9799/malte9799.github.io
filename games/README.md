@@ -328,7 +328,7 @@ export default {
 migration), `options`, `send(type, data, toId?)`, `onMessage`, `onEvent`, `addCleanup(fn)`, `end()` (host).
 Rules: no globals, no top-level side effects (the module is imported once and kept), everything you
 start in `mount`/`go` is stopped in `destroy`. The host's client owns the rules and broadcasts state;
-see `hub-games/tictactoe.js` (turns, host authority, host migration), `hub-games/clickrace.js`
+see `hub-games/tictactoe.js` (Normal + Super mode, two players at the board and the rest rotating in as spectators, host authority, validated state, host migration), `hub-games/clickrace.js`
 (`go()`, host announces the result). Canvas/p5 games should use p5 instance mode inside `ctx.root`.
 To add a game: write the module, add one line to `GAMES` in `hub.js`.
 

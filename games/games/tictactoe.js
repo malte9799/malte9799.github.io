@@ -14,6 +14,7 @@ initGame({
   buttons: [
     { id: "btn-new",  label: "New game", primary: true, onClick: () => newGame() },
     { id: "btn-undo", label: "Undo",     onClick: () => undo() },
+    { id: "btn-mp",  label: "Mehrspieler", onClick: () => { location.href = "index.html?mode=multi"; } },
     { id: "btn-cpu",  label: "vs Computer", onClick: () => { vsCpu = !vsCpu; setButtonActive("btn-cpu", vsCpu); saveState(); newGame(); } },
   ],
   sliders: [],
