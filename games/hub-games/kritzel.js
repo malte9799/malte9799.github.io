@@ -29,7 +29,7 @@ function injectStyle() {
   styleEl.textContent = `
     .hub-stage.hub-kritzel { position: fixed; inset: 0; z-index: 30; max-width: none; margin: 0;
       padding: 0; border: 0; border-radius: 0; background: #f6ebd2; box-shadow: none; }
-    .hub-stage.hub-kritzel canvas { display: block; margin: 0 !important; }
+    .hub-stage.hub-kritzel canvas { display: block; margin: 0 !important; touch-action: none; }
     .hub-bar { position: relative; z-index: 40; }
   `;
   document.head.appendChild(styleEl);
@@ -47,6 +47,7 @@ export default {
       return {};
     }
     ctx.root.innerHTML = "";
+    window.Multiplayer.closeUI();          // the lobby window must never block the game canvas
     window.__KR_NET__ = {
       send: (t, d, to) => ctx.send(t, d, to),
       onMessage: (t, fn) => ctx.onMessage(t, fn),

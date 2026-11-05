@@ -1198,6 +1198,8 @@ function setup() {
   const cnv = createCanvas(w, h);
   cnv.parent(HUB() ? window.__KR_ROOT__ : "canvas-wrap");
   pixelDensity(Math.min(2, window.devicePixelRatio || 1));
+  // touches belong to the crayon: no scrolling/zooming over the canvas, on the page and in the hub
+  cnv.elt.style.touchAction = "none";
   const wrap = document.getElementById("canvas-wrap");
   if (wrap) wrap.style.touchAction = "none";
   loadState();
@@ -1317,6 +1319,38 @@ function mouseDragged() {
 }
 
 function mouseReleased() {
+  pressing = false;
+  const me = painters[meIdx];
+  if (me) me.target = null;
+}
+
+// touch: p5 does not reliably map touches onto the mouse handlers (on phones the crayon would
+// never move), so the touch path is handled explicitly
+function touchPos(e) {
+  const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
+  if (!t || !L) return null;
+  return { x: (t.clientX - L.ox) / L.S - L.field.x, y: (t.clientY - L.oy) / L.S - L.field.y };
+}
+
+function touchStarted(e) {
+  if (!e || !e.target || e.target.tagName !== "CANVAS" || !grid) return;
+  ensureAudio();
+  pressing = true;
+  const me = painters[meIdx];
+  const p = touchPos(e);
+  if (me && me.alive && phase === "run" && p) me.target = p;
+  return false;                     // no scrolling/zooming over the sheet
+}
+
+function touchMoved(e) {
+  if (!pressing) return;
+  const me = painters[meIdx];
+  const p = touchPos(e);
+  if (me && me.alive && phase === "run" && p) me.target = p;
+  return false;
+}
+
+function touchEnded() {
   pressing = false;
   const me = painters[meIdx];
   if (me) me.target = null;
