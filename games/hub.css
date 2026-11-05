@@ -81,15 +81,15 @@
 .tb[data-t="x"] { --c: var(--tx); } .tb[data-t="o"] { --c: var(--to); }
 .tc.win { background: color-mix(in srgb, var(--tx) 18%, transparent); }
 /* the board you have to play in */
-.tb.hot { background: color-mix(in srgb, var(--c) 8%, transparent); outline: 1.5px solid color-mix(in srgb, var(--c) 55%, transparent); outline-offset: 1px; animation: ttt-pulse 1.6s ease-in-out infinite; }
-@keyframes ttt-pulse { 50% { outline-color: color-mix(in srgb, var(--c) 28%, transparent); } }
+.tb.hot { z-index: 1; background: color-mix(in srgb, var(--c) 14%, var(--panel)); outline: 2px solid var(--c); outline-offset: 0; box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 26%, transparent); animation: ttt-pulse 1.6s ease-in-out infinite; }
+@keyframes ttt-pulse { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--c) 8%, transparent); } }
 /* a decided small board: tinted, with one big mark on top */
 .tb[data-w="x"] { background: color-mix(in srgb, var(--tx) 10%, transparent); } .tb[data-w="o"] { background: color-mix(in srgb, var(--to) 10%, transparent); }
 .tb[data-w="d"] { background: color-mix(in srgb, var(--tl) 35%, transparent); }
-.tb-big { position: absolute; inset: 0; display: none; place-items: center; pointer-events: none; opacity: .3; }
+.tb-big { position: absolute; inset: 0; display: none; place-items: center; pointer-events: none; border-radius: inherit; background: color-mix(in srgb, var(--panel) 82%, transparent); }
 .tb[data-w="x"] .tb-big, .tb[data-w="o"] .tb-big { display: grid; }
-.tb-big .mk { width: 88%; height: 88%; } .tb-big .mk.x, .tb-big .mk.o { stroke-width: 7; }
-.tb.inwin .tb-big { opacity: .5; }
+.tb-big .mk { width: 80%; height: 80%; } .tb-big .mk.x, .tb-big .mk.o { stroke-width: 8; }
+.tb.inwin .tb-big { background: color-mix(in srgb, var(--txh) 22%, var(--panel)); }
 .ttt-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .ttt-line path { fill: none; stroke: var(--txh); stroke-width: 1.8; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; }
 .ttt-line path[data-m="o"] { stroke: var(--toh); }
