@@ -128,7 +128,7 @@ function renderLobby() {
   const why = !g ? "Wähle ein Spiel." : n < g.min ? `Warte auf Mitspieler (mind. ${g.min}).` : n > g.max ? `Zu viele Spieler für dieses Spiel (max. ${g.max}).` : "";
   top.innerHTML = `<div class="hub-card hub-roomhead"><div class="hub-head"><h2>Spiel wählen</h2><span class="hub-meta">Raum <b>${esc(s.code)}</b> · ${n} Spieler</span></div></div>`;
   act.innerHTML = s.isHost
-    ? `<div class="hub-act"><button class="primary" id="hub-start" ${why ? "disabled" : ""}>Spiel starten</button>${why ? `<p>${esc(why)}</p>` : ""}</div>`
+    ? `<div class="hub-act">${why ? `<p>${esc(why)}</p>` : `<p class="hub-wait">Klick auf ein Spiel, um es zu starten.</p>`}</div>`
     : `<p class="hub-wait">Der Host wählt das Spiel${g ? ` – aktuell: <b>${esc(g.title)}</b>` : ""}.</p>`;
   syncCards();
 }
@@ -170,9 +170,15 @@ function openHow() {
   b.querySelector(".hub-how-x").focus();
 }
 
+// no room yet: picking a game opens one. Host: a click chooses the game and starts it at once
+// (start() checks the player count, so a game that needs more players just stays in the lobby).
 function pickCard(card) {
-  if (!inRoom()) MP.openUI();                      // no room yet: picking a game starts with opening one
-  else if (MP.isHost) { const g = def(card.dataset.game); if (g) MP.setGame(g.id, { min: g.min, max: g.max }); }
+  if (!inRoom()) { MP.openUI(); return; }
+  if (!MP.isHost) return;
+  const g = def(card.dataset.game);
+  if (!g) return;
+  MP.setGame(g.id, { min: g.min, max: g.max });
+  MP.start(startOpts());
 }
 
 document.addEventListener("click", (e) => {
@@ -182,7 +188,6 @@ document.addEventListener("click", (e) => {
   if (!t) return;
   if (t.id === "hub-how") openHow();
   else if (t.id === "hub-open") MP.openUI();
-  else if (t.id === "hub-start") MP.start(startOpts());
 });
 document.addEventListener("keydown", (e) => {
   const card = e.target.closest && e.target.closest("#hub-grid .card");
