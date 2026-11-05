@@ -453,19 +453,19 @@ function feltTexture() {
     for (let x = 0; x < size; x++) {
       const u = x / size;
       const cloud = vnoise(u, v, 3, 3) * 0.5 + vnoise(u, v, 8, 8, 50, 50) * 0.3 + vnoise(u, v, 21, 21, 90, 90) * 0.2;
-      const fine = vnoise(u, v, 256, 256, 10, 10) * 0.5 + Math.random() * 0.5;
-      const k = 1 + (cloud - 0.5) * 0.2 + (fine - 0.5) * 0.085, i = (y * size + x) * 4;
+      const fine = vnoise(u, v, 96, 96, 10, 10) * 0.6 + vnoise(u, v, 192, 192, 30, 30) * 0.4;   // smooth, no per-pixel noise (that is what looked grainy)
+      const k = 1 + (cloud - 0.5) * 0.22 + (fine - 0.5) * 0.06, i = (y * size + x) * 4;
       im.data[i] = 27 * k; im.data[i + 1] = 90 * k; im.data[i + 2] = 58 * k; im.data[i + 3] = 255;
-      const b = 128 + (fine - 0.5) * 110;
+      const b = 128 + (fine - 0.5) * 70;
       ib.data[i] = ib.data[i + 1] = ib.data[i + 2] = b; ib.data[i + 3] = 255;
     }
   }
   gm.putImageData(im, 0, 0); gb.putImageData(ib, 0, 0);
   gm.lineCap = gb.lineCap = "round"; gm.lineWidth = gb.lineWidth = 1;
-  for (let i = 0; i < 38000; i++) {
-    const x = Math.random() * size, y = Math.random() * size, a = 0.55 + (Math.random() - 0.5) * 0.7, len = 3 + Math.random() * 8, light = Math.random() < 0.5;
-    gm.strokeStyle = light ? "rgba(150,232,184,.04)" : "rgba(0,26,12,.055)";
-    gb.strokeStyle = light ? "rgba(255,255,255,.14)" : "rgba(0,0,0,.18)";
+  for (let i = 0; i < 9000; i++) {
+    const x = Math.random() * size, y = Math.random() * size, a = 0.55 + (Math.random() - 0.5) * 0.5, len = 8 + Math.random() * 14, light = Math.random() < 0.5;
+    gm.strokeStyle = light ? "rgba(150,232,184,.035)" : "rgba(0,26,12,.045)";
+    gb.strokeStyle = light ? "rgba(255,255,255,.08)" : "rgba(0,0,0,.1)";
     for (const g of [gm, gb]) { g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * len, y + Math.sin(a) * len); g.stroke(); }
   }
   const tex = (cv, srgb) => {
@@ -718,7 +718,8 @@ function init3D() {
   // tray: wooden frame around a felt floor
   const rimTex = woodTexture({ size: 512, dark: [56, 19, 8], light: [152, 72, 33], planks: 1, streaks: 40, calm: 0.5, seed: 2 });
   const rimMat = new T.MeshPhysicalMaterial({ map: rimTex, roughness: 0.4, clearcoat: 0.65, clearcoatRoughness: 0.28, envMapIntensity: 0.6 });
-  const rackTex2 = rimTex.clone(); rackTex2.needsUpdate = true; rackTex2.repeat.set(1 / 10, 1 / 10);
+  const rackTex2 = woodTexture({ size: 512, dark: [56, 19, 8], light: [152, 72, 33], planks: 1, streaks: 40, calm: 0.5, seed: 7 });   // its own grain, not the rim's
+  rackTex2.repeat.set(1 / 10, 1 / 10); rackTex2.offset.set(Math.random(), 0.5);                  // offset: the dark plank seam (v = 0) stays out of the rack
   const rackMat = rimMat.clone(); rackMat.map = rackTex2;
   const rr = (s, hx, hz, r) => {
     s.moveTo(-hx + r, -hz); s.lineTo(hx - r, -hz); s.absarc(hx - r, -hz + r, r, -Math.PI / 2, 0);
@@ -737,7 +738,7 @@ function init3D() {
   rim.castShadow = rim.receiveShadow = true;
   scene.add(rim);
   const felt = feltTexture();
-  const floor = new T.Mesh(new T.PlaneGeometry((TRAY_HX + 0.6) * 2, (TRAY_HZ + 0.6) * 2), new T.MeshStandardMaterial({ map: felt.map, bumpMap: felt.bump, bumpScale: 0.7, roughness: 1, envMapIntensity: 0.08 }));
+  const floor = new T.Mesh(new T.PlaneGeometry((TRAY_HX + 0.6) * 2, (TRAY_HZ + 0.6) * 2), new T.MeshStandardMaterial({ map: felt.map, bumpMap: felt.bump, bumpScale: 0.3, roughness: 1, envMapIntensity: 0.08 }));
   floor.rotation.x = -Math.PI / 2; floor.position.y = 0; floor.receiveShadow = true;
   scene.add(floor);
   const shade = new T.Mesh(new T.PlaneGeometry((TRAY_HX + 0.05) * 2, (TRAY_HZ + 0.05) * 2), new T.MeshBasicMaterial({ map: trayShadeTexture(), transparent: true, depthWrite: false, toneMapped: false }));
@@ -984,6 +985,8 @@ function releaseDie(d) {
 
 let drag = null;
 const canArrange = () => !!G && G.phase === "choose";
+// while the dice roll, the dice already on the rack can still be rearranged (only there, only by their roller)
+const rolling = () => !!G && (G.phase === "scoop" || G.phase === "rolling" || G.phase === "settle") && myTurn();
 function groundPoint(ev, y) {
   const r = glEl.getBoundingClientRect();
   rc.v = rc.v || new THREE.Vector2(); rc.ray = rc.ray || new THREE.Raycaster();
@@ -999,7 +1002,7 @@ function onPointerDown(ev) {
   const i = pickDie(ev);
   if (i < 0) return;
   if (G.phase === "idle") return note(t("needRoll"));
-  if (!canArrange()) return;
+  if (!canArrange() && !(rolling() && D[i].held)) return;
   if (G.rolls <= 0 && !D[i].held) return note(t("noHold"));
   drag = { i, sx: ev.clientX, sy: ev.clientY, moved: false, id: ev.pointerId };
   try { glEl.setPointerCapture(ev.pointerId); } catch {}
@@ -1029,7 +1032,7 @@ function onPointerUp() {
   try { glEl.releasePointerCapture(dr.id); } catch {}
   glEl.style.cursor = "";
   setRackHL(-1);
-  if (!dr.moved) return toggleHold(dr.i);
+  if (!dr.moved) return canArrange() ? toggleHold(dr.i) : undefined;
   dropDie(d);
 }
 
@@ -1037,6 +1040,11 @@ function dropDie(d) {
   const x = d.mesh.position.x, z = d.mesh.position.z, wasHeld = d.held, from = d.slot;
   const back = () => tweenDie(d, d.rest, { dur: 0.35, arc: 0.4 });
   d.state = "rest";
+  if (!canArrange()) {                                        // mid-roll: a rack die can only change places on the rack
+    const s = z > TRAY_HZ + 0.7 ? nearestSlot(x, false) : from, occ = slotTaken(s, d);
+    if (occ) holdAt(occ, from);
+    return holdAt(d, s);
+  }
   if (z > TRAY_HZ + 0.7) {                                    // dropped on the rack
     if (!wasHeld && G.rolls <= 0) return back();
     let s = nearestSlot(x, false);
