@@ -75,6 +75,7 @@ function buildMpCards() {
         <div class="card-meta">${players(game)}</div>
       </div>`;
     grid.appendChild(c);
+    designCard(c, game, idx);                     // design decoration, e.g. the y2k window bar
     mpSketches.push(new p5(function (p) {
       p.setup = function () {
         p.createCanvas(600, 360).parent(c.querySelector(".preview"));
@@ -105,7 +106,7 @@ window.addEventListener("themechange", () => themeFontReady().then(buildMpCards)
 function renderLobby() {
   const s = MP.state, room = inRoom();
   if (room) fromLink = false;
-  const showMulti = !!run || room;                // in a room: multiplayer games only
+  const showMulti = !!run || room || fromLink;    // in a room (or invited by link): multiplayer games only
   const showSolo = !showMulti;                    // outside a room: single-player games
 
   $("hub-lobby").hidden = !showMulti;
