@@ -28,7 +28,7 @@ initGame({
     secs = s;
     saveState();
     if (mode === "solo") newPractice();
-    else flashNote("Gilt ab der nächsten Runde.");
+    else note("Gilt ab der nächsten Runde.");
   },
   onSlider: () => {},
   onClamp: () => {},
@@ -113,13 +113,12 @@ let builtPortrait = null;
 let soundOn = true;
 let L = null;                    // stage layout, see layout()
 let lobbyAt = 0;                 // hub: when the game mounted (seed rescue timer)
+let noteMsg = "", noteAt = 0;    // hub has no #note element: canvas notes (see note())
 
-// flashNote from the shell writes into #note, which only exists on the game page — in the hub
-// notes are mirrored onto the canvas instead
-const _shellNote = flashNote;
-let noteMsg = "", noteAt = 0;
-function flashNote(msg) {
-  _shellNote(msg);
+// the shell's flashNote writes into #note, which only exists on the game page — in the hub
+// notes are mirrored onto the paper instead (drawCanvasNote renders them)
+function note(msg) {
+  flashNote(msg);
   if (HUB()) { noteMsg = msg || ""; noteAt = typeof frameCount === "number" ? frameCount : 0; }
 }
 
@@ -149,7 +148,7 @@ if (!HUB() && MP) {
   const row = document.querySelector("#ui-overlay .row.tight");
   if (row) MP.mountButton(row);
   MP.on("start", (ev) => onStart(ev));
-  MP.on("end", () => flashNote(MP.isHost ? "Zurück in der Lobby — „Nochmal“ für eine neue Runde." : "Zurück in der Lobby."));
+  MP.on("end", () => note(MP.isHost ? "Zurück in der Lobby — „Nochmal“ für eine neue Runde." : "Zurück in der Lobby."));
   MP.openFromUrl();
 }
 wireNet();
@@ -162,8 +161,8 @@ function wireNet() {
   MP.onMessage("over", (m) => onNetOver(m.data));
   MP.onMessage("seed", (m) => { if (HUB() && m.data) beginWith(Number(m.data.seed) || ((Math.random() * 1e9) | 0), Number(m.data.secs)); });
   MP.on("leave", (p) => onPlayerGone(p.id, p.name));
-  MP.on("host", (h) => { if (h.you) flashNote("Du bist jetzt der Host."); });
-  MP.on("join", (p) => { if (!HUB() && p.you && phase !== "over") flashNote("Im Raum " + (MP.state ? MP.state.code : "") + " — der Host startet die Runde."); });
+  MP.on("host", (h) => { if (h.you) note("Du bist jetzt der Host."); });
+  MP.on("join", (p) => { if (!HUB() && p.you && phase !== "over") note("Im Raum " + (MP.state ? MP.state.code : "") + " — der Host startet die Runde."); });
   MP.on("close", (c) => onRoomClosed(c));
 }
 
@@ -218,14 +217,14 @@ function onPlayerGone(id, name) {
   const p = painters.find((q) => q.id === id);
   if (!p) return;
   p.alive = false;
-  flashNote(name + " ist gegangen — das Revier bleibt.");
+  note(name + " ist gegangen — das Revier bleibt.");
 }
 
 function onRoomClosed(c) {
   if (mode !== "mp") return;
   mode = "solo";
   newPractice();
-  flashNote(c && c.reason === "left" ? "Raum verlassen — Übungsrunde gestartet." : "Verbindung getrennt — Übungsrunde gestartet.");
+  note(c && c.reason === "left" ? "Raum verlassen — Übungsrunde gestartet." : "Verbindung getrennt — Übungsrunde gestartet.");
 }
 
 // ---- rounds ----
@@ -254,18 +253,18 @@ function startRound() {
 // new sheet in the hub (broadcast as a "seed" message, so nobody has to leave the game)
 function again() {
   if (HUB()) {
-    if (phase !== "over") { flashNote("Die Runde läuft schon."); return; }
-    if (!MP.isHost) { flashNote("Nur der Host startet das nächste Blatt."); return; }
+    if (phase !== "over") { note("Die Runde läuft schon."); return; }
+    if (!MP.isHost) { note("Nur der Host startet das nächste Blatt."); return; }
     const s = (Math.random() * 1e9) | 0;
     MP.send("seed", { seed: s, secs });
     beginWith(s);
     return;
   }
   if (mode === "mp" && MP && MP.connected) {
-    if (phase === "run" || phase === "countdown") { flashNote("Die Runde läuft schon."); return; }
-    if (MP.state && MP.state.status !== "lobby") { flashNote("Einen Moment — zurück in die Lobby …"); return; }
-    if (!MP.isHost) { flashNote("Nur der Host kann eine neue Runde starten."); return; }
-    if (!MP.start({ seed: (Math.random() * 1e9) | 0, secs })) flashNote("Mindestens 2 Spieler im Raum nötig.");
+    if (phase === "run" || phase === "countdown") { note("Die Runde läuft schon."); return; }
+    if (MP.state && MP.state.status !== "lobby") { note("Einen Moment — zurück in die Lobby …"); return; }
+    if (!MP.isHost) { note("Nur der Host kann eine neue Runde starten."); return; }
+    if (!MP.start({ seed: (Math.random() * 1e9) | 0, secs })) note("Mindestens 2 Spieler im Raum nötig.");
   } else {
     newPractice();
   }
@@ -716,6 +715,7 @@ function makePaperTile() {
 }
 
 function drawPaper() {
+  background(...PAPER);                 // warm paper base (the pattern on top is only grain)
   const ctx = drawingContext;
   if (!paperPattern) paperPattern = ctx.createPattern(makePaperTile(), "repeat");
   ctx.save();
@@ -745,8 +745,8 @@ function drawBoard() {
   for (let r = 1; r < ROWS; r++) line(f.x, f.y + r * CELL, f.x + f.w, f.y + r * CELL);
   ctx.setLineDash([]);
   ctx.restore();
-  // paint, then stains on top so rings stay crisp
-  if (paintCv) image(paintCv, f.x, f.y, f.w, f.h);
+  // paint, then stains on top so rings stay crisp (raw drawImage: p5.image() rejects bare canvases)
+  if (paintCtx) ctx.drawImage(paintCv, f.x, f.y, f.w, f.h);
   for (const s of stains) drawStain(s);
   // wobbly ink border
   if (borderPts.length) {
@@ -1259,8 +1259,10 @@ function draw() {
         MP.send("pos", { x: Math.round(me.x), y: Math.round(me.y) });
       }
     }
-    // host: hand the room back to the lobby a moment after the result appeared
-    if (phase === "over" && mode === "mp" && MP && MP.connected && MP.isHost && !mpEnded && frameCount - overFrame > 90) {
+    // host on the game page: hand the room back to the lobby once the result has been seen.
+    // In the hub the sketch stays up — the host keeps the result on screen and can start a new
+    // sheet with "Nochmal" (N), which broadcasts a fresh seed without leaving the game.
+    if (phase === "over" && mode === "mp" && !HUB() && MP && MP.connected && MP.isHost && !mpEnded && frameCount - overFrame > 90) {
       mpEnded = true;
       MP.endGame();
     }

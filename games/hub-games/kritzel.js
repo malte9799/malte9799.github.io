@@ -14,7 +14,7 @@ function loadKritzel() {
   if (loader) return loader;
   loader = new Promise((res, rej) => {
     const s = document.createElement("script");
-    s.src = "games/games/kritzel.js";
+    s.src = "games/kritzel.js";        // the hub page is games/index.html, so this is games/games/kritzel.js
     s.onload = res;
     s.onerror = () => { loader = null; rej(new Error("kritzel.js konnte nicht geladen werden")); };
     document.body.appendChild(s);
