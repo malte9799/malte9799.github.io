@@ -79,7 +79,6 @@ const HOW = [
   ["Verbindungsaufbau", "Über öffentliche Nostr-Relays, nur einmal zum Finden. Spielzüge laufen nie darüber."],
   ["Verschlüsselung", "Die Datenkanäle sind DTLS-verschlüsselt. Mitspieler sehen deine IP-Adresse."],
   ["Raumcode", "Das einzige Geheimnis: 5 Zeichen, kein Login. Wer den Code kennt, kommt rein."],
-  ["Eingaben", "Nachrichten gelten als unsicher: geprüft, nur von Raummitgliedern, Namen gekürzt und escaped."],
 ];
 
 function openHow() {
