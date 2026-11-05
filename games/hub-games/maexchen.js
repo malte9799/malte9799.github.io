@@ -246,6 +246,7 @@ export default {
 
     // ---- my private view ----
     let myDice = null;                       // my roll of the current turn (private; arrives via "dice")
+    let myDiceRound = null;                  // which round myDice belongs to (round-number stamp on every "dice")
     let myPick = null;                       // the rank I am about to announce (UI state)
 
     // ---- sound (tiny WebAudio; toggle remembered locally) ----
@@ -597,8 +598,8 @@ export default {
     }
     // send a roll to its owner; own dice never leave the client
     function privateDice(d, seatId) {
-      ctx.send("dice", { d }, seatId);
-      if (seatId === me()) { myDice = d; shakeT0 = performance.now(); shakeSnd(); }
+      ctx.send("dice", { d, r: st.rounds }, seatId);   // r stamps the round: the owner can tell fresh from stale twitches
+      if (seatId === me()) { myDice = d; myDiceRound = st.rounds; shakeT0 = performance.now(); shakeSnd(); }
     }
 
     function go() {
@@ -682,7 +683,9 @@ export default {
       if (!next) return;
       const prevRound = st.rounds, prevTurn = st.turn, prevPhase = st.phase;
       st = next;
-      if (next.rounds !== prevRound) myDice = null;      // a new round voids my dice story
+      if (next.rounds !== prevRound && myDice != null && myDiceRound !== next.rounds) {
+        myDice = null; myDiceRound = null;             // a new round voids dice from any older round
+      }
       if (next.turn !== prevTurn || next.rounds !== prevRound || next.phase !== prevPhase) {
         // a fresh turn: default pick sits right above the current claim
         const mySeat = seatOf(me());
@@ -699,6 +702,7 @@ export default {
       if (from !== ctx.hostId) return;
       if (data && Array.isArray(data.d) && data.d.length === 2 && data.d.every((v) => Number.isInteger(v) && v >= 1 && v <= 6)) {
         myDice = [data.d[0], data.d[1]];
+        myDiceRound = Number.isInteger(data.r) && data.r >= 0 ? data.r : st.rounds;   // dice may arrive just before its round's state
         shakeT0 = performance.now();
         shakeSnd();
         paintDOM();
@@ -772,7 +776,7 @@ export default {
     ctx.onEvent("host", ({ you }) => {
       if (you) {
         if (st.phase === "play") {
-          diceMemo.clear(); myDice = null; myPick = null;
+          diceMemo.clear(); myDice = null; myDiceRound = null; myPick = null;
           st.reveal = { reason: "transfer", d: null, loser: null };
           st.phase = "reveal";
           st.winnerSeat = null;
