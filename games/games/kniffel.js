@@ -12,7 +12,23 @@
 //             animated pen, every label letter by letter, see "Score card"
 // Everything lives in one closure so none of it can collide with the shell.
 
-(() => {
+// The game is a factory: createKniffel({ root?, net? }). Solo (the games page) it runs on its own and mounts into the shell's
+// #canvas-wrap; inside the multiplayer hub (hub.html) it gets the hub's `root` and `net` (room messages, players, host).
+window.createKniffel = (env = {}) => {
+
+const NET = env.net || null, HUB = !!NET;
+let destroyed = false, raf = 0, rootStyleEl = null, onKeyDown = null;
+const observers = [];
+// the shell's helpers are not there inside the hub: small local versions
+const loadSettings = (k) => { try { return JSON.parse(localStorage.getItem(k) || "{}") || {}; } catch { return {}; } };
+const saveSettings = (k, o) => { try { localStorage.setItem(k, JSON.stringify(o)); } catch {} };
+const flashNote = () => {};
+const setStatus = () => {};
+const setButtonActive = () => {};
+function celebrate(tier) {
+  const fire = () => window.confetti && window.confetti({ particleCount: 30 + (tier || 1) * 45, spread: 75, startVelocity: 42, origin: { y: 0.62 }, zIndex: 200, disableForReducedMotion: true, colors: ["#ffd66e", "#74e2b2", "#ff6e8c", "#6cb6ff", "#b098ff"] });
+  if (window.confetti) fire(); else loadScript("https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js").then(fire).catch(() => {});
+}
 
 // ============================================================ data & rules
 
@@ -75,7 +91,7 @@ const I18N = {
     mnTag: "Roll · Hold · Write it down", mnResume: "Resume", mnResumeSub: "Your game is still running", mnResumeMp: "Back to the multiplayer game",
     mnSolo: "Single player", mnSoloAgain: "New single-player game", mnSoloSub: "Chase your own high score — 13 rounds",
     mnSure: "Sure?", mnSureSub: "The running game is lost — tap again",
-    mnMulti: "Multiplayer", mnMultiSub: "Up to 6 friends · link or QR code · no account",
+    mnMulti: "Multiplayer", mnMultiSub: "Play with friends · no account",
     mnInRoom: (c, n) => "Room " + c + " · " + n + (n === 1 ? " player" : " players"),
     mnCard: "Game variant", mnHow: "How to play", mnSoundOn: "Sound: on", mnSoundOff: "Sound: off", mnAll: "← All games", mnBack: "← Back",
     mnCardHint: "Changing the variant starts a new game.", mnCardLocked: "In a multiplayer game the host picks the variant.",
@@ -89,6 +105,8 @@ const I18N = {
     rc_yatzy: "Scandinavia", rd_yatzy: "15 fields · pairs · bonus 50",
     rc_generala: "Latin America", rd_generala: "10 fields · +5 on the 1st roll",
     theme: "Card style", th_blue: "Blue", th_mono: "Black & white", th_script: "Script",
+    mnBegin: "Start the game", mnBeginSub: (n) => n + " players ready", mnLoading: "Waiting for everybody to load …", mnHubWait: "The host picks the variant and starts the game …",
+    mnToLobby: "Back to the lobby", mnToLobbySub: "Pick another game", mnLeaveRoom: "Leave room", mnLeaveRoomSub: "You can join again with the code",
     infoTitle: "How to play",
     info: [
       "Roll all five dice with the Roll button or <b>Space</b>. Click dice to hold them — they slide onto the rack — or drag them there and arrange them as you like. Then roll the rest again. You get three rolls per turn.",
@@ -124,7 +142,7 @@ const I18N = {
     mnTag: "Würfeln · Halten · Aufschreiben", mnResume: "Weiterspielen", mnResumeSub: "Dein Spiel läuft noch", mnResumeMp: "Zurück zum Mehrspielerspiel",
     mnSolo: "Einzelspieler", mnSoloAgain: "Neues Einzelspiel", mnSoloSub: "Allein auf Punktejagd – 13 Runden",
     mnSure: "Sicher?", mnSureSub: "Das laufende Spiel geht verloren – nochmal tippen",
-    mnMulti: "Mehrspieler", mnMultiSub: "Bis zu 6 Freunde · Link oder QR-Code · ohne Konto",
+    mnMulti: "Mehrspieler", mnMultiSub: "Mit Freunden spielen · ohne Konto",
     mnInRoom: (c, n) => "Raum " + c + " · " + n + " Spieler",
     mnCard: "Spielvariante", mnHow: "Spielanleitung", mnSoundOn: "Ton: an", mnSoundOff: "Ton: aus", mnAll: "← Alle Spiele", mnBack: "← Zurück",
     mnCardHint: "Beim Wechsel der Variante beginnt ein neues Spiel.", mnCardLocked: "Im Mehrspielerspiel bestimmt der Gastgeber die Variante.",
@@ -138,6 +156,8 @@ const I18N = {
     rc_yatzy: "Skandinavien", rd_yatzy: "15 Felder · Paare · Bonus 50",
     rc_generala: "Lateinamerika", rd_generala: "10 Felder · +5 im 1. Wurf",
     theme: "Kartenstil", th_blue: "Blau", th_mono: "Schwarz-Weiß", th_script: "Schreibschrift",
+    mnBegin: "Spiel starten", mnBeginSub: (n) => n + " Spieler bereit", mnLoading: "Warte, bis alle geladen haben …", mnHubWait: "Der Host wählt die Variante und startet das Spiel …",
+    mnToLobby: "Zurück zur Lobby", mnToLobbySub: "Anderes Spiel wählen", mnLeaveRoom: "Raum verlassen", mnLeaveRoomSub: "Mit dem Code kannst du wieder beitreten",
     infoTitle: "So wird gespielt",
     info: [
       "Würfle alle fünf Würfel mit dem Knopf oder der <b>Leertaste</b>. Klicke Würfel an, um sie zu halten — sie rutschen auf die Ablage — oder zieh sie dorthin und ordne sie selbst an. Dann würfle den Rest nochmal. Pro Runde sind drei Würfe erlaubt.",
@@ -785,7 +805,7 @@ function init3D() {
   glEl.addEventListener("pointerup", onPointerUp);
   glEl.addEventListener("pointercancel", onPointerUp);
   glEl.addEventListener("pointerleave", () => { if (!drag) setHover(-1); });
-  requestAnimationFrame(loop);
+  raf = requestAnimationFrame(loop);
 }
 
 function placeDice() {
@@ -1036,7 +1056,8 @@ function dropDie(d) {
 // ---- frame loop ----
 
 function loop(ts) {
-  requestAnimationFrame(loop);
+  if (destroyed) return;
+  raf = requestAnimationFrame(loop);
   const dt = Math.min(0.05, (ts - (lastTs || ts)) / 1000);
   lastTs = ts;
   let active = false;
@@ -1618,80 +1639,15 @@ const CSS = `
   .mn-title { font-size: 66px; } .mn-dice svg { width: 42px; height: 42px; } .mn-dice { gap: 9px; } .mn-sub { margin-bottom: 18px; font-size: 13px; }
   #kn-root .mn-card { width: 140px; } .mn-btn { padding: 11px 16px; } .mn-btn b { font-size: 17px; } .kn-tools .lb { display: none; } .kn-tools #kn-t-menu .lb { display: inline; } .kn-tools { right: 10px; top: 8px; }
 }
-#kn-qr { position: absolute; right: max(24px, 3.5vw); top: 50%; z-index: 90; width: min(290px, 28vw); box-sizing: border-box; display: none; text-align: center; padding: 20px 22px 16px;
-  border-radius: 18px; background: linear-gradient(#3b2516f2, #20120af2); border: 2px solid #c99a4a; box-shadow: 0 24px 60px rgba(0,0,0,.65), inset 0 0 0 5px rgba(0,0,0,.25); transform: translateY(-50%); }
-#kn-qr.show { display: block; animation: qr-in .5s cubic-bezier(.2,1.1,.4,1); }
-@keyframes qr-in { from { opacity: 0; transform: translateY(-50%) translateX(34px); } }
-#kn-qr h4 { margin: 0; font: italic 400 14px Georgia, serif; letter-spacing: .24em; text-transform: uppercase; color: #d9b975; }
-#kn-qr .qr { width: 100%; max-width: 236px; margin: 14px auto 10px; padding: 10px; box-sizing: border-box; border-radius: 12px; background: #fbf4e2; box-shadow: 0 8px 18px rgba(0,0,0,.45); }
-#kn-qr .qr svg { display: block; width: 100%; height: auto; }
-#kn-qr .qc { font-size: 30px; margin-top: 2px; }
-#kn-qr p { margin: 8px 0 0; font-size: 13px; line-height: 1.35; color: #cdb27a; }
-@media (max-width: 899px), (max-aspect-ratio: 21/20) {
-  #kn-qr { top: auto; bottom: 12px; right: 50%; width: min(270px, 86vw); padding: 12px 16px 10px; transform: translateX(50%); }
-  #kn-qr.show { animation: qr-up .5s cubic-bezier(.2,1.1,.4,1); }
-  @keyframes qr-up { from { opacity: 0; transform: translateX(50%) translateY(30px); } }
-  #kn-qr .qr { max-width: 150px; margin: 8px auto 6px; padding: 7px; } #kn-qr .qc { font-size: 24px; padding: 8px 8px 8px 14px; } #kn-qr p { font-size: 12px; margin-top: 4px; }
-  #kn-mp.with-qr { padding-right: 0; align-items: flex-start; padding-top: 14px; } #kn-mp.with-qr .box { max-height: calc(100% - 340px); }
-}
-#kn-mp { position: absolute; inset: 0; z-index: 80; display: none; align-items: center; justify-content: center; background: rgba(10,4,0,.62); backdrop-filter: blur(3px); }
-#kn-mp.show { display: flex; }
-#kn-mp .box { position: relative; width: min(440px, 94vw); max-height: 94%; overflow: auto; box-sizing: border-box; padding: 24px 28px 24px; border-radius: 20px; text-align: center;
-  background: linear-gradient(#3b2516, #20120a); border: 2px solid #c99a4a; box-shadow: 0 24px 60px rgba(0,0,0,.65), inset 0 0 0 5px rgba(0,0,0,.25); -webkit-user-select: text; user-select: text; }
-#kn-mp .mp-head { margin-bottom: 18px; }
-#kn-mp .mp-dice { display: flex; justify-content: center; gap: 10px; margin-bottom: 8px; }
-#kn-mp .mp-dice svg { width: 32px; height: 32px; overflow: visible; filter: drop-shadow(0 5px 4px rgba(0,0,0,.5)); animation: none; transform: rotate(var(--r, 0deg)); }
-#kn-mp h3 { margin: 0 0 8px; font: italic 400 16px Georgia, serif; letter-spacing: .3em; text-transform: uppercase; color: #e3c47e; }
-#kn-mp .sub { margin: 0 auto; max-width: 330px; font-size: 14px; color: #d8c392; line-height: 1.4; text-wrap: balance; }
-#kn-mp .err { margin: 12px 0 0; font-size: 14px; color: #ff9c8a; }
-#kn-mp .x { position: absolute; top: 10px; right: 12px; width: 34px; height: 34px; padding: 0; font-size: 15px; background: none; box-shadow: none; color: #d9b975; border-radius: 50%; }
-#kn-mp .x:hover { background: rgba(255,255,255,.1); color: #fff0c4; box-shadow: none; filter: none; }
-#kn-mp .mp-field { text-align: left; margin-bottom: 14px; }
-#kn-mp label { display: block; margin: 0 0 7px 2px; font: 600 11.5px Georgia, serif; letter-spacing: .16em; text-transform: uppercase; color: #d9b975; }
-#kn-mp input { width: 100%; box-sizing: border-box; height: 46px; padding: 0 14px; margin: 0; font: 600 17px Georgia, serif; color: #f6e7b4; background: #1a0e07; border: 1px solid rgba(201,154,74,.7); border-radius: 12px; outline: none; box-shadow: inset 0 2px 5px rgba(0,0,0,.45); }
-#kn-mp input::placeholder { color: rgba(246,231,180,.34); }
-#kn-mp input:focus { border-color: #ffd66e; box-shadow: inset 0 2px 5px rgba(0,0,0,.45), 0 0 0 3px rgba(255,214,110,.25); }
-#kn-mp .mp-sec { text-align: left; padding: 14px; border-radius: 14px; background: rgba(255,255,255,.045); border: 1px solid rgba(201,154,74,.22); }
-#kn-mp .mp-sec b { display: block; font: 700 14px Georgia, serif; letter-spacing: .08em; color: #ffe6a6; }
-#kn-mp .mp-sec small { display: block; margin: 3px 0 12px; font: italic 400 13px/1.35 Georgia, serif; color: #cdb27a; }
-#kn-mp .mp-or { display: flex; align-items: center; gap: 12px; margin: 12px 0; font: 12px Georgia, serif; letter-spacing: .22em; text-transform: uppercase; color: #a98a52; }
-#kn-mp .mp-or::before, #kn-mp .mp-or::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,154,74,.5), transparent); }
-#kn-mp .row { display: flex; gap: 10px; align-items: stretch; margin-bottom: 0; }
-#kn-mp .row input { flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: .24em; text-align: center; font: 700 19px "Space Mono", ui-monospace, Menlo, Consolas, monospace; padding-left: 20px; }
-#kn-mp button { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: 46px; font: 700 14px Georgia, serif; letter-spacing: .1em; text-transform: uppercase; border: 0; border-radius: 23px; padding: 0 24px; color: #3d2106;
-  background: linear-gradient(#ffe69a, #e0a028); box-shadow: 0 4px 0 #7d4d0c, 0 10px 18px rgba(0,0,0,.4); transition: transform .08s, filter .15s; }
-#kn-mp button:hover:not(:disabled) { color: #3d2106; background: linear-gradient(#ffeeb0, #eab033); filter: none; }
-#kn-mp button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #7d4d0c; }
-#kn-mp button:disabled { filter: saturate(.2) brightness(.7); cursor: default; }
-#kn-mp button.sec { color: #f6e7b4; background: linear-gradient(#6b4528, #43291a); box-shadow: 0 4px 0 #1b0e06; border: 1px solid #c99a4a; }
-#kn-mp button.sec:hover:not(:disabled) { color: #fff0c4; background: linear-gradient(#7a502e, #4c2e1c); border-color: #e0b866; }
-#kn-mp button.wide { width: 100%; }
-#kn-mp button.copy { margin-top: 4px; min-height: 42px; font-size: 13px; }
-#kn-mp button svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-#kn-mp .mp-lbl { margin: 2px 0 8px; font: 600 11.5px Georgia, serif; letter-spacing: .2em; text-transform: uppercase; color: #d9b975; }
-#kn-mp .code, #kn-qr .qc { display: inline-block; font: 700 34px/1 "Space Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .2em; padding: 11px 10px 11px 18px; border-radius: 12px;
-  color: #ffe6a6; background: rgba(0,0,0,.38); border: 1px solid rgba(201,154,74,.7); box-shadow: inset 0 2px 6px rgba(0,0,0,.5); text-shadow: none; -webkit-user-select: all; user-select: all; cursor: text; }
-#kn-mp .code::selection, #kn-qr .qc::selection { background: #ffd66e; color: #2a1608; }
-#kn-mp .code { margin: 0 0 14px; }
-#kn-mp .mp-plh { display: flex; justify-content: space-between; align-items: baseline; margin: 20px 2px 8px; font: 600 11.5px Georgia, serif; letter-spacing: .16em; text-transform: uppercase; color: #d9b975; }
-#kn-mp .mp-plh b { font: 700 14px "Space Mono", ui-monospace, Menlo, monospace; letter-spacing: .04em; color: #ffe6a6; }
-#kn-mp .pl { list-style: none; margin: 0 0 4px; padding: 0; text-align: left; }
-#kn-mp .pl li { display: flex; align-items: center; gap: 12px; padding: 8px 12px; margin-bottom: 6px; border-radius: 12px; background: rgba(255,255,255,.06); color: #f4e3bc; }
-#kn-mp .pl li.on { background: rgba(255,214,110,.2); box-shadow: inset 0 0 0 1px #c99a4a; } #kn-mp .pl li.gone { opacity: .4; text-decoration: line-through; }
-#kn-mp .pl .av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 14px Georgia, serif; font-style: normal; color: #3d2106; background: linear-gradient(#ffe69a, #e0a028); box-shadow: 0 2px 4px rgba(0,0,0,.4); }
-#kn-mp .pl .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 16px; }
-#kn-mp .pl em { margin-left: 8px; padding: 2px 8px; border-radius: 9px; font: italic 400 11.5px Georgia, serif; color: #d9b975; background: rgba(0,0,0,.3); }
-#kn-mp .pl b { font: 700 15px "Space Mono", ui-monospace, Menlo, monospace; color: #ffe6a6; }
-#kn-mp .mp-act { display: flex; flex-direction: column; gap: 10px; align-items: stretch; margin-top: 14px; }
-#kn-mp .mp-act .sec { align-self: center; min-height: 40px; font-size: 12.5px; padding: 0 20px; }
-#kn-mp .hint { margin: 0; font: italic 400 13.5px Georgia, serif; color: #cdb27a; }
+/* inside the multiplayer hub the game fills the stage (the hub's own dock stays on top) */
+#kn-root.hub { position: fixed; inset: 0; z-index: 30; }
 @media (prefers-reduced-motion: reduce) { .hw i, .kn-r::after, .kn-r::before { animation: none !important; } }
 `;
 
 // ============================================================ HUD, layout, game flow
 
 let G = null;
-let mpEl, qrEl, root, dcEl, ccEl, roundEl, scoreEl, bestEl, promptEl, rollBtn, dotsEl, overEl, newArmed = false, armTimer = 0;
+let root, dcEl, ccEl, roundEl, scoreEl, bestEl, promptEl, rollBtn, dotsEl, overEl, newArmed = false, armTimer = 0;
 
 const freshGame = () => ({ phase: "idle", rolls: 3, cur: { cells: {}, yb: 0 }, snap: null, rolling: null, rollT: 0, restT: 0, nudges: 0, final: null });
 G = freshGame();
@@ -1903,152 +1859,59 @@ function setRules(id) {
 }
 function toggleSound() { S.sound = !S.sound; save(); updateBar(); if (S.sound) { audio(); clack(0.4); } }
 
-// ============================================================ multiplayer (Trystero over WebRTC)
-// Peer to peer, no game server: players meet in a room (5-letter code) through Trystero's public
-// signalling relays and then talk directly. The player whose turn it is runs the physics locally and
-// broadcasts what happens (roll started, where the dice lie, which field was written); everybody else
-// replays it. The host only keeps the player list and starts / restarts the game.
+// ============================================================ multiplayer (inside the hub)
+// The hub owns the room (connection, player list, host, invite link, QR code, lobby). This game only
+// sends its own messages through NET: the host announces the start ("begin"), the player whose turn it is
+// announces rolls (a seed, so every client simulates the same roll), where the dice came to rest, and the
+// field they wrote; everybody else replays that.
 
-const TRYSTERO = "https://cdn.jsdelivr.net/npm/trystero@0.26.0/nostr/+esm";
 const MAX_PLAYERS = 6;
-let net = null;                   // { room, send(msg, targetId?), leave(), selfId }
-let LB = null;                    // the room we are in: { code, host, hostId, name, players: [{ id, name }], status }
-let mpErr = "", mpSnap = "", mpTimer = 0, mpCopied = false;
-
-const roomCode = () => { const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let c = ""; for (let i = 0; i < 5; i++) c += A[Math.floor(Math.random() * A.length)]; return c; };
-const cleanName = (n) => String(n || "").trim().slice(0, 12) || t("player");
+let mpSnap = "", mpTimer = 0, hubReady = false, inbox = [];
 const myTurn = () => !MP || MP.players[MP.turn].id === MP.myId;
-const mpSend = (msg) => { if (net && MP) net.send(msg); };
+const mpSend = (msg, to) => { if (NET && MP) NET.send("k", msg, to); };
+const cleanName = (n) => String(n || "").trim().slice(0, 12) || t("player");
 const cleanPlayers = (a) => (Array.isArray(a) ? a.slice(0, MAX_PLAYERS).map((p) => ({ id: String(p.id), name: cleanName(p.name) })) : []);
-
-async function netOpen(code) {
-  // via Function so the Vite dev server doesn't rewrite it (it would prepend an `import` to this classic script and break loading)
-  const mod = await new Function("u", "return import(u)")(TRYSTERO);
-  const room = mod.joinRoom({ appId: "malte9799-kniffel" }, code);
-  const a = room.makeAction("kn");
-  const send = (msg, target) => (Array.isArray(a) ? a[0](msg, target) : a.send(msg, target ? { target } : undefined));
-  const handler = (m, meta) => onNet(m, typeof meta === "string" ? meta : meta && meta.peerId);
-  if (Array.isArray(a)) a[1](handler); else a.onMessage = handler;
-  net = { room, send, selfId: mod.selfId, leave: () => { try { room.leave(); } catch {} net = null; } };
-  room.onPeerJoin = (id) => { if (LB && !LB.host && !MP) send({ t: "hello", name: LB.name }, id); };
-  room.onPeerLeave = onPeerLeave;
-}
-
-async function mpHost(name) {
-  if (String(name || "").trim()) { S.name = cleanName(name); save(); }
-  LB = { code: roomCode(), host: true, hostId: null, name: cleanName(S.name), players: [], status: "connecting" };
-  mpErr = ""; mpRender();
-  try { await netOpen(LB.code); } catch (e) { console.error(e); return mpFail(t("netFail")); }
-  if (!LB) return net && net.leave();
-  LB.hostId = net.selfId; LB.players = [{ id: net.selfId, name: LB.name }]; LB.status = "lobby";
-  updateBar(); mpRender();
-}
-
-async function mpJoin(code, name) {
-  code = String(code || "").trim().toUpperCase();
-  if (code.length < 3) return;
-  S.name = cleanName(name); save();
-  LB = { code, host: false, hostId: null, name: S.name, players: [], status: "connecting" };
-  mpErr = ""; mpRender();
-  try { await netOpen(code); } catch (e) { console.error(e); return mpFail(t("netFail")); }
-  setTimeout(() => { if (LB && LB.status === "connecting" && LB.code === code) mpFail(t("noRoom")); }, 20000);
-  updateBar();
-}
-
-function mpFail(msg) { if (net) net.leave(); LB = null; mpErr = msg; updateBar(); mpRender(); }
-
-const roomUrl = (code) => location.href.split("?")[0].split("#")[0] + "?game=kniffel&room=" + code;
-let qrLoading = null;
-function ensureQR() {
-  if (window.qrcode) return Promise.resolve();
-  return qrLoading || (qrLoading = loadScript("https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js").catch((e) => { qrLoading = null; console.error(e); }));
-}
-// QR code for the direct link to the room, drawn as one SVG path
-function qrBlock(code) {
-  if (!window.qrcode) { ensureQR().then(() => { if (LB && LB.code === code) mpRender(); }); return ""; }
-  const q = window.qrcode(0, "M");
-  q.addData(roomUrl(code)); q.make();
-  const n = q.getModuleCount(), m = 2;
-  let d = "";
-  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (q.isDark(r, c)) d += `M${c + m} ${r + m}h1v1h-1z`;
-  return `<div class="qr"><svg viewBox="0 0 ${n + m * 2} ${n + m * 2}" shape-rendering="crispEdges" role="img" aria-label="QR"><rect width="100%" height="100%" fill="#fbf4e2"/><path d="${d}" fill="#2a1608"/></svg></div>`;
-}
-
-// the invitation board on the right edge of the screen: QR code with the direct link, shown while the room window is open
-function qrRender() {
-  if (!qrEl) return;
-  const show = !!LB && !MP && LB.status === "lobby" && mpEl.classList.contains("show");
-  qrEl.classList.toggle("show", show);
-  mpEl.classList.toggle("with-qr", show);
-  if (!show) return;
-  const code = LB.code;
-  if (qrEl.dataset.code !== code || !qrEl.querySelector(".qr")) {
-    const q = qrBlock(code);
-    if (!q) return;                                   // library still loading, qrBlock re-renders when it is there
-    qrEl.dataset.code = code;
-    qrEl.innerHTML = `<h4>${t("qrTitle")}</h4>${q}<div class="qc">${esc(code)}</div><p>${t("qrHint")}</p>`;
-  }
-}
-
-function lobbyBroadcast() { if (net && LB && LB.host) net.send({ t: "lobby", players: LB.players, rules: S.rules }); }
+const hubPlayers = () => NET.players.map((p) => ({ id: p.id, name: p.name }));
 
 function onNet(m, from) {
   if (!m || typeof m !== "object" || !from) return;
-  if (m.t === "hello") {
-    if (!LB || !LB.host) return;
-    if (MP || LB.players.length >= MAX_PLAYERS) return net.send({ t: "full" }, from);
-    if (!LB.players.some((p) => p.id === from)) {
-      let name = cleanName(m.name), n = 1;
-      while (LB.players.some((p) => p.name === name)) name = cleanName(m.name).slice(0, 10) + ++n;
-      LB.players.push({ id: from, name });
-    }
-    lobbyBroadcast(); mpRender();
-  } else if (m.t === "full") {
-    if (LB && !LB.host) mpFail(t("roomFull"));
-  } else if (m.t === "lobby") {
-    if (LB && !LB.host && !MP) { LB.hostId = from; LB.players = cleanPlayers(m.players); LB.rules = RULES[m.rules] ? m.rules : "kniffel"; LB.status = "lobby"; mpRender(); }
-  } else if (m.t === "start") {
-    if (LB && !LB.host && from === LB.hostId) mpStart(cleanPlayers(m.players), m.rules);
+  if (m.t === "begin") {                                  // the host chose the variant and started
+    if (from !== NET.hostId) return;
+    if (!D.length) { inbox = [[m, from]]; return; }       // 3D is still loading: start as soon as it is there
+    mpStart(cleanPlayers(m.players), m.rules);
   } else if (MP) mpGame(m, from);
+  else if (inbox.length) inbox.push([m, from]);
 }
 
 function onPeerLeave(id) {
-  if (MP) {
-    if (id === MP.hostId && !MP.host) { flashNote(t("hostLeft")); mpErr = t("hostLeft"); return leaveMP(); }
-    const pl = MP.players.find((p) => p.id === id);
-    if (!pl || pl.left) return;
-    pl.left = true;
-    if (!MP.over && MP.players[MP.turn].id === id) {            // it was their turn: skip them
-      if (D.some((d) => d.held)) { for (const x of D) { x.held = false; x.slot = -1; } layoutRow(D, { dur: 0.6, arc: 1.0 }); }
-      mpAdvance(); sync(true); markColumn(); refreshPicks(); mpFinishCheck();
-    }
-    updateHUD(); mpRender();
-  } else if (LB) {
-    if (LB.host) { LB.players = LB.players.filter((p) => p.id !== id); lobbyBroadcast(); }
-    else if (id === LB.hostId) mpFail(t("hostLeft"));
-    mpRender();
+  if (!MP) return;
+  const pl = MP.players.find((p) => p.id === id);
+  if (!pl || pl.left) return;
+  pl.left = true;
+  if (!MP.over && MP.players[MP.turn].id === id) {            // it was their turn: skip them
+    if (D.some((d) => d.held)) { for (const x of D) { x.held = false; x.slot = -1; } layoutRow(D, { dur: 0.6, arc: 1.0 }); }
+    mpAdvance(); sync(true); markColumn(); refreshPicks(); mpFinishCheck();
   }
+  updateHUD();
 }
 
-function mpStartHost() {
-  if (!LB || !LB.host || LB.players.length < 2) return;
-  const players = LB.players.map((p) => ({ id: p.id, name: p.name }));
-  net.send({ t: "start", players, rules: S.rules });
-  mpStart(players, S.rules);
+// host: start the game for everybody with the chosen variant
+function mpBegin(players, rules) {
+  if (!NET.isHost) return;
+  NET.send("k", { t: "begin", rules, players });
+  mpStart(players, rules);
 }
 function mpRematch() {
-  if (!MP || !MP.host) return;
-  const players = MP.players.filter((p) => !p.left).map((p) => ({ id: p.id, name: p.name }));
-  net.send({ t: "start", players, rules: MP.rules });
-  mpStart(players, MP.rules);
+  if (!MP || !NET.isHost) return;
+  mpBegin(MP.players.filter((p) => !p.left).map((p) => ({ id: p.id, name: p.name })), MP.rules);
 }
 
 function mpStart(players, rid) {
-  if (!net || !LB || !D.length || !players.some((p) => p.id === net.selfId)) return;
+  if (!NET || !D.length || !players.some((p) => p.id === NET.me.id)) return;
   const rr = RULES[rid] ? rid : "kniffel";
-  MP = { host: LB.host, hostId: LB.hostId, myId: net.selfId, rules: rr, turn: 0, over: false,
-         players: players.map((p) => ({ id: p.id, name: p.name, cur: { cells: {}, yb: 0 }, left: false })) };
-  mpClose(); menuClose();
+  MP = { host: NET.isHost, hostId: NET.hostId, myId: NET.me.id, rules: rr, turn: 0, over: false,
+         players: players.map((p) => ({ id: p.id, name: p.name, cur: { cells: {}, yb: 0 }, left: !NET.players.some((q) => q.id === p.id) })) };
+  menuClose();
   overEl.classList.remove("show");
   for (const d of D) if (d.state === "phys") world.removeBody(d.body);
   G = freshGame(); G.cur = MP.players[0].cur; G.phase = myTurn() ? "idle" : "wait";
@@ -2057,16 +1920,11 @@ function mpStart(players, rid) {
   applyDiceTheme(); placeDice(); setHover(-1);
   renderCard(); layout(); updateBar(); updateHUD(); refreshPicks();
   clearInterval(mpTimer); mpTimer = setInterval(mpTick, 300);
+  const queued = inbox; inbox = [];
+  for (const [m, from] of queued) onNet(m, from);
 }
 
-function leaveMP() {
-  const was = !!MP;
-  clearInterval(mpTimer);
-  if (net) net.leave();
-  MP = null; LB = null; mpSnap = "";
-  if (was) { applyRules(S.rules); applyDiceTheme(); newGame(true, true); }
-  updateBar(); mpRender();
-}
+const leaveMP = () => { if (NET) NET.leave(); };
 
 // ---- turn handling (every client runs the same state machine) ----
 
@@ -2087,11 +1945,11 @@ function mpFinishCheck() { if (MP && MP.over) whenIdle(() => setTimeout(showOver
 
 // the player whose turn it is publishes where the dice lie, once they have come to rest
 function mpTick() {
-  if (!MP || !net || !myTurn() || G.phase !== "choose") return;
+  if (!MP || !NET || !myTurn() || G.phase !== "choose") return;
   if (D.some((d) => d.state !== "rest")) return;
   const snap = { t: "dice", rolls: G.rolls, d: D.map((d) => ({ v: d.v, h: d.held ? 1 : 0, s: d.slot, x: +d.mesh.position.x.toFixed(2) })) };
   const key = JSON.stringify(snap);
-  if (key !== mpSnap) { mpSnap = key; net.send(snap); }
+  if (key !== mpSnap) { mpSnap = key; mpSend(snap); }
 }
 
 // where the roller's dice lie (sent once they have come to rest): corrects a client whose own simulation differs
@@ -2134,7 +1992,7 @@ function mpGame(m, from) {
     if (!CATS.includes(cat) || pl.cur.cells[cat] != null) return;
     pl.cur.cells[cat] = clamp(m.val | 0, 0, 100); pl.cur.yb = clamp(m.yb | 0, 0, 9);
     if (D.some((d) => d.held)) { for (const x of D) { x.held = false; x.slot = -1; } layoutRow(D, { dur: 0.6, arc: 1.0 }); }
-    mpAdvance(); sync(true); markColumn(); updateHUD(); refreshPicks(); mpFinishCheck(); mpRender();
+    mpAdvance(); sync(true); markColumn(); updateHUD(); refreshPicks(); mpFinishCheck();
   }
 }
 
@@ -2148,79 +2006,13 @@ function showOverMP() {
   if (rk[0].me) celebrate(2);
 }
 
-// ---- lobby window ----
-
-function mpOpen(code) {
-  if (!D.length) return;                         // 3D (and with it the game) is still loading
-  mpEl.classList.add("show");
-  mpRender(code);
-}
-function mpClose() { mpEl.classList.remove("show"); qrRender(); }
-
-function mpRender(prefill) {
-  if (!mpEl) return;
-  const box = mpEl.querySelector(".box");
-  const keepCode = prefill || (mpEl.querySelector("#mp-code") || {}).value || "";
-  const keepName = (mpEl.querySelector("#mp-name") || {}).value;
-  const head = `<button class="x" data-act="close" aria-label="Close">✕</button>
-    <div class="mp-head"><div class="mp-dice">${[5, 2, 6].map(menuDie).join("")}</div><h3>${t("mp")}</h3>`;
-  const initial = (n) => esc([...String(n).trim()][0] || "?").toUpperCase();
-  const list = (pl) => `<ul class="pl">${pl.map((p, i) => `<li class="${MP && i === MP.turn && !MP.over ? "on" : ""}${p.left ? " gone" : ""}"><i class="av">${initial(p.name)}</i><span class="nm">${esc(p.name)}${(MP ? p.id === MP.myId : net && p.id === net.selfId) ? `<em>${t("you")}</em>` : ""}${LB && p.id === LB.hostId ? `<em>${t("hostTag")}</em>` : ""}</span>${MP ? `<b>${liveTotal(p.cur)}</b>` : ""}</li>`).join("")}</ul>`;
-  const copyIco = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/></svg>`;
-  const link = `<button class="sec wide copy" data-act="copy">${copyIco}${mpCopied ? t("copied") : t("copyLink")}</button>`;
-  const code = (c) => `<div class="mp-lbl">${t("roomCode")}</div><div class="code">${esc(c)}</div>`;
-  let h;
-  if (MP) {
-    h = `${head}</div>${code(LB ? LB.code : "")}${list(MP.players)}${link}<div class="mp-act"><button class="sec" data-act="leave">${t("leaveRoom")}</button></div>`;
-  } else if (!LB) {
-    h = `${head}<p class="sub">${t("mpSub")}</p></div>
-      <div class="mp-field"><label for="mp-name">${t("yourName")}</label><input id="mp-name" maxlength="12" autocomplete="off" spellcheck="false" value="${esc(keepName ?? (S.name || ""))}" placeholder="${esc(t("player"))}"></div>
-      <div class="mp-sec"><b>${t("mpHostT")}</b><small>${t("mpHostS")}</small><button class="wide" data-act="host">${t("create")}</button></div>
-      <div class="mp-or"><span>${t("or")}</span></div>
-      <div class="mp-sec"><b>${t("mpJoinT")}</b><div class="row" style="margin-top:10px"><input id="mp-code" maxlength="5" autocomplete="off" spellcheck="false" placeholder="ABCDE" aria-label="${t("roomCode")}" value="${esc(keepCode)}"><button data-act="join">${t("join")}</button></div></div>
-      ${mpErr ? `<p class="err">${esc(mpErr)}</p>` : ""}`;
-  } else if (LB.status === "connecting") {
-    h = `${head}</div>${code(LB.code)}<p class="sub">${t("connecting")}</p><div class="mp-act"><button class="sec" data-act="leave">${t("leaveRoom")}</button></div>`;
-  } else {
-    h = `${head}</div>${code(LB.code)}${link}
-      <p class="hint" style="margin:12px 0 0">${t("rulesLbl")}: <b>${RULES[LB.host ? S.rules : LB.rules || "kniffel"].name}</b></p>
-      <div class="mp-plh"><span>${t("players")}</span><b>${LB.players.length}/${MAX_PLAYERS}</b></div>${list(LB.players)}
-      <div class="mp-act">${LB.host
-        ? `<button class="wide" data-act="start" ${LB.players.length < 2 ? "disabled" : ""}>${t("start")}</button>${LB.players.length < 2 ? `<p class="hint">${t("needTwo")}</p>` : ""}`
-        : `<p class="hint">${t("waitHost")}</p>`}
-        <button class="sec" data-act="leave">${t("leaveRoom")}</button></div>`;
-  }
-  box.innerHTML = h;
-  qrRender();
-}
-
-function onMpClick(e) {
-  if (e.target === mpEl) return mpClose();
-  const b = e.target.closest("[data-act]");
-  if (!b) return;
-  const val = (id) => (mpEl.querySelector(id) || {}).value;
-  switch (b.dataset.act) {
-    case "close": mpClose(); break;
-    case "host": mpHost(val("#mp-name")); break;
-    case "join": mpJoin(val("#mp-code"), val("#mp-name")); break;
-    case "start": mpStartHost(); break;
-    case "leave": leaveMP(); if (!MP) mpClose(); break;
-    case "copy": {
-      const url = roomUrl(LB.code);
-      (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).catch(() => {});
-      mpCopied = true; mpRender(); setTimeout(() => { mpCopied = false; mpRender(); }, 1800);
-      break;
-    }
-  }
-}
-
 // ============================================================ main menu
 
 let menuEl, menuView = "main", soloArmed = false, soloTimer = 0;
 const menuIsOpen = () => !!menuEl && menuEl.classList.contains("show");
-const progress = () => !!MP || (G.phase !== "over" && (G.phase !== "idle" || CATS.some((c) => G.cur.cells[c] != null)));
+const progress = () => !HUB && (G.phase !== "over" && (G.phase !== "idle" || CATS.some((c) => G.cur.cells[c] != null)));
 function menuOpen(view = "main") { menuView = view; soloArmed = false; menuRender(); menuEl.classList.add("show"); }
-function menuClose() { if (menuEl) menuEl.classList.remove("show"); }
+function menuClose() { if (menuEl && !(HUB && !MP)) menuEl.classList.remove("show"); }      // in the hub the pre-game screen stays until the host starts
 
 function menuDie(n, i) {
   const pips = PIPS[n].map(([x, y]) => `<circle cx="${6 + x * 36}" cy="${6 + y * 36}" r="3.7" fill="#16171d"/>`).join("");
@@ -2233,24 +2025,38 @@ const ICO = {
   multi: `<svg class="ic" viewBox="0 0 48 48">${dieIco(2, 14, -14, 3)}${dieIco(18, 6, 12, 6)}</svg>`,
 };
 
+function ruleStrip(locked) {
+  return `<section class="mn-types"><h2 class="mn-h">${t("mnCard")}</h2><p class="mn-note">${locked ? t("mnCardLocked") : HUB ? "" : progress() ? t("mnCardHint") : ""}</p>
+    <div class="mn-strip">${RULE_IDS.map((id) => `<button class="mn-card${id === S.rules ? " sel" : ""}" data-act="rules" data-id="${id}" ${locked ? "disabled" : ""} aria-pressed="${id === S.rules}">
+      <span class="th v-${V().id}"><i class="tt">${RULES[id].name}</i><i class="tg"></i><i class="tn" style="top:35%">12</i><i class="tn" style="top:45%">9</i><i class="tn" style="top:55%">24</i><i class="td" style="--db:${V().dice.body};--dp:${V().dice.pip}"></i></span>
+      <b>${RULES[id].name}</b><small>${t("rc_" + id)}</small><small class="rd">${t("rd_" + id)}</small></button>`).join("")}</div></section>`;
+}
+
 function menuRender() {
   if (!menuEl) return;
-  const prog = progress(), room = MP ? MP.players.length : LB ? LB.players.length : 0;
-  const locked = !!MP, warn = locked ? t("mnCardLocked") : prog ? t("mnCardHint") : "";
   const keepScroll = (menuEl.querySelector(".mn-strip") || {}).scrollLeft || 0;
-  menuEl.innerHTML = `<div class="mn-wrap">
-    <div class="mn-dice">${[5, 3, 6, 2, 4].map(menuDie).join("")}</div>
-    <h1 class="mn-title">Kniffel</h1><p class="mn-sub">${t("mnTag")}</p>
-    <div class="mn-list">
-      ${prog ? `<button class="mn-btn pri" data-act="resume">${ICO.play}<span><b>${t("mnResume")}</b><small>${MP ? t("mnResumeMp") : t("mnResumeSub")}</small></span></button>` : ""}
-      <button class="mn-btn" data-act="solo">${ICO.solo}<span><b>${soloArmed ? t("mnSure") : prog && !MP ? t("mnSoloAgain") : t("mnSolo")}</b><small>${soloArmed ? t("mnSureSub") : t("mnSoloSub")}</small></span></button>
-      <button class="mn-btn" data-act="multi" ${D.length ? "" : "disabled"}>${ICO.multi}<span><b>${t("mnMulti")}</b><small>${LB ? t("mnInRoom", LB.code, room) : t("mnMultiSub")}</small></span></button>
-    </div>
-    <section class="mn-types"><h2 class="mn-h">${t("mnCard")}</h2><p class="mn-note">${warn}</p>
-      <div class="mn-strip">${RULE_IDS.map((id) => `<button class="mn-card${id === S.rules ? " sel" : ""}" data-act="rules" data-id="${id}" ${locked ? "disabled" : ""} aria-pressed="${id === S.rules}">
-        <span class="th v-${V().id}"><i class="tt">${RULES[id].name}</i><i class="tg"></i><i class="tn" style="top:35%">12</i><i class="tn" style="top:45%">9</i><i class="tn" style="top:55%">24</i><i class="td" style="--db:${V().dice.body};--dp:${V().dice.pip}"></i></span>
-        <b>${RULES[id].name}</b><small>${t("rc_" + id)}</small><small class="rd">${t("rd_" + id)}</small></button>`).join("")}</div></section>
-    <div class="mn-foot"><button class="mn-link" data-act="how">${t("mnHow")}</button><button class="mn-link ico${S.sound ? "" : " off"}" data-act="sound" title="${S.sound ? t("mnSoundOn") : t("mnSoundOff")}" aria-label="${S.sound ? t("mnSoundOn") : t("mnSoundOff")}" aria-pressed="${S.sound}"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="mute" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg></button><a class="mn-link" href="index.html">${t("mnAll")}</a></div></div>`;
+  const sound = `<button class="mn-link ico${S.sound ? "" : " off"}" data-act="sound" title="${S.sound ? t("mnSoundOn") : t("mnSoundOff")}" aria-label="${S.sound ? t("mnSoundOn") : t("mnSoundOff")}" aria-pressed="${S.sound}"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="mute" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg></button>`;
+  const head = `<div class="mn-dice">${[5, 3, 6, 2, 4].map(menuDie).join("")}</div><h1 class="mn-title">Kniffel</h1><p class="mn-sub">${t("mnTag")}</p>`;
+  let body;
+  if (HUB && !MP) {                                           // before the game: the host picks the variant and starts
+    body = `<div class="mn-list">${NET.isHost
+      ? `<button class="mn-btn pri" data-act="begin" ${hubReady ? "" : "disabled"}>${ICO.play}<span><b>${t("mnBegin")}</b><small>${hubReady ? t("mnBeginSub", NET.players.length) : t("mnLoading")}</small></span></button>`
+      : `<p class="mn-note" style="margin:0">${t("mnHubWait")}</p>`}</div>${ruleStrip(!NET.isHost)}
+      <div class="mn-foot">${sound}</div>`;
+  } else if (HUB) {                                           // a running game
+    body = `<div class="mn-list"><button class="mn-btn pri" data-act="resume">${ICO.play}<span><b>${t("mnResume")}</b><small>${t("mnResumeMp")}</small></span></button>
+      ${NET.isHost ? `<button class="mn-btn" data-act="lobby">${ICO.multi}<span><b>${t("mnToLobby")}</b><small>${t("mnToLobbySub")}</small></span></button>` : ""}
+      <button class="mn-btn" data-act="leave">${ICO.solo}<span><b>${t("mnLeaveRoom")}</b><small>${t("mnLeaveRoomSub")}</small></span></button></div>
+      <div class="mn-foot">${sound}</div>`;
+  } else {                                                    // solo page
+    const prog = progress();
+    body = `<div class="mn-list">
+      ${prog ? `<button class="mn-btn pri" data-act="resume">${ICO.play}<span><b>${t("mnResume")}</b><small>${t("mnResumeSub")}</small></span></button>` : ""}
+      <button class="mn-btn" data-act="solo">${ICO.solo}<span><b>${soloArmed ? t("mnSure") : prog ? t("mnSoloAgain") : t("mnSolo")}</b><small>${soloArmed ? t("mnSureSub") : t("mnSoloSub")}</small></span></button>
+      <button class="mn-btn" data-act="multi">${ICO.multi}<span><b>${t("mnMulti")}</b><small>${t("mnMultiSub")}</small></span></button></div>${ruleStrip(false)}
+      <div class="mn-foot">${typeof _openInfo === "function" ? `<button class="mn-link" data-act="how">${t("mnHow")}</button>` : ""}${sound}<a class="mn-link" href="index.html">${t("mnAll")}</a></div>`;
+  }
+  menuEl.innerHTML = `<div class="mn-wrap">${head}${body}</div>`;
   const strip = menuEl.querySelector(".mn-strip");
   if (strip) strip.scrollLeft = keepScroll;
 }
@@ -2262,7 +2068,6 @@ function menuSolo() {
     return menuRender();
   }
   soloArmed = false; clearTimeout(soloTimer);
-  if (MP || LB) leaveMP();
   if (G.phase !== "idle" || CATS.some((c) => G.cur.cells[c] != null)) newGame(true);
   menuClose();
 }
@@ -2273,9 +2078,12 @@ function onMenuClick(e) {
   switch (b.dataset.act) {
     case "resume": menuClose(); break;
     case "solo": menuSolo(); break;
-    case "multi": mpOpen(); break;
-    case "rules": { if (!MP && b.dataset.id !== S.rules) { setRules(b.dataset.id); if (LB && LB.host) { lobbyBroadcast(); mpRender(); } } menuRender(); break; }
-    case "how": _openInfo(); break;
+    case "multi": location.href = "hub.html"; break;                 // rooms and game switching live in the multiplayer hub
+    case "rules": { if (!MP && b.dataset.id !== S.rules && (!HUB || NET.isHost)) setRules(b.dataset.id); menuRender(); break; }
+    case "begin": if (HUB && NET.isHost && hubReady && !MP) mpBegin(hubPlayers(), S.rules); break;
+    case "lobby": if (HUB && NET.isHost) NET.end(); break;
+    case "leave": leaveMP(); break;
+    case "how": if (typeof _openInfo === "function") _openInfo(); break;
     case "sound": toggleSound(); break;
   }
 }
@@ -2301,7 +2109,7 @@ function fontsReady() {
 }
 
 function buildDOM() {
-  const st = document.createElement("style");
+  const st = rootStyleEl = document.createElement("style");
   st.textContent = CSS;
   document.head.appendChild(st);
   root = document.createElement("div");
@@ -2327,40 +2135,30 @@ function buildDOM() {
       <div id="kn-cc"><div class="kn-card" id="kn-card"></div></div>
     </div>
     <div id="kn-menu"></div>
-    <div id="kn-mp"><div class="box"></div></div>
-    <aside id="kn-qr" aria-label="${t("qrTitle")}"></aside>
     <div id="kn-pen"><svg width="64" height="84" viewBox="0 0 64 84"><g transform="translate(11 74) rotate(30)">
       <path d="M0 0 -2.6-11h5.2z" fill="#d7dae2"/><path d="M-.5-.6h1v-1.6h-1z" fill="#2a2a30"/>
       <rect x="-3.4" y="-70" width="6.8" height="59" rx="3.2" fill="#1d3a8f"/><rect x="-3.4" y="-70" width="2.2" height="59" rx="1.1" fill="#fff" opacity=".28"/>
       <rect x="-3.4" y="-24" width="6.8" height="3" fill="#c9ccd6"/><rect x="2" y="-66" width="1.6" height="30" rx=".8" fill="#c9ccd6"/>
       <rect x="-1.4" y="-76" width="2.8" height="7" rx="1.2" fill="#c9ccd6"/></g></svg></div>`;
-  document.getElementById("canvas-wrap").appendChild(root);
+  if (HUB) root.classList.add("hub");
+  (env.root || document.getElementById("canvas-wrap")).appendChild(root);
   dcEl = root.querySelector("#kn-dc"); ccEl = root.querySelector("#kn-cc"); cardEl = root.querySelector("#kn-card");
   roundEl = root.querySelector("#kn-round"); scoreEl = root.querySelector("#kn-score"); bestEl = root.querySelector("#kn-best");
   promptEl = root.querySelector("#kn-prompt"); rollBtn = root.querySelector("#kn-roll"); dotsEl = root.querySelector("#kn-dots");
-  overEl = root.querySelector("#kn-over"); penEl = root.querySelector("#kn-pen"); mpEl = root.querySelector("#kn-mp");
+  overEl = root.querySelector("#kn-over"); penEl = root.querySelector("#kn-pen");
   rollBtn.addEventListener("click", doRoll);
-  overEl.querySelector("button").addEventListener("click", () => (MP ? (MP.host ? mpRematch() : leaveMP()) : newGame(true)));
-  mpEl.addEventListener("click", onMpClick);
-  mpEl.addEventListener("keydown", (e) => {            // Enter in the code field joins once all 5 characters are there
-    if (e.key !== "Enter" || e.target.id !== "mp-code") return;
-    e.preventDefault();
-    const code = e.target.value.trim();
-    if (code.length === 5) mpJoin(code, (mpEl.querySelector("#mp-name") || {}).value);
-  });
-  menuEl = root.querySelector("#kn-menu"); qrEl = root.querySelector("#kn-qr");
+  overEl.querySelector("button").addEventListener("click", () => (MP ? (NET.isHost ? mpRematch() : leaveMP()) : newGame(true)));
+  menuEl = root.querySelector("#kn-menu");
   menuEl.addEventListener("click", onMenuClick);
   root.querySelector("#kn-t-undo").addEventListener("click", () => undo());
   root.querySelector("#kn-t-sound").addEventListener("click", () => toggleSound());
   root.querySelector("#kn-t-menu").addEventListener("click", () => menuOpen());
   cardEl.addEventListener("click", onCardClick);
-  new ResizeObserver(layout).observe(root);
-  new ResizeObserver(layout).observe(root.querySelector(".kn-bottom"));   // the prompt can wrap to two lines on phones
-  const bar = document.getElementById("ui-overlay");
-  if (bar) new ResizeObserver(layout).observe(bar);
+  const ro = new ResizeObserver(layout);
+  ro.observe(root); ro.observe(root.querySelector(".kn-bottom"));       // the prompt can wrap to two lines on phones
+  observers.push(ro);
 
-  document.addEventListener("keydown", (e) => {
-    if (mpEl.classList.contains("show")) { if (e.key === "Escape") mpClose(); return; }
+  document.addEventListener("keydown", onKeyDown = (e) => {
     if (menuIsOpen()) { if (e.key === "Escape") menuClose(); return; }
     if (e.target.closest && e.target.closest("input,textarea,select")) { if (e.key === "Escape") e.target.blur(); return; }
     if (e.key === "Escape") return menuOpen();
@@ -2374,7 +2172,7 @@ function buildDOM() {
   });
 }
 
-initGame({
+if (!HUB && typeof initGame === "function") initGame({
   title: "Kniffel · Yahtzee",
   tag: "roll · hold · write it down",
   fullscreen: true,
@@ -2394,7 +2192,12 @@ initGame({
 
 document.documentElement.lang = S.lang;
 buildDOM();
-if (!new URLSearchParams(location.search).get("room")) menuOpen();
+if (HUB) {
+  NET.onMessage("k", ({ data, from }) => onNet(data, from));
+  NET.onEvent("leave", (p) => onPeerLeave(p.id));
+  NET.onEvent("host", () => { if (MP) { MP.hostId = NET.hostId; MP.host = NET.isHost; } updateHUD(); if (menuIsOpen()) menuRender(); });
+}
+menuOpen();
 updateBar();
 updateHUD();
 layout();
@@ -2403,16 +2206,18 @@ layout();
   const libs = Promise.all([
     loadScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"),
     loadScript("https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"),
-  ]).then(() => { init3D(); layout(); if (menuIsOpen()) menuRender(); });
+  ]).then(() => {
+    if (destroyed) return;
+    init3D(); layout(); if (menuIsOpen()) menuRender();
+    if (inbox.length) { const [m, from] = inbox[0]; inbox = []; onNet(m, from); }       // a "begin" that came in while 3D loaded
+  });
   await Promise.race([fontsReady(), sleep(3500)]);
   renderCard();
   layout();
   refreshPicks();
-  const roomParam = new URLSearchParams(location.search).get("room");
-  if (roomParam) libs.then(() => mpOpen(roomParam)).catch(() => {});
   try { await libs; } catch (e) {
     console.error(e);
-    const er = document.getElementById("kn-err");
+    const er = root.querySelector("#kn-err");
     er.style.display = "flex";
     er.textContent = S.lang === "de" ? "Die 3D-Würfel konnten nicht geladen werden (Internetverbindung nötig)." : "Couldn't load the 3D dice (needs an internet connection).";
   }
@@ -2488,8 +2293,23 @@ function infoAnim(p, w, h, f) {
 if (/[?&]debug\b/.test(location.search)) {
   window.__kn = {
     get G() { return G; }, get camera() { return camera; }, get scene() { return scene; }, get renderer() { return renderer; },
-    get fitBox() { return fitBox; }, D, S, get MP() { return MP; }, get LB() { return LB; }, mpHost, mpJoin, mpStartHost, doRoll, pickCat, toggleHold, newGame, options, undo, setRules, setTheme, derive, RULES, sync, layout,
+    get fitBox() { return fitBox; }, D, S, get MP() { return MP; }, mpStart, mpBegin, mpRematch, doRoll, pickCat, toggleHold, newGame, options, undo, setRules, setTheme, derive, RULES, sync, layout,
   };
 }
 
-})();
+function destroy() {
+  destroyed = true;
+  cancelAnimationFrame(raf);
+  clearInterval(mpTimer); clearTimeout(soloTimer);
+  if (onKeyDown) document.removeEventListener("keydown", onKeyDown);
+  observers.forEach((o) => o.disconnect());
+  try { if (renderer) { renderer.dispose(); const ext = renderer.getContext && renderer.getContext().getExtension("WEBGL_lose_context"); if (ext) ext.loseContext(); } } catch {}
+  try { if (actx) actx.close(); } catch {}
+  if (rootStyleEl) rootStyleEl.remove();
+  if (root) root.remove();
+}
+
+return { destroy, go() { hubReady = true; if (menuIsOpen()) menuRender(); } };
+};
+
+if (!window.__KN_HUB__) window.createKniffel();
