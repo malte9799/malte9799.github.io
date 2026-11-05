@@ -1641,6 +1641,10 @@ const CSS = `
 }
 /* inside the multiplayer hub the game fills the stage (the hub's own dock stays on top) */
 #kn-root.hub { position: fixed; inset: 0; z-index: 30; }
+.hub-stage.hub-kniffel { padding: 0; border: 0; background: none; box-shadow: none; }
+#kn-root.hub .kn-top { left: 252px; max-width: 270px; gap: 2px 12px; }
+#kn-root.hub #kn-t-undo { display: none; }                      /* no undo with other players at the table */
+@media (max-width: 700px) { #kn-root.hub .kn-top { left: 14px; top: 64px; } }
 @media (prefers-reduced-motion: reduce) { .hw i, .kn-r::after, .kn-r::before { animation: none !important; } }
 `;
 

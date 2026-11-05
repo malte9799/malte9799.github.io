@@ -15,6 +15,7 @@
 
 const GAMES = [
   { id: "tictactoe", title: "Tic Tac Toe", desc: "Drei in einer Reihe", min: 2, max: 2, load: () => import("./hub-games/tictactoe.js") },
+  { id: "kniffel", title: "Kniffel", desc: "Würfeln, halten, aufschreiben – Kniffel, Yahtzee, Yatzy, Generala", min: 2, max: 6, load: () => import("./hub-games/kniffel.js") },
   { id: "clickrace", title: "Klick-Rennen", desc: "15 Sekunden, wer klickt mehr?", min: 2, max: 6, load: () => import("./hub-games/clickrace.js") },
 ];
 
