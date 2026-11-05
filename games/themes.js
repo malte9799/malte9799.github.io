@@ -501,14 +501,16 @@ function mountThemePicker(container) {
         </button>`).join("")}
     </div>`;
   container.appendChild(wrap);
-  // each tile takes the border and corner radius of that design's card
+  // cap every px value in a border-radius string (keeps the 4-corner / slash shape)
+function capPx(value, max) { return value.replace(/(\d+(?:\.\d+)?)px/g, (m, n) => Math.min(parseFloat(n), max) + "px"); }
+// each tile takes the border and corner radius of that design's card
   wrap.querySelectorAll(".theme-frame iframe").forEach((f) => f.addEventListener("load", () => {
     const probe = f.contentDocument?.querySelector("#home .card.probe");
     if (!probe) return;
     probe.style.animation = "none";                       // base radius, not a mid-morph value
     const cs = f.contentWindow.getComputedStyle(probe);
     const frame = f.parentElement;
-    frame.style.borderRadius = cs.borderRadius;
+    frame.style.borderRadius = capPx(cs.borderRadius, 28);   // soft designs (liquid) are cut down to a calmer corner
     frame.style.border = parseFloat(cs.borderTopWidth) > 0
       ? `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}` : "none";
   }));

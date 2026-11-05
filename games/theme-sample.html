@@ -60,15 +60,14 @@ window.THEME_SAMPLE = true;
 
 // shrink the hero so long titles stay inside the tile
 function fit() {
+  // scale the whole tile with CSS zoom: text and layout shrink together, nothing wraps or clips
   const hero = document.querySelector("#home .hero");
-  hero.style.transform = "";
-  // natural width of the text itself (nowrap), so a wide title scales only as much as needed
+  document.body.style.zoom = "";
   const natural = (el) => { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width; };
   const w = Math.max(natural(hero.querySelector("h1")), natural(hero.querySelector(".subtitle")), hero.scrollWidth);
   const h = hero.getBoundingClientRect().height;
   const k = Math.min(1, (innerWidth - 24) / w, (innerHeight - 40) / h);
-  hero.style.transformOrigin = "0 0";
-  hero.style.transform = k < 1 ? `scale(${k.toFixed(3)})` : "";
+  if (k < 1) document.body.style.zoom = k.toFixed(3);
 }
 // flip-letter designs widen while they animate in, so measure again a few times
 addEventListener("load", () => { fit(); [400, 1500, 3000].forEach((ms) => setTimeout(fit, ms)); });
