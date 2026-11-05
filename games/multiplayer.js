@@ -34,7 +34,7 @@
       connecting: "Verbinde …", leave: "Raum verlassen", you: "du", host: "Host", game: "Spiel",
       full: "Der Raum ist voll oder das Spiel läuft schon.", noRoom: "Kein Raum mit diesem Code gefunden.",
       netFail: "Verbindung fehlgeschlagen. Prüfe deine Internetverbindung.", hostLeft: "Der Host hat den Raum verlassen.",
-      qrTitle: "Mitspieler einladen", qrHint: "QR-Code scannen – öffnet direkt diesen Raum", close: "Schließen", button: "Mehrspieler",
+      qrShow: "QR-Code anzeigen", qrHide: "QR-Code ausblenden", qrTitle: "Mitspieler einladen", qrHint: "QR-Code scannen – öffnet direkt diesen Raum", close: "Schließen", button: "Mehrspieler",
       inGame: "Spiel läuft", back: "Zurück zur Lobby",
     },
     en: {
@@ -45,7 +45,7 @@
       connecting: "Connecting…", leave: "Leave room", you: "you", host: "host", game: "Game",
       full: "That room is full or already playing.", noRoom: "No room found with that code.",
       netFail: "Couldn't connect. Check your internet connection.", hostLeft: "The host left the room.",
-      qrTitle: "Invite players", qrHint: "Scan the QR code — it opens this room directly", close: "Close", button: "Multiplayer",
+      qrShow: "Show QR code", qrHide: "Hide QR code", qrTitle: "Invite players", qrHint: "Scan the QR code — it opens this room directly", close: "Close", button: "Multiplayer",
       inGame: "Game running", back: "Back to lobby",
     },
   };
@@ -353,7 +353,7 @@
   // Two states: a form (name, create room, join with code) and the lobby (code, link, players, start).
   // Ids and classes are all prefixed mp- and styled in multiplayer.css from the theme variables.
   const ui = {
-    el: null, qrEl: null, open: false, copied: false, lastCode: "", buttons: new Set(),
+    el: null, qrEl: null, open: false, copied: false, qrOpen: false, lastCode: "", buttons: new Set(),
 
     ensure() {
       if (this.el) return;
@@ -364,6 +364,7 @@
       this.qrEl.id = "mp-qr";
       document.body.append(this.el, this.qrEl);
       this.el.addEventListener("click", (e) => this.click(e));
+      this.qrEl.addEventListener("click", (e) => { if (e.target.closest("[data-act=qrclose]")) { this.qrOpen = false; this.render(); } });
       this.el.addEventListener("keydown", (e) => {
         if (e.key === "Escape") this.hide();
         else if (e.key === "Enter" && e.target.id === "mp-code") this.click({ target: this.el.querySelector('[data-act="join"]') });
@@ -408,7 +409,7 @@
         else if (isHost && !cfg.lobbyStart) act = `<button class="mp-primary mp-wide" data-act="pick">${t("pick")}</button>`;
         else if (isHost) act = `<button class="mp-primary mp-wide" data-act="start" ${enough ? "" : "disabled"}>${t("start")}</button>${enough ? "" : `<p class="mp-hint">${tooMany ? t("tooMany", { n: cfg.gameMax }) : t("needMore")}</p>`}`;
         else act = `<p class="mp-hint">${t("waitHost")}</p>`;
-        h = `${head}</div>${codeBlock(R.code)}${linkBtn}
+        h = `${head}</div><div class="mp-coderow">${codeBlock(R.code)}<button class="mp-qr-toggle" data-act="qr" aria-label="${t("qrShow")}" title="${t("qrShow")}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v0M17 17v4h4"/></svg></button></div>${linkBtn}
           ${R.game ? `<div class="mp-game"><span>${t("game")}</span><b>${esc(gameTitle(R.game))}</b></div>` : ""}
           <div class="mp-plh"><span>${t("players")}</span><b>${S.players.length}/${R.max}</b></div><ul class="mp-pl">${list}</ul>
           <div class="mp-act">${act}${leaveBtn}</div>`;
@@ -423,12 +424,14 @@
       const show = this.open && !!R && R.status === "lobby";
       this.qrEl.classList.toggle("show", show);
       this.el.classList.toggle("mp-with-qr", show);
+      this.qrEl.classList.toggle("mp-qr-open", this.qrOpen);      // phones: the board shows only when opened
+      this.el.classList.toggle("mp-qr-open", this.qrOpen);
       if (!show) return;
       const code = R.code, url = roomUrl(code);
       if (this.qrEl.dataset.url === url && this.qrEl.querySelector(".mp-qrimg")) return;
       if (!window.qrcode) { ensureQR().then(() => { if (R && R.code === code) this.renderQR(); }); return; }
       this.qrEl.dataset.url = url;
-      this.qrEl.innerHTML = `<h4>${t("qrTitle")}</h4><div class="mp-qrimg">${qrSvg(url)}</div><div class="mp-qc">${esc(code)}</div><p>${t("qrHint")}</p>`;
+      this.qrEl.innerHTML = `<button class="mp-qr-close" data-act="qrclose" aria-label="${t("close")}">✕</button><h4>${t("qrTitle")}</h4><div class="mp-qrimg">${qrSvg(url)}</div><div class="mp-qc">${esc(code)}</div><p>${t("qrHint")}</p>`;
     },
 
     click(e) {
@@ -438,6 +441,7 @@
       const val = (id) => (this.el.querySelector(id) || {}).value;
       switch (b.dataset.act) {
         case "close": this.hide(); break;
+        case "qr": this.qrOpen = !this.qrOpen; this.render(); break;   // phones: the QR board sits behind this button
         case "host": host({ name: val("#mp-name") }).catch(() => {}); break;
         case "join": join(val("#mp-code"), { name: val("#mp-name") }).catch(() => {}); break;
         case "start": start(cfg.startOptions ? cfg.startOptions() : null); break;

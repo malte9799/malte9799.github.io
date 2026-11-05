@@ -1,0 +1,173 @@
+/* ---- Blueprint: white linework on cyanotype blue, dimension lines, title block ---- */
+html[data-theme="blueprint"] {
+  --bg: #0e3e8c;
+  --board: #1048a0;
+  --panel: #1a56b4;
+  --panel-2: #2765c6;
+  --panel-edge: rgba(236, 246, 255, 0.7);
+  --edge-hover: #ffe278;
+  --grid-line: rgba(236, 246, 255, 0.22);
+  --hairline: rgba(236, 246, 255, 0.55);
+  --ink: #ecf6ff;
+  --muted: #a9cdf5;
+  --dim: #6c9ede;
+  --sun: #ffe278;
+  --mint: #8cffdc;
+  --rose: #ff96aa;
+  --sky: #a0d6ff;
+  --lilac: #ccc0ff;
+  --accent: #ffe278;
+  --toggle: #ffe278;
+  --toggle-fg: #ffe278;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --font: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: var(--font);
+  --ui-tracking: 0.02em;
+  --title-size: 24px;
+  --title-weight: 500;
+  --title-tracking: 0.12em;
+  --title-transform: uppercase;
+  --hero-fill: none;
+  --hero-size: clamp(52px, 11vw, 112px);
+
+  --r-sm: 0;
+  --r-md: 0;
+  --r-lg: 0;
+  --r-xl: 0;
+  --border-w: 1px;
+
+  --page-bg: var(--bg);
+  --wrap-shadow: none;
+  --btn-shadow: none;
+  --btn-shadow-press: none;
+  --btn-press: translateY(1px);
+  --primary-bg: #ffe278;
+  --primary-hover: #fff0b0;
+  --primary-fg: #0a2f70;
+  --primary-border: #ffe278;
+  --primary-shadow: none;
+  --card-bg: rgba(16, 72, 160, 0.35);
+  --card-shadow: none;
+  --card-hover-shadow: 0 0 0 1px #ffe278;
+  --card-hover-lift: none;
+  --modal-bg: #0f4296;
+  --modal-shadow: 0 0 0 5px #0e3e8c, 0 0 0 6px rgba(236, 246, 255, 0.6), 0 30px 60px -10px rgba(0, 10, 40, 0.6);
+  --backdrop: rgba(6, 28, 70, 0.8);
+  --bar-bg: rgba(14, 62, 140, 0.94);
+  --chip-bg: rgba(14, 62, 140, 0.9);
+  color-scheme: dark;
+}
+
+html[data-theme="blueprint"] body {
+  background:
+    linear-gradient(rgba(236, 246, 255, 0.22) 1px, transparent 1px) -1px -1px / 100px 100px,
+    linear-gradient(90deg, rgba(236, 246, 255, 0.22) 1px, transparent 1px) -1px -1px / 100px 100px,
+    linear-gradient(rgba(236, 246, 255, 0.08) 1px, transparent 1px) -1px -1px / 20px 20px,
+    linear-gradient(90deg, rgba(236, 246, 255, 0.08) 1px, transparent 1px) -1px -1px / 20px 20px,
+    radial-gradient(ellipse at 50% 30%, #1556b8 0%, #0e3e8c 70%);
+  background-attachment: fixed;
+}
+html[data-theme="blueprint"] #home, html[data-theme="blueprint"] #app { position: relative; z-index: 1; }
+html[data-theme="blueprint"] ::selection { background: #ffe278; color: #0a2f70; }
+
+/* drawing sheet frame with zone ticks (injected) */
+.bp-frame { position: fixed; inset: 10px; z-index: 2; pointer-events: none; border: 2px solid rgba(236, 246, 255, 0.85); }
+.bp-frame::before { content: ""; position: absolute; inset: 5px; border: 1px solid rgba(236, 246, 255, 0.45); }
+.bp-frame span { position: absolute; font: 500 10px/1 "IBM Plex Mono", monospace; color: rgba(236, 246, 255, 0.8); letter-spacing: 0.1em; }
+.bp-frame .zt { top: 14px; transform: translateX(-50%); }
+.bp-frame .zl { left: 14px; transform: translateY(-50%); }
+.bp-frame i { position: absolute; background: rgba(236, 246, 255, 0.7); }
+.bp-frame .tt { top: 0; width: 1px; height: 7px; }
+.bp-frame .tl { left: 0; height: 1px; width: 7px; }
+
+/* hero */
+html[data-theme="blueprint"] #home .hero { text-align: left; margin-bottom: 50px; position: relative; }
+html[data-theme="blueprint"] #home h1 {
+  background: none; color: var(--ink); -webkit-background-clip: border-box; background-clip: border-box;
+  font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; line-height: 1; margin: 6px 0 10px;
+  -webkit-text-stroke: 0; text-shadow: 0 0 0 transparent;
+}
+.bp-dim { display: flex; align-items: center; gap: 12px; font: 500 12px/1 var(--font); letter-spacing: 0.22em; text-transform: uppercase; color: #ffe278; margin: 22px 0 4px; }
+.bp-dim i { flex: 1; height: 1px; background: #ffe278; position: relative; }
+.bp-dim i::before, .bp-dim i::after { content: ""; position: absolute; top: -4px; border: 4px solid transparent; }
+.bp-dim i:first-child::before { left: 0; border-right: 9px solid #ffe278; border-left: 0; }
+.bp-dim i:last-child::after { right: 0; border-left: 9px solid #ffe278; border-right: 0; }
+.bp-dim i:first-child { box-shadow: -1px 0 0 0 #ffe278; }
+.bp-dim i::marker { content: ""; }
+html[data-theme="blueprint"] #home .hero::after { content: "NOTE 1. ALL UNITS IN FUN. DO NOT SCALE DRAWING."; display: block; margin-top: 10px; font-size: 11px; letter-spacing: 0.18em; color: #a9cdf5; }
+html[data-theme="blueprint"] #home .subtitle { font-size: 16px; color: #a9cdf5; letter-spacing: 0.04em; }
+html[data-theme="blueprint"] #home .subtitle::before { content: "// "; color: #6c9ede; }
+html[data-theme="blueprint"] #home .site-link, html[data-theme="blueprint"] .back-link { color: #a9cdf5; text-transform: uppercase; letter-spacing: 0.14em; font-size: 12px; }
+html[data-theme="blueprint"] #home .site-link:hover, html[data-theme="blueprint"] .back-link:hover { color: #ffe278; }
+html[data-theme="blueprint"] #home { padding-top: 56px; }
+
+/* cards = numbered figures */
+html[data-theme="blueprint"] #home .grid { gap: 34px 28px; counter-reset: bp; }
+html[data-theme="blueprint"] #home .card {
+  counter-increment: bp; position: relative; overflow: visible; border: 1px solid rgba(236, 246, 255, 0.6); background: rgba(14, 62, 140, 0.55);
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
+}
+html[data-theme="blueprint"] #home .card::before, html[data-theme="blueprint"] #home .card::after {
+  /* crosshair registration marks on opposite corners */
+  content: ""; position: absolute; width: 17px; height: 17px; pointer-events: none; z-index: 3;
+  background: linear-gradient(#ecf6ff, #ecf6ff) 50% 0 / 1px 100% no-repeat, linear-gradient(#ecf6ff, #ecf6ff) 0 50% / 100% 1px no-repeat;
+}
+html[data-theme="blueprint"] #home .card::before { left: -9px; top: -9px; }
+html[data-theme="blueprint"] #home .card::after { right: -9px; bottom: -9px; }
+html[data-theme="blueprint"] #home .card:hover { border-color: #ffe278; background: rgba(21, 86, 184, 0.7); transform: none; }
+html[data-theme="blueprint"] #home .card .preview { margin: 14px 14px 0; border: 1px solid rgba(236, 246, 255, 0.55); background: var(--board); width: auto; }
+html[data-theme="blueprint"] #home .card .preview::before { content: "FIG. " counter(bp, decimal-leading-zero); position: absolute; left: 0; top: 0; z-index: 3; padding: 4px 8px; background: #0e3e8c; border-right: 1px solid rgba(236, 246, 255, 0.55); border-bottom: 1px solid rgba(236, 246, 255, 0.55); font: 500 11px/1 var(--font); letter-spacing: 0.16em; color: #ffe278; }
+html[data-theme="blueprint"] #home .card .preview::after {
+  /* construction lines appear on hover */
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity 0.25s;
+  background: repeating-linear-gradient(90deg, rgba(255, 226, 120, 0.9) 0 8px, transparent 8px 14px) 0 50% / 100% 1px no-repeat, repeating-linear-gradient(rgba(255, 226, 120, 0.9) 0 8px, transparent 8px 14px) 50% 0 / 1px 100% no-repeat;
+}
+html[data-theme="blueprint"] #home .card:hover .preview::after { opacity: 1; }
+html[data-theme="blueprint"] #home .card:hover canvas { transform: none; }
+html[data-theme="blueprint"] #home .card-text { border: 0; padding: 14px 54px 16px 14px; position: relative; }
+html[data-theme="blueprint"] #home .card-text::after { /* callout bubble */
+  content: counter(bp); position: absolute; right: 14px; top: 50%; margin-top: -15px; width: 30px; height: 30px; border: 1px solid #ecf6ff; border-radius: 50%; display: grid; place-items: center; font: 500 12px/1 var(--font); color: #ecf6ff;
+}
+html[data-theme="blueprint"] #home .card:hover .card-text::after { border-color: #ffe278; color: #ffe278; }
+html[data-theme="blueprint"] #home .card-title { font-size: 16px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+html[data-theme="blueprint"] #home .card-desc { font-size: 12.5px; color: #a9cdf5; margin-top: 4px; }
+html[data-theme="blueprint"] #home .card-desc::before { content: "REF · "; color: #6c9ede; }
+html[data-theme="blueprint"] #home .star-btn { border-radius: 0; top: 14px; right: 14px; background: #0e3e8c; border-color: rgba(236, 246, 255, 0.55); width: 30px; height: 30px; }
+html[data-theme="blueprint"] #home .star-btn.starred { color: #ffe278; border-color: #ffe278; }
+html[data-theme="blueprint"] #home .star-btn.starred .star-icon { fill: #ffe278; }
+
+/* title block (injected) */
+.bp-tb { display: grid; grid-template-columns: 1.6fr 1fr 1fr; width: min(520px, 100%); margin: 70px 0 0 auto; border: 1px solid rgba(236, 246, 255, 0.8); background: rgba(14, 62, 140, 0.7); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+.bp-tb div { padding: 7px 10px 8px; border-right: 1px solid rgba(236, 246, 255, 0.5); border-bottom: 1px solid rgba(236, 246, 255, 0.5); color: #ecf6ff; }
+.bp-tb div:nth-child(3n) { border-right: 0; }
+.bp-tb div:nth-last-child(-n+3) { border-bottom: 0; }
+.bp-tb small { display: block; font-size: 9px; color: #6c9ede; letter-spacing: 0.2em; margin-bottom: 3px; }
+.bp-tb .big { font-size: 15px; font-weight: 600; color: #ffe278; }
+#app .bp-tb { margin-top: 36px; }
+
+/* game page */
+html[data-theme="blueprint"] header { border-bottom: 1px solid rgba(236, 246, 255, 0.55); padding-bottom: 8px; }
+html[data-theme="blueprint"] #app h1::before { content: "PLATE · "; color: #ffe278; font-size: 0.55em; vertical-align: 0.2em; letter-spacing: 0.2em; }
+html[data-theme="blueprint"] .tag { font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; color: #a9cdf5; }
+html[data-theme="blueprint"] #canvas-wrap:not(.fs) { border: 1px solid rgba(236, 246, 255, 0.8); outline: 1px solid rgba(236, 246, 255, 0.4); outline-offset: 6px; margin: 6px; }
+html[data-theme="blueprint"] .status { font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; }
+html[data-theme="blueprint"] .status::before { content: "STATUS ─"; color: #6c9ede; letter-spacing: 0.1em; }
+html[data-theme="blueprint"] .status .dot { border-radius: 0; transform: rotate(45deg); }
+html[data-theme="blueprint"] button, html[data-theme="blueprint"] .preset-row select { background: transparent; text-transform: uppercase; letter-spacing: 0.12em; font-size: 12.5px; font-weight: 500; }
+html[data-theme="blueprint"] button:hover { background: #ecf6ff; color: #0a2f70; border-color: #ecf6ff; }
+html[data-theme="blueprint"] button.primary:hover { background: #fff0b0; }
+html[data-theme="blueprint"] button.active, html[data-theme="blueprint"] button.hint-confirm { background: rgba(255, 226, 120, 0.15); border-color: #ffe278; color: #ffe278; }
+html[data-theme="blueprint"] button.active:hover, html[data-theme="blueprint"] button.hint-confirm:hover { background: #ffe278; color: #0a2f70; }
+html[data-theme="blueprint"] .controls { background: rgba(14, 62, 140, 0.5); border-style: dashed; }
+html[data-theme="blueprint"] .info-modal { border-color: rgba(236, 246, 255, 0.8); }
+html[data-theme="blueprint"] .info-title::before { content: "DETAIL A · "; color: #ffe278; font-size: 0.6em; }
+html[data-theme="blueprint"] .theme-menu { background: #0f4296; }
+html[data-theme="blueprint"] .theme-opt:hover { background: #ecf6ff; color: #0a2f70; }
+html[data-theme="blueprint"] .theme-opt:hover .theme-sub { color: #0a2f70; }
+html[data-theme="blueprint"] .preset-row select option { background: #0f4296; }
+@media (max-width: 640px) { .bp-tb { grid-template-columns: 1fr 1fr; } .bp-tb div:nth-child(3n) { border-right: 1px solid rgba(236, 246, 255, 0.5); } .bp-tb div:nth-child(2n) { border-right: 0; } .bp-frame .zt:nth-of-type(even) { display: none; } }
+
+/* primary button keeps its own colours over the design's generic button look */
+html[data-theme="blueprint"] button.primary { background: var(--primary-bg); color: var(--primary-fg); border-color: var(--primary-border); }
+html[data-theme="blueprint"] button.primary:hover { background: var(--primary-hover); color: var(--primary-fg); border-color: var(--primary-border); }

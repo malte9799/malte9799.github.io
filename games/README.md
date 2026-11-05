@@ -173,10 +173,51 @@ function drawMyGame(p, w, h) {
 | `shuffleArray(arr, rnd?)` | Fisher–Yates; pass a seeded rnd for reproducible boards |
 | `easeInOutQuad(t)` | the house easing for slides/moves |
 
+## Art-directed designs
+
+Fifteen designs go beyond a recolour — each has its own layout, motion and
+decoration on the home page *and* on the game pages. They live in `designs/`:
+
+| id | look |
+|---|---|
+| `liquid` | gooey metaball blobs, melting card outlines, rippling title |
+| `neon` | tube-light signs, flickering letters, synthwave floor, canvas glow |
+| `y2k` | chrome title, glossy gel buttons, every card a blue "window" |
+| `kinetic` | variable-font letters that follow the pointer, scroll-driven marquees, list rows |
+| `cutout` | layered paper scenery, cut-out letters, taped cards |
+| `holo` | foil cards with pointer-tracked rainbow sheen and 3D tilt |
+| `ascii` | terminal + figlet banner; card previews are re-rendered as text, board has a pixels/ASCII toggle |
+| `comic` | halftone, panels, speech bubble, POW! bursts, click sound effects |
+| `flap` | departure board — real two-half flip tiles, live clock |
+| `sketch` | marker on graph paper, wobbly SVG-filtered outlines, drawn-on doodles |
+| `blueprint` | cyanotype sheet frame, FIG. numbers, dimension line, title block |
+| `pixel` | PICO-8 palette, sprites, previews quantised + dithered to 150×90 |
+| `bauhaus` | primary colours, circle/square/triangle, asymmetric hero |
+| `deco` | black & gold, sunburst, stepped ornaments, corner brackets |
+| `neobrutal` | flat colour blocks, stickers, hard shadows, ticker |
+
+Per design: an entry in `THEMES` (themes.js, with `assets: true`, and
+`script: true` if it has a script), `designs/<id>.css` (the usual
+`html[data-theme=<id>]` variable block + extra rules), and optionally
+`designs/<id>.js` which registers `DESIGN_FX[id] = { enter(), card(el, game, i) }`:
+
+- `enter()` runs once the page content exists (home grid built / game shell
+  built) and may return a cleanup function — it **must** undo everything it
+  added, because switching design runs it.
+- `card(el, game, i)` runs for every home card right after it is built; cards are
+  rebuilt on every design switch, so no cleanup is needed there.
+- `previewCanvas(el, cb)` waits for a card's p5 preview to exist (ASCII/pixel use it).
+- Canvas palettes are generated with `_derive({...})` from ~10 colours; pass
+  `over: { … }` to override single `PAL` keys. `fx.glow: n` makes bright
+  shapes cast an `n`px glow (Neon).
+- The stylesheet must style `button.primary` itself if it restyles `button`
+  (the generic rule would otherwise beat `--primary-bg`).
+
 ## Conventions
 
 - **Designs.** The player picks a design (Midnight, Classic, Studio, Paper,
-  Brutal, Pop) with the "Design" button; mechanics
+  Brutal, Pop, plus the 15 art-directed ones below) with the "Design" button
+  (or links straight to one with `index.html?design=<id>`); mechanics
   never change, only looks. So never hardcode colours in canvas code —
   spread `PAL`, e.g. `fill(...PAL.sun, 80)` or `p.stroke(...PAL.line)`.
   PAL is updated in place on a switch, so caching `const C = PAL.mint` is

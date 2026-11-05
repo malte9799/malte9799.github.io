@@ -1,0 +1,170 @@
+/* ---- Neo-brutalism: flat colour blocks, 4px black outlines, hard shadows, stickers, a ticker ---- */
+html[data-theme="neobrutal"] {
+  --bg: #c4a4ff;
+  --board: #ffffff;
+  --panel: #ffffff;
+  --panel-2: #ffde59;
+  --panel-edge: #000000;
+  --edge-hover: #000000;
+  --grid-line: #000000;
+  --hairline: #000000;
+  --ink: #000000;
+  --muted: #2b2b2b;
+  --dim: #8a8a8a;
+  --sun: #ffde59;
+  --mint: #78e88c;
+  --rose: #ff5c8d;
+  --sky: #4ba0ff;
+  --lilac: #a06eff;
+  --accent: #ff5c8d;
+  --toggle: #ff5c8d;
+  --toggle-fg: #000;
+
+  --nb-yel: #ffde59;
+  --nb-pink: #ff5c8d;
+  --nb-lime: #b9ff66;
+  --nb-cyan: #5ce1e6;
+  --nb-org: #ff9650;
+
+  --ease: cubic-bezier(0.34, 1.6, 0.5, 1);
+  --font: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Archivo", sans-serif;
+  --ui-tracking: 0;
+  --title-size: 34px;
+  --title-weight: 900;
+  --title-tracking: -0.03em;
+  --title-transform: uppercase;
+  --hero-fill: none;
+  --hero-size: clamp(64px, 15vw, 150px);
+
+  --r-sm: 999px;
+  --r-md: 14px;
+  --r-lg: 14px;
+  --r-xl: 16px;
+  --border-w: 4px;
+
+  --page-bg: var(--bg);
+  --wrap-shadow: 10px 10px 0 #000;
+  --btn-shadow: 4px 4px 0 #000;
+  --btn-shadow-press: 0 0 0 #000;
+  --btn-press: translate(4px, 4px);
+  --primary-bg: #78e88c;
+  --primary-hover: #94f2a4;
+  --primary-fg: #000;
+  --primary-border: #000;
+  --primary-shadow: 4px 4px 0 #000;
+  --card-bg: #ffffff;
+  --card-shadow: 8px 8px 0 #000;
+  --card-hover-shadow: 14px 14px 0 #000;
+  --card-hover-lift: translate(-6px, -6px) rotate(-0.6deg);
+  --modal-bg: #ffffff;
+  --modal-shadow: 12px 12px 0 #000;
+  --backdrop: rgba(196, 164, 255, 0.78);
+  --bar-bg: #c4a4ff;
+  --chip-bg: #ffffff;
+  color-scheme: light;
+}
+html[data-theme="neobrutal"] body {
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.28) 1.6px, transparent 1.9px) 0 0 / 24px 24px, #c4a4ff;
+  background-attachment: fixed;
+  overflow-x: clip;
+}
+html[data-theme="neobrutal"] ::selection { background: #000; color: #b9ff66; }
+
+/* ticker */
+.nb-marq { position: relative; z-index: 3; margin: 0 -2vw; padding: 9px 0; background: #000; color: #b9ff66; border-block: 4px solid #000; rotate: -1.2deg; overflow: hidden; white-space: nowrap; box-shadow: 0 6px 0 #ff5c8d; }
+.nb-marq div { display: inline-block; animation: nb-scroll 26s linear infinite; font: 900 22px/1 "Archivo", sans-serif; letter-spacing: 0.04em; text-transform: uppercase; }
+.nb-marq span { padding: 0 0.6em; }
+.nb-marq span:nth-child(3n+2) { color: #ffde59; }
+.nb-marq span:nth-child(3n) { color: #fff; }
+@keyframes nb-scroll { to { transform: translateX(-50%); } }
+.nb-marq:hover div { animation-play-state: paused; }
+
+/* hero */
+html[data-theme="neobrutal"] #home { padding-top: 56px; }
+html[data-theme="neobrutal"] #home .hero { position: relative; margin-bottom: 64px; }
+html[data-theme="neobrutal"] #home h1 {
+  background: none; -webkit-background-clip: border-box; background-clip: border-box;
+  color: #fff; -webkit-text-stroke: 5px #000; paint-order: stroke fill;
+  text-shadow: 8px 8px 0 #000, 14px 14px 0 #ff5c8d; text-transform: uppercase; font-weight: 900; letter-spacing: -0.04em; line-height: 0.92;
+  margin: 8px 0 28px; display: inline-block; transition: transform 0.3s var(--ease);
+}
+html[data-theme="neobrutal"] #home h1:hover { transform: rotate(-2deg) scale(1.03); }
+html[data-theme="neobrutal"] #home .subtitle {
+  display: inline-block; font: 700 15px/1.3 "Space Mono", ui-monospace, monospace; text-transform: uppercase; letter-spacing: 0.04em;
+  background: #ffde59; color: #000; border: 4px solid #000; padding: 8px 14px; box-shadow: 5px 5px 0 #000; rotate: 1.2deg; border-radius: 10px;
+}
+html[data-theme="neobrutal"] #home .site-link { display: flex; width: fit-content; margin: 0 auto 18px; }
+html[data-theme="neobrutal"] #home .site-link, html[data-theme="neobrutal"] .back-link {
+  background: #fff; color: #000; border: 4px solid #000; border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 14px; box-shadow: 4px 4px 0 #000; text-transform: uppercase; transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+}
+html[data-theme="neobrutal"] .back-link { margin: 0; }
+html[data-theme="neobrutal"] #home .site-link:hover, html[data-theme="neobrutal"] .back-link:hover { background: #b9ff66; transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000; color: #000; }
+html[data-theme="neobrutal"] #home .hero::before { content: ""; position: absolute; left: 3%; top: 36%; width: 70px; height: 70px; border-radius: 50%; background: #5ce1e6; border: 4px solid #000; box-shadow: 5px 5px 0 #000; animation: nb-float 5s ease-in-out infinite; }
+html[data-theme="neobrutal"] #home .hero::after { content: ""; position: absolute; right: 4%; bottom: 8%; width: 58px; height: 58px; background: #b9ff66; border: 4px solid #000; box-shadow: 5px 5px 0 #000; rotate: 14deg; animation: nb-float 6s ease-in-out -2s infinite; }
+@keyframes nb-float { 50% { translate: 0 -12px; rotate: 8deg; } }
+.nb-badge { position: absolute; right: 2%; top: -6px; width: 116px; height: 116px; z-index: 3; display: grid; place-items: center; text-align: center; rotate: 12deg; font: 900 15px/1 "Archivo", sans-serif; text-transform: uppercase; animation: nb-spin 14s linear infinite; }
+.nb-badge::before { content: ""; position: absolute; inset: -5px; background: #000; clip-path: polygon(50% 0, 61% 14%, 79% 9%, 82% 28%, 100% 35%, 90% 50%, 100% 65%, 82% 72%, 79% 91%, 61% 86%, 50% 100%, 39% 86%, 21% 91%, 18% 72%, 0 65%, 10% 50%, 0 35%, 18% 28%, 21% 9%, 39% 14%); }
+.nb-badge::after { content: ""; position: absolute; inset: 0; background: #ffde59; clip-path: polygon(50% 0, 61% 14%, 79% 9%, 82% 28%, 100% 35%, 90% 50%, 100% 65%, 82% 72%, 79% 91%, 61% 86%, 50% 100%, 39% 86%, 21% 91%, 18% 72%, 0 65%, 10% 50%, 0 35%, 18% 28%, 21% 9%, 39% 14%); z-index: 0; }
+.nb-badge b { position: relative; z-index: 1; font-size: 34px; display: block; line-height: 0.9; }
+.nb-badge span { position: relative; z-index: 1; display: block; rotate: 0deg; animation: nb-spin-r 14s linear infinite; }
+@keyframes nb-spin { to { rotate: 372deg; } }
+@keyframes nb-spin-r { to { rotate: -360deg; } }
+@media (max-width: 700px) { .nb-badge { width: 84px; height: 84px; font-size: 11px; top: -34px; } .nb-badge b { font-size: 24px; } html[data-theme="neobrutal"] #home .hero::before { display: none; } }
+
+/* cards */
+html[data-theme="neobrutal"] #home .grid { gap: 40px 34px; }
+html[data-theme="neobrutal"] #home .card { overflow: visible; border-radius: 16px; transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease); --tb: #ffde59; --tg: #ff5c8d; }
+html[data-theme="neobrutal"] #home .card:nth-child(6n+1) { --tb: #ffde59; --tg: #ff5c8d; }
+html[data-theme="neobrutal"] #home .card:nth-child(6n+2) { --tb: #ff9ec8; --tg: #b9ff66; }
+html[data-theme="neobrutal"] #home .card:nth-child(6n+3) { --tb: #b9ff66; --tg: #ffde59; }
+html[data-theme="neobrutal"] #home .card:nth-child(6n+4) { --tb: #5ce1e6; --tg: #ff9650; }
+html[data-theme="neobrutal"] #home .card:nth-child(6n+5) { --tb: #ff9650; --tg: #5ce1e6; }
+html[data-theme="neobrutal"] #home .card:nth-child(6n+6) { --tb: #d2b8ff; --tg: #b9ff66; }
+html[data-theme="neobrutal"] #home .card .preview { border-radius: 12px 12px 0 0; border-bottom: 4px solid #000; background: #fff; }
+html[data-theme="neobrutal"] #home .card-text { border: 0; background: var(--tb); border-radius: 0 0 12px 12px; padding: 14px 16px 16px; }
+html[data-theme="neobrutal"] #home .card-title { font-size: 24px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.03em; line-height: 1; color: #000; }
+html[data-theme="neobrutal"] #home .card-desc { font: 700 12.5px/1.3 "Space Mono", ui-monospace, monospace; text-transform: uppercase; color: #000; margin-top: 7px; }
+html[data-theme="neobrutal"] #home .card::before { /* sticker */
+  content: attr(data-tag); position: absolute; z-index: 5; left: -14px; top: 14px; padding: 5px 10px 4px; background: var(--tg); color: #000; border: 3px solid #000; border-radius: 8px; box-shadow: 3px 3px 0 #000;
+  font: 700 12px/1 "Space Mono", monospace; text-transform: uppercase; rotate: -7deg; transition: rotate 0.25s var(--ease), translate 0.25s var(--ease);
+}
+html[data-theme="neobrutal"] #home .card:hover::before { rotate: 4deg; translate: 0 -4px; }
+html[data-theme="neobrutal"] #home .card:hover canvas { transform: scale(1.06) rotate(1deg); }
+html[data-theme="neobrutal"] #home .star-btn { border: 3px solid #000; background: #fff; box-shadow: 3px 3px 0 #000; width: 38px; height: 38px; opacity: 1; transform: none; color: #000; right: 12px; top: 12px; }
+html[data-theme="neobrutal"] #home .star-btn:hover { background: #ffde59; transform: translate(-1px, -1px) !important; box-shadow: 4px 4px 0 #000; }
+html[data-theme="neobrutal"] #home .star-btn.starred { background: #ffde59; }
+html[data-theme="neobrutal"] #home .star-btn.starred .star-icon { fill: #ff5c8d; stroke: #000; }
+html[data-theme="neobrutal"] #home .card.reveal { --reveal-from: translateY(40px) rotate(-3deg); }
+
+/* game page */
+html[data-theme="neobrutal"] header { align-items: center; margin-bottom: 22px; }
+html[data-theme="neobrutal"] #app h1 { color: #fff; -webkit-text-stroke: 4px #000; paint-order: stroke fill; text-shadow: 5px 5px 0 #000, 9px 9px 0 #ff5c8d; font-size: 42px; line-height: 1; }
+html[data-theme="neobrutal"] .tag { background: #ffde59; border: 3px solid #000; border-radius: 8px; padding: 4px 10px; font: 700 12px/1.2 "Space Mono", monospace; text-transform: uppercase; box-shadow: 3px 3px 0 #000; rotate: 2deg; color: #000; }
+html[data-theme="neobrutal"] #canvas-wrap:not(.fs) { border-radius: 16px; }
+html[data-theme="neobrutal"] .status { background: #fff; border: 4px solid #000; border-radius: 999px; padding: 4px 16px; margin-left: 0; width: fit-content; font-weight: 800; color: #000; box-shadow: 4px 4px 0 #000; text-transform: uppercase; font-size: 13px; }
+html[data-theme="neobrutal"] .status .dot { border: 2px solid #000; width: 12px; height: 12px; }
+html[data-theme="neobrutal"] .status.solved { background: #b9ff66; color: #000; }
+html[data-theme="neobrutal"] .status.dead { background: #ff9ec8; color: #000; }
+html[data-theme="neobrutal"] .status.solved .dot, html[data-theme="neobrutal"] .status.dead .dot { box-shadow: none; background: #000; }
+html[data-theme="neobrutal"] button, html[data-theme="neobrutal"] .preset-row select { font-weight: 800; text-transform: uppercase; font-size: 14px; border-radius: 999px; }
+html[data-theme="neobrutal"] button { transition: transform 0.12s, box-shadow 0.12s, background 0.12s; }
+html[data-theme="neobrutal"] button:hover { background: #ffde59; transform: translate(-2px, -2px); box-shadow: 6px 6px 0 #000; }
+html[data-theme="neobrutal"] button:active { transform: var(--btn-press); box-shadow: var(--btn-shadow-press); }
+html[data-theme="neobrutal"] button.primary:hover { background: var(--primary-hover); }
+html[data-theme="neobrutal"] button.active, html[data-theme="neobrutal"] button.hint-confirm { background: #ff5c8d; color: #000; border-color: #000; }
+html[data-theme="neobrutal"] button.active:hover, html[data-theme="neobrutal"] button.hint-confirm:hover { background: #ff7da4; }
+html[data-theme="neobrutal"] .preset-row label, html[data-theme="neobrutal"] .hint-note { color: #000; font-weight: 700; font-family: "Space Mono", monospace; text-transform: uppercase; font-size: 12px; }
+html[data-theme="neobrutal"] .preset-row::after { border-color: #000; }
+html[data-theme="neobrutal"] .controls { border-radius: 16px; box-shadow: 6px 6px 0 #000; background: #fff; }
+html[data-theme="neobrutal"] .ctl label { color: #000; font-weight: 700; }
+html[data-theme="neobrutal"] .ctl + .ctl { border-top-width: 3px; }
+html[data-theme="neobrutal"] .info-title { font-size: 28px; }
+html[data-theme="neobrutal"] .info-text { color: #000; font-weight: 500; }
+html[data-theme="neobrutal"] .theme-opt:hover { background: #ffde59; }
+html[data-theme="neobrutal"] .theme-opt:hover .theme-sub { color: #000; }
+@media (prefers-reduced-motion: reduce) { .nb-marq div, .nb-badge, .nb-badge span, html[data-theme="neobrutal"] #home .hero::before, html[data-theme="neobrutal"] #home .hero::after { animation: none; } }
+
+/* cards in a row share one height: the coloured text panel fills the rest of the card */
+html[data-theme="neobrutal"] #home .card { display: flex; flex-direction: column; }
+html[data-theme="neobrutal"] #home .card-text { flex: 1; }
