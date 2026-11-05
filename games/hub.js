@@ -28,6 +28,7 @@ const READY_TIMEOUT = 10000;
 const startOpts = () => ({ run: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) });
 MP.configure({ gameParam: false, startOptions: startOpts });
 MP.mountDock();
+mountThemePicker($("hub"));                       // the design button, top right like on the other pages
 
 let run = null;          // the game that is running (or loading) right now; null in the lobby
 

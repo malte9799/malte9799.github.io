@@ -1,6 +1,7 @@
 /* Multiplayer hub shell + the example games. Theme variables only (themes.css). */
 #hub { max-width: 760px; margin: 0 auto; padding: 64px 18px 56px; }
-#hub > .back-link { position: fixed; top: 20px; right: 22px; z-index: 11; }
+#hub > .theme-picker { position: fixed; top: 14px; right: 16px; }
+#hub > .back-link { position: fixed; top: 24px; right: 150px; z-index: 11; }
 @media (min-width: 1100px) { #hub { padding-left: 18px; } }
 .hub-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .hub-tools { display: flex; gap: 8px; }
