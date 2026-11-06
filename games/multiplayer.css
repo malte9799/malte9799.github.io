@@ -166,3 +166,9 @@ button.mp-launch.mp-live::after { content: ""; width: 7px; height: 7px; margin-l
 @media (max-width: 899px), (max-aspect-ratio: 21/20) {
   #mp-prof:not(.mp-prof-open) { display: none; }
 }
+
+/* share and copy-link buttons side by side */
+#mp-ui .mp-linkrow { display: flex; gap: 8px; }
+#mp-ui .mp-linkrow > button { flex: 1 1 0; min-width: 0; width: auto; }
+#mp-ui .mp-linkrow > button { margin: 0; }
+#mp-ui .mp-linkrow > button { margin: 0 !important; transform: none; }
