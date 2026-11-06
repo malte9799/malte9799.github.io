@@ -27,6 +27,10 @@
 .hub-act button { flex: none; padding: 11px 22px; } .hub-act p, .hub-wait { margin: 0; font-size: 14px; color: var(--muted); }
 .hub-wait { margin-top: 16px; }
 .hub-stage { padding: 20px; border: var(--border-w) solid var(--hairline); border-radius: var(--r-xl); background: var(--card-bg); box-shadow: var(--card-shadow); }
+/* Mau-Mau sits directly on the page: no extra card box around the table */
+.hub-stage.hub-maumau { background: none; border: none; box-shadow: none; padding: 0; width: 100%; }
+/* the mode switch is hidden while a room/game is on — display:flex would override [hidden] */
+.hub-modes[hidden] { display: none; }
 .hub-loading { margin: 24px; text-align: center; color: var(--muted); }
 
 /* Tic Tac Toe */

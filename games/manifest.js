@@ -704,3 +704,100 @@ function drawMaexchen(p, w, h) {
   for (let k = 0; k < 2; k++) { p.fill(...CLR.red, 220); p.circle(w / 2 + 130 + k * 16, 58, 12); }
   p.fill(...PAL.sky, 220); p.circle(w / 2 + 130, 318, 12);
 }
+// Mau-Mau (hub only): the wooden parlour table — striped card backs fanned
+// along the edges, a slumping discard pile, sticker-style hand cards
+function drawMaumau(p, w, h) {
+  p.background(141, 63, 46);
+  p.noStroke();
+  // wooden planks
+  for (let i = 0; i < 8; i++) {
+    p.fill(120 + (i % 2) * 14, 50 + (i % 2) * 10, 34 + (i % 2) * 8, 200);
+    p.rect(0, i * 45, w, 45);
+    p.fill(60, 22, 12, 120); p.rect(0, i * 45, w, 2);
+  }
+  for (let k = 0; k < 200; k++) {                       // wood grain
+    const a = ((k * 197 + 31) % 97) / 97, b = ((k * 283 + 59) % 89) / 89;
+    p.fill(70, 26, 14, 30);
+    p.rect(a * w, b * h, 10 + (k % 5) * 6, 1.2);
+  }
+  p.fill(0, 0, 0, 50);
+  for (let i = 6; i >= 0; i--) { p.fill(40, 10, 4, 14); p.rect(14 - i, 10 - i, w - 28 + i * 2, h - 20 + i * 2, 20); }
+  p.textAlign(p.CENTER, p.CENTER);
+  const SUIT = { r: [217, 58, 43], y: [231, 156, 15], g: [47, 145, 71], b: [43, 111, 190], w: [42, 45, 52] };
+  const SYM = { 10: "⊘", 11: "⇄", 12: "+2", 14: "+4" };
+  const backCard = (x, y, s, rot) => {                  // striped back with MAU tag
+    p.push(); p.translate(x, y); p.rotate(rot);
+    const cw = s, ch = s / 0.66;
+    p.fill(0, 0, 0, 60); p.rect(-cw / 2 + 2, -ch / 2 + 4, cw, ch, 7);
+    for (let i = -5; i < 7; i++) {
+      const STRIPE = [[232, 77, 138], [245, 166, 35], [53, 182, 176], [123, 92, 214]][((i % 4) + 4) % 4];
+      p.fill(...STRIPE);
+      p.quad(-cw / 2 + i * cw / 4, -ch / 2, -cw / 2 + (i + 1) * cw / 4, -ch / 2, -cw / 2 + (i + 1) * cw / 4 - 6, ch / 2, -cw / 2 + i * cw / 4 - 6, ch / 2);
+    }
+    p.noFill(); p.stroke(255); p.strokeWeight(2.5); p.rect(-cw / 2, -ch / 2, cw, ch, 7); p.noStroke();
+    p.fill(38, 33, 42); p.rect(-cw * 0.32, -7, cw * 0.64, 14, 5);
+    p.fill(255, 217, 77); p.textStyle(p.BOLD); p.textSize(cw * 0.2); p.text("MAU", 0, 0.5);
+    p.pop();
+  };
+  const card = (x, y, s, suit, sym, rot, ring) => {     // sticker-style face
+    p.push(); p.translate(x, y); p.rotate(rot);
+    const cw = s, ch = s / 0.66;
+    p.fill(0, 0, 0, 55); p.rect(-cw / 2 + 2, -ch / 2 + 4, cw, ch, 7);
+    p.fill(...SUIT[suit]); p.rect(-cw / 2, -ch / 2, cw, ch, 7);
+    p.fill(255, 255, 255, 55); p.rect(-cw / 2, -ch / 2, cw, ch * 0.5, 7, 7, 12, 12);
+    p.textStyle(p.BOLD);
+    p.fill(253, 246, 232);
+    p.textSize(cw * 0.17); p.text(sym, -cw * 0.34, -ch * 0.4);
+    p.push(); p.rotate(p.PI); p.text(sym, -cw * 0.34, -ch * 0.4); p.pop();
+    p.push(); p.rotate(-0.05); p.textSize(cw * (sym.length > 1 ? 0.4 : 0.58));
+    p.fill(60, 20, 8, 90); p.text(sym, 1.5, cw * 0.04 + 1.5);
+    p.fill(253, 246, 232); p.text(sym, 0, cw * 0.04); p.pop();
+    p.noFill(); p.stroke(255); p.strokeWeight(2.5); p.rect(-cw / 2, -ch / 2, cw, ch, 7); p.noStroke();
+    if (ring) { p.stroke(255, 217, 77); p.strokeWeight(4); p.rect(-cw / 2 - 4, -ch / 2 - 4, cw + 8, ch + 8, 10); p.noStroke(); }
+    p.pop();
+  };
+  // opponent fans: top row + left edge, chips like name tags
+  const chip = (x, y, label, n) => {
+    p.fill(0, 0, 0, 50); p.rect(x - 52, y - 12, 104, 24, 12);
+    p.fill(253, 246, 232); p.rect(x - 54, y - 14, 104, 24, 12);
+    p.fill(91, 42, 22); p.textStyle(p.BOLD); p.textSize(12); p.text(label, x - 8, y - 2);
+    p.fill(253, 246, 232); p.textSize(11); p.fill(91, 42, 22);
+    p.fill(91, 42, 22); p.circle(x + 38, y - 2, 16);
+    p.fill(253, 246, 232); p.text(String(n), x + 38, y - 1.5);
+  };
+  for (let i = 0; i < 6; i++) backCard(178 + i * 44 + Math.sin(i * 2.1) * 2, 44 + Math.abs(2.5 - i) * 3, 40, (i - 2.5) * 0.075);
+  chip(298, 96, "MIA", 6);
+  p.push(); p.translate(38, 170); p.rotate(p.PI / 2);
+  for (let i = 0; i < 4; i++) backCard(i * 30 + i * 1.5, Math.abs(1.5 - i) * 3, 34, (i - 1.5) * 0.1);
+  p.pop();
+  chip(40, 96, "BEN", 4);
+  p.fill(238, 164, 28); p.circle(96, 84, 26);
+  p.fill(60, 42, 5); p.textStyle(p.BOLD); p.textSize(11); p.text("UNO!", 96, 84);
+  // direction + discard pile (red 5 slumping on ghosts)
+  p.stroke(255, 244, 226, 130); p.strokeWeight(3.5); p.strokeCap(p.ROUND); p.noFill();
+  p.arc(280, 172, 30, 30, -0.5, 3.4);
+  p.line(288, 154, 280, 161); p.line(280, 161, 289, 164);
+  p.noStroke();
+  p.push(); p.translate(352, 176); p.rotate(0.16); p.fill(46, 18, 9); p.rect(-24, -37, 48, 74, 7); p.pop();
+  p.push(); p.translate(350, 178); p.rotate(-0.12); p.fill(46, 18, 9); p.rect(-24, -37, 48, 74, 7); p.pop();
+  card(352, 178, 50, "r", "5", 0.03, false);
+  // deck with count
+  backCard(216, 172, 52, -0.04);
+  p.fill(253, 246, 232); p.circle(246, 210, 22); p.fill(91, 42, 22); p.textSize(11); p.text("34", 246, 210.5);
+  // my fanned hand, the yellow 4 raised
+  card(150, 296, 48, "g", "7", -0.14);
+  card(198, 302, 48, "b", "3", -0.07);
+  card(246, 306, 48, "y", "4", 0, true);
+  card(294, 306, 48, "r", "⇄", 0.07);
+  card(342, 302, 48, "g", "+2", 0.14);
+  card(392, 296, 48, "w", "", 0.2);
+  // my name tag
+  p.fill(245, 188, 68); p.circle(66, 306, 26); p.stroke(255); p.strokeWeight(2.5); p.noFill(); p.circle(66, 306, 26); p.noStroke();
+  p.fill(91, 42, 22); p.textStyle(p.BOLD); p.textSize(13); p.text("D", 66, 306);
+  p.fill(255, 233, 184); p.rect(84, 294, 96, 24, 12); p.stroke(255); p.strokeWeight(2); p.noFill(); p.rect(84, 294, 96, 24, 12); p.noStroke();
+  p.fill(91, 42, 22); p.textSize(12); p.text("DU", 108, 306); p.text("5", 166, 306);
+  // "play" buttons like the app
+  p.push(); p.translate(452, 240); p.rotate(-0.1);
+  p.fill(53, 182, 176); p.rect(-42, -14, 84, 28, 14); p.stroke(255); p.strokeWeight(2.5); p.noFill(); p.rect(-42, -14, 84, 28, 14); p.noStroke();
+  p.fill(255); p.textStyle(p.BOLD); p.textSize(13); p.text("MAU!", 0, 0.5); p.pop();
+}
