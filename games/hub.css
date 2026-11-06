@@ -1,10 +1,11 @@
 /* Multiplayer hub shell + the example games. Theme variables only (themes.css). */
 #hub { max-width: 1080px; min-height: 100vh; min-height: 100dvh; margin: 0 auto; padding: 64px 24px 20px; display: flex; flex-direction: column; }
 #hub > .theme-picker { position: fixed; top: 14px; right: 16px; }
-#hub > .back-link { position: fixed; top: 24px; right: 150px; z-index: 11; }
-#hub > * { min-width: 0; }
-@media (max-width: 640px) { #hub { padding: 64px 14px 16px; } }
+[hidden] { display: none !important; }
+
 .hub-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+.hub-bar.has-end { justify-content: flex-start; }
+@media (max-width: 640px) { #hub { padding: 64px 14px 16px; } }
 .hub-bar h1 { margin: 0; font: var(--title-weight) 30px/1.1 var(--font-display); letter-spacing: var(--title-tracking); text-transform: var(--title-transform); }
 .hub-modes { display: flex; gap: 8px; flex-wrap: wrap; }
 .hub-modes button { flex: none; padding: 11px 22px; font: var(--title-weight) 18px var(--font-display); letter-spacing: var(--title-tracking); text-transform: var(--title-transform); }
@@ -13,6 +14,7 @@
 #hub-top:not(:empty) { margin-bottom: 20px; }
 #hub-act { margin-top: 20px; }
 .hub-tools { display: flex; gap: 8px; }
+.hub-end { position: relative; z-index: 121; }
 .hub-tools button { flex: none; padding: 10px 16px; }
 .hub-tools button.mp-live::after { content: ""; width: 7px; height: 7px; margin-left: 8px; border-radius: 50%; background: var(--mint); display: inline-block; vertical-align: middle; }
 

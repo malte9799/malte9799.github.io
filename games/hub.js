@@ -138,8 +138,12 @@ function renderLobby() {
 
 function renderTools() {
   // "Zurück zur Lobby" and "Raum verlassen" live in the frame of the game itself (hub-kit.js)
-
   // a game is running but its page was closed: offer to bring it back
+  const s = MP.state;
+  let b = $("hub-end");
+  const need = !!s && s.isHost && s.status === "playing";
+  const header = $("#hub").querySelector("header.hub-bar");
+
   let show = $("hub-show");
   const hidden = !!run && !run.open;
   if (hidden && !show) {
@@ -147,9 +151,15 @@ function renderTools() {
     show.onclick = () => showStage(true);
     $("hub-tools").prepend(show);
   } else if (!hidden && show) show.remove();
-}
 
-// ---- "Wie funktioniert’s?" modal ----
+  if (need && !b) {
+    b = document.createElement("button"); b.id = "hub-end"; b.textContent = "Zurück zur Lobby";
+    b.onclick = () => MP.endGame();
+    $("hub-tools").prepend(b);
+  } else if (!need && b) b.remove();
+
+  header.classList.toggle("has-end", need);
+}// ---- "Wie funktioniert’s?" modal ----
 
 const HOW = [
   ["So geht’s", "Oben links auf „Mehrspieler“, Raum erstellen, den 5-stelligen Code (oder Link/QR-Code) teilen. Fertig."],
