@@ -166,3 +166,8 @@ button.mp-launch.mp-live::after { content: ""; width: 7px; height: 7px; margin-l
 @media (max-width: 899px), (max-aspect-ratio: 21/20) {
   #mp-prof:not(.mp-prof-open) { display: none; }
 }
+
+/* the close cross of the side panels is only needed on phones; on the desktop they stay open with the room */
+@media (min-width: 900px) and (min-aspect-ratio: 21/20) {
+  #mp-qr .mp-qr-close, #mp-prof .mp-qr-close { display: none; }
+}
