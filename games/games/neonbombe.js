@@ -356,7 +356,7 @@ function drawParticles() {
 // ---- p5 ----
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  if (!MP) startSolo();
+  if (!MP || !MP.connected) startSolo();
 }
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
@@ -599,5 +599,13 @@ function infoAnim(p, w, h, frame) {
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 // ---- start ----
-if (!MP) startSolo();
+if (!MP || !MP.connected) startSolo();
 netWire();
+
+// p5's global mode starts on window.load. If this script loads after that,
+// setup()/draw() may never have been called → no canvas, nothing renders.
+// Fallback: create the canvas and start the draw loop manually.
+if (typeof setup === "function" && typeof draw === "function" && !document.querySelector("canvas")) {
+  setup();
+  (function loop() { draw(); requestAnimationFrame(loop); })();
+}
