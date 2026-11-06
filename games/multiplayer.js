@@ -14,7 +14,6 @@
 //   Multiplayer.openUI() / closeUI() / mountButton(el)        the shared lobby window with QR code
 //
 // Full reference: games/README.md → "Multiplayer".
-
 (function () {
   "use strict";
 
@@ -586,8 +585,9 @@
         else act = `<p class="mp-hint">${t("waitHost")}</p>`;
         h = `${head}</div><div class="mp-coderow">${codeBlock(R.code)}<button class="mp-qr-toggle" data-act="qr" aria-label="${t("qrShow")}" title="${t("qrShow")}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v0M17 17v4h4"/></svg></button></div>${linkBtn}
           ${R.game ? `<div class="mp-game"><span>${t("game")}</span><b>${esc(gameTitle(R.game))}</b></div>` : ""}
-          <div class="mp-plh"><span>${t("players")}</span><b>${S.players.length}/${R.max}</b></div><ul class="mp-pl">${list}</ul>
           <div class="mp-me"><button type="button" class="mp-me-big" data-act="prof" aria-label="${t("profileT")}" style="${R.color ? "background:" + R.color : ""}">${R.avatar ? esc(R.avatar) : initial(R.name)}</button><small>${t("profileT")}</small></div>
+          <div class="mp-plh"><span>${t("players")}</span><b>${S.players.length}/${R.max}</b></div><ul class="mp-pl">${list}</ul>
+          
           <div class="mp-act">${act}${leaveBtn}</div>`;
       }
       box.innerHTML = h;

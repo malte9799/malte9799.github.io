@@ -158,3 +158,6 @@ button.mp-launch.mp-live::after { content: ""; width: 7px; height: 7px; margin-l
 @media (max-width: 899px), (max-aspect-ratio: 21/20) {
   #mp-prof { width: min(86vw, 340px); }
 }
+
+/* the own icon above the player list: big circle, big emoji (the theme buttons would shrink it) */
+#mp-ui .mp-me-big { width: 104px; height: 104px; font-size: 56px !important; line-height: 1; }
