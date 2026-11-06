@@ -123,6 +123,150 @@ const THEMES = [
   },
 ];
 
+// ---- the 15 art-directed designs ----
+// These ship their own stylesheet (designs/<id>.css) and, where the look needs
+// DOM tricks, a script (designs/<id>.js) — see "design assets" below. Their
+// canvas palettes are derived from a handful of colours so each stays readable.
+
+function _mix(a, b, t) { return a.map((v, i) => Math.round(v + (b[i] - v) * t)); }
+
+// s: { bg, board, ink, sun, mint, rose, sky, lilac, peach, aqua } as [r, g, b]
+// (+ optional overrides for any PAL key). Text colours are mixed from the
+// board, because that is what canvas text sits on.
+function _derive(s) {
+  const { board, ink } = s;
+  const lum = (c) => (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
+  const light = lum(board) > 0.55;
+  const hi = (c) => _mix(c, [255, 255, 255], 0.62);
+  const m = (a, b, t) => _mix(a, b, t);
+  const out = {
+    bg: s.bg, board, ink,
+    well: m(board, ink, light ? 0.06 : 0.05), panel: m(board, ink, light ? 0.13 : 0.13), panelHi: m(board, ink, light ? 0.23 : 0.24),
+    line: m(board, ink, light ? 0.24 : 0.2), lineHi: m(board, ink, 0.5),
+    muted: m(board, ink, 0.62), dim: m(board, ink, 0.36),
+    sun: s.sun, mint: s.mint, rose: s.rose, sky: s.sky, lilac: s.lilac, peach: s.peach, aqua: s.aqua,
+    sunHi: hi(s.sun), mintHi: hi(s.mint), skyHi: hi(s.sky), aquaHi: hi(s.aqua),
+    fillInk: ink, mine: m(board, ink, 0.55), mineHi: m(board, ink, 0.82),
+    onLight: light ? ink : board, onDark: light ? board : ink,
+    tiles: [m(board, ink, 0.1), m(board, ink, 0.2), s.sky, s.aqua, s.mint, m(s.mint, s.sun, 0.5), s.sun, s.peach, s.rose, m(s.rose, s.lilac, 0.5), s.lilac],
+    tilesNeg: [0.2, 0.34, 0.5, 0.68, 0.88].map((t) => m(board, s.rose, t)),
+    flood: [s.rose, s.sun, s.mint, s.sky, s.lilac, s.peach, s.aqua, m(s.rose, s.lilac, 0.5)],
+  };
+  // a non-light board with a light-ish tile needs dark text; games pick by tile luminance
+  return { ...out, ...(s.over || {}) };
+}
+
+THEMES.push(
+  {
+    id: "liquid", name: "Liquid morph", sub: "gooey blobs, melting shapes", assets: true, script: true,
+    font: "Bricolage Grotesque", fonts: ["Bricolage+Grotesque:opsz,wght@12..96,400..800"],
+    fx: { corners: 1.6 },
+    pal: _derive({ bg: [22, 10, 52], board: [30, 14, 70], ink: [250, 244, 255],
+      sun: [255, 214, 102], mint: [94, 240, 200], rose: [255, 88, 160], sky: [90, 170, 255], lilac: [186, 140, 255], peach: [255, 150, 100], aqua: [80, 230, 240] }),
+  },
+  {
+    id: "neon", name: "Neon glow", sub: "tube lights on black", assets: true, script: true,
+    font: "Rajdhani", fonts: ["Rajdhani:wght@500;600;700", "Tilt+Neon"],
+    fx: { corners: 0.6, glow: 9, text: 1.08 },
+    pal: _derive({ bg: [6, 4, 14], board: [9, 6, 22], ink: [236, 244, 255],
+      sun: [255, 240, 60], mint: [57, 255, 140], rose: [255, 40, 130], sky: [0, 200, 255], lilac: [190, 80, 255], peach: [255, 120, 40], aqua: [0, 255, 230] }),
+  },
+  {
+    id: "y2k", name: "Y2K chrome", sub: "liquid metal & glossy blue", assets: true, script: true,
+    font: "Exo 2", fonts: ["Exo+2:wght@400;600;700;800", "Audiowide"],
+    fx: { corners: 1.2 },
+    pal: _derive({ bg: [196, 214, 238], board: [240, 246, 255], ink: [14, 30, 84],
+      sun: [255, 190, 20], mint: [24, 200, 140], rose: [255, 70, 170], sky: [30, 130, 255], lilac: [140, 90, 255], peach: [255, 130, 70], aqua: [0, 200, 230] }),
+  },
+  {
+    id: "kinetic", name: "Kinetic type", sub: "moving letters, big type", assets: true, script: true,
+    font: "Anybody", fonts: ["Anybody:wdth,wght@50..150,100..900"],
+    fx: { corners: 0, text: 1.02 },
+    pal: _derive({ bg: [238, 236, 228], board: [250, 249, 244], ink: [14, 14, 14],
+      sun: [255, 184, 0], mint: [0, 168, 107], rose: [255, 59, 31], sky: [20, 90, 255], lilac: [120, 70, 255], peach: [255, 120, 50], aqua: [0, 170, 200] }),
+  },
+  {
+    id: "cutout", name: "Paper cutout", sub: "layered paper, tape & shadows", assets: true, script: true,
+    font: "Fredoka", fonts: ["Fredoka:wght@400;500;600;700", "Bagel+Fat+One"],
+    fx: { corners: 0.8, text: 1.04 },
+    pal: _derive({ bg: [31, 111, 115], board: [252, 246, 228], ink: [43, 45, 66],
+      sun: [244, 184, 48], mint: [58, 166, 138], rose: [226, 87, 76], sky: [60, 120, 190], lilac: [140, 100, 170], peach: [240, 138, 80], aqua: [70, 180, 190] }),
+  },
+  {
+    id: "holo", name: "Holographic", sub: "foil, rainbow sheen, tilt", assets: true, script: true,
+    font: "Sora", fonts: ["Sora:wght@300..800"],
+    fx: { corners: 1.1 },
+    pal: _derive({ bg: [10, 8, 22], board: [14, 12, 32], ink: [246, 242, 255],
+      sun: [255, 236, 160], mint: [150, 255, 214], rose: [255, 140, 200], sky: [140, 200, 255], lilac: [200, 160, 255], peach: [255, 190, 160], aqua: [150, 245, 255] }),
+  },
+  {
+    id: "ascii", name: "ASCII art", sub: "everything is a character", assets: true, script: true,
+    font: "JetBrains Mono", fonts: ["JetBrains+Mono:wght@400;500;700"],
+    fx: { corners: 0, text: 0.92 },
+    pal: _derive({ bg: [3, 9, 4], board: [4, 14, 6], ink: [172, 255, 190],
+      sun: [255, 214, 80], mint: [70, 255, 120], rose: [255, 90, 80], sky: [100, 220, 255], lilac: [200, 150, 255], peach: [255, 160, 70], aqua: [90, 255, 210],
+      over: { well: [10, 30, 15], panel: [26, 76, 40], panelHi: [42, 112, 62], line: [50, 130, 74], lineHi: [100, 210, 130], mine: [110, 200, 130], mineHi: [170, 240, 190] } }),
+  },
+  {
+    id: "comic", name: "Comic book", sub: "halftone, panels, POW!", assets: true, script: true,
+    font: "Comic Neue", fonts: ["Comic+Neue:wght@400;700", "Bangers"],
+    fx: { corners: 0.3, text: 1.08 },
+    pal: _derive({ bg: [255, 224, 70], board: [255, 253, 242], ink: [12, 12, 16],
+      sun: [255, 214, 0], mint: [0, 184, 120], rose: [237, 28, 36], sky: [0, 114, 206], lilac: [128, 70, 180], peach: [255, 127, 42], aqua: [0, 190, 220] }),
+  },
+  {
+    id: "flap", name: "Split-flap", sub: "departure board, clack clack", assets: true, script: true,
+    font: "Oswald", fonts: ["Oswald:wght@400;500;600;700", "Barlow+Condensed:wght@500;600;700"],
+    fx: { corners: 0.35, text: 1.02 },
+    pal: _derive({ bg: [26, 26, 28], board: [14, 14, 16], ink: [246, 238, 214],
+      sun: [255, 190, 40], mint: [120, 205, 125], rose: [226, 72, 60], sky: [96, 156, 216], lilac: [166, 136, 206], peach: [238, 142, 72], aqua: [92, 196, 184] }),
+  },
+  {
+    id: "sketch", name: "Hand-drawn", sub: "marker doodles, wobbly lines", assets: true, script: true,
+    font: "Kalam", fonts: ["Kalam:wght@400;700", "Permanent+Marker"],
+    fx: { corners: 0.6, text: 1.1 },
+    pal: _derive({ bg: [255, 255, 255], board: [255, 254, 249], ink: [34, 34, 42],
+      sun: [255, 206, 20], mint: [52, 200, 120], rose: [255, 84, 110], sky: [50, 134, 255], lilac: [156, 106, 230], peach: [255, 146, 64], aqua: [30, 198, 210] }),
+  },
+  {
+    id: "blueprint", name: "Blueprint", sub: "technical drawing, cyan on blue", assets: true, script: true,
+    font: "IBM Plex Mono", fonts: ["IBM+Plex+Mono:wght@400;500;600"],
+    fx: { corners: 0, text: 0.95 },
+    pal: _derive({ bg: [14, 62, 140], board: [16, 72, 160], ink: [236, 246, 255],
+      sun: [255, 226, 120], mint: [140, 255, 220], rose: [255, 150, 170], sky: [160, 214, 255], lilac: [204, 192, 255], peach: [255, 198, 150], aqua: [120, 240, 255] }),
+  },
+  {
+    id: "pixel", name: "Pixel art", sub: "8-bit, 16 colours, blocky", assets: true, script: true,
+    font: "Silkscreen", fonts: ["Silkscreen:wght@400;700", "Press+Start+2P", "VT323"],
+    fx: { corners: 0, text: 0.88 },
+    pal: _derive({ bg: [29, 43, 83], board: [18, 24, 54], ink: [255, 241, 232],
+      sun: [255, 236, 39], mint: [0, 228, 54], rose: [255, 0, 77], sky: [41, 173, 255], lilac: [131, 118, 156], peach: [255, 163, 0], aqua: [41, 222, 214],
+      over: { flood: [[255, 0, 77], [255, 236, 39], [0, 228, 54], [41, 173, 255], [131, 118, 156], [255, 163, 0], [41, 222, 214], [255, 119, 168]] } }),
+  },
+  {
+    id: "bauhaus", name: "Bauhaus", sub: "primaries, circle · square · triangle", assets: true, script: true,
+    font: "Jost", fonts: ["Jost:wght@400;500;600;700;800"],
+    fx: { corners: 0, text: 1.04 },
+    pal: _derive({ bg: [240, 232, 214], board: [249, 244, 231], ink: [20, 20, 20],
+      sun: [244, 196, 0], mint: [0, 134, 102], rose: [214, 40, 40], sky: [0, 82, 180], lilac: [96, 62, 146], peach: [240, 120, 30], aqua: [0, 150, 170] }),
+  },
+  {
+    id: "deco", name: "Art deco", sub: "gold, symmetry, sunbursts", assets: true,
+    font: "Josefin Sans", fonts: ["Josefin+Sans:wght@300;400;600;700", "Poiret+One", "Limelight"],
+    fx: { corners: 0, text: 1.06 },
+    pal: _derive({ bg: [10, 14, 22], board: [13, 19, 30], ink: [238, 224, 182],
+      sun: [214, 176, 58], mint: [44, 168, 136], rose: [196, 64, 84], sky: [78, 128, 178], lilac: [146, 104, 166], peach: [214, 134, 72], aqua: [64, 176, 176] }),
+  },
+  {
+    id: "neobrutal", name: "Neo-brutalism", sub: "flat colour, stickers, hard shadows", assets: true, script: true,
+    hardShadow: true,
+    font: "Archivo", fonts: ["Archivo:wght@400;600;800;900", "Space+Mono:wght@400;700"],
+    fx: { corners: 0.5, text: 1 },
+    pal: _derive({ bg: [196, 164, 255], board: [255, 255, 255], ink: [0, 0, 0],
+      sun: [255, 222, 89], mint: [120, 232, 140], rose: [255, 92, 141], sky: [75, 160, 255], lilac: [160, 110, 255], peach: [255, 150, 80], aqua: [64, 224, 208] }),
+  },
+);
+
 const THEME_KEY = "games_theme";
 
 // live state read by game.js and the games
@@ -155,8 +299,64 @@ function _loadFonts(t) {
   document.head.appendChild(link);
 }
 
+// ---- design assets ----
+// A design flagged `assets` ships designs/<id>.css; with `script` it also ships
+// designs/<id>.js, which registers  DESIGN_FX[id] = { enter, card, shell }:
+//   enter()            page content exists (home grid / game shell) — decorate it,
+//                      return a cleanup function that undoes everything
+//   card(el, game, i)  called for each home card right after it is built
+// Pages call designMount() once their content is built (and again after a
+// design switch); applyTheme() runs the previous design's cleanup first.
+const DESIGN_FX = {};
+const _assets = {};
+
+function _loadAssets(t) {
+  if (!t.assets) return Promise.resolve();
+  if (_assets[t.id]) return _assets[t.id];
+  const css = new Promise((res) => {
+    const l = document.createElement("link");
+    l.rel = "stylesheet"; l.href = "designs/" + t.id + ".css";
+    l.onload = l.onerror = res;
+    document.head.appendChild(l);
+  });
+  const js = t.script ? new Promise((res) => {
+    const s = document.createElement("script");
+    s.src = "designs/" + t.id + ".js";
+    s.onload = s.onerror = res;
+    document.head.appendChild(s);
+  }) : Promise.resolve();
+  return (_assets[t.id] = Promise.all([css, js]).then(() => {}));
+}
+
+function themeAssetsReady() { return _loadAssets(THEME); }
+
+let _fxCleanup = null;
+function designUnmount() {
+  if (!_fxCleanup) return;
+  try { _fxCleanup(); } catch (e) { console.error(e); }
+  _fxCleanup = null;
+}
+function designMount() {
+  designUnmount();
+  const fx = DESIGN_FX[THEME.id];
+  if (fx && fx.enter) { try { _fxCleanup = fx.enter() || null; } catch (e) { console.error(e); } }
+}
+function designCard(el, game, i) {
+  const fx = DESIGN_FX[THEME.id];
+  if (fx && fx.card) { try { fx.card(el, game, i); } catch (e) { console.error(e); } }
+}
+
+// Calls cb(canvas) once a home card's p5 preview has been created and drawn
+// (p5 starts on window load, which can be after the card was built).
+function previewCanvas(el, cb, tries = 150) {
+  const c = el.querySelector(".preview canvas");
+  if (c) requestAnimationFrame(() => cb(c));
+  else if (tries > 0) requestAnimationFrame(() => previewCanvas(el, cb, tries - 1));
+}
+
 function applyTheme(id, { save = true } = {}) {
   const t = THEMES.find(x => x.id === id) || THEMES[0];
+  designUnmount();
   THEME = t;
   _deepAssign(PAL, _BASE);
   _deepAssign(PAL, t.pal);
@@ -166,17 +366,33 @@ function applyTheme(id, { save = true } = {}) {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = "rgb(" + PAL.bg.join(",") + ")";
   _loadFonts(t);
+  if (t.assets && !_assets[t.id]) {
+    // keep the page hidden until the design's stylesheet is in (no flash of the wrong look)
+    const root = document.documentElement;
+    root.classList.add("design-pending");
+    const done = () => root.classList.remove("design-pending");
+    _loadAssets(t).then(done);
+    setTimeout(done, 2500);
+  }
   if (save) { try { localStorage.setItem(THEME_KEY, t.id); } catch {} }
   document.querySelectorAll(".theme-opt").forEach(b => b.setAttribute("aria-checked", String(b.dataset.theme === t.id)));
   window.dispatchEvent(new CustomEvent("themechange", { detail: t }));
 }
 
-// apply the saved theme immediately (this file loads in <head>, before paint)
-(function () {
+// apply the saved theme immediately (this file loads in <head>, before paint);
+// ?design=<id> in the URL wins and is remembered
+if (!window.THEME_SAMPLE) (function () {   // theme-sample.html loads this file only for its helpers
   let saved = null;
-  try { saved = localStorage.getItem(THEME_KEY); } catch {}
-  applyTheme(saved || "midnight", { save: false });
+  try { saved = new URLSearchParams(location.search).get("design"); } catch {}
+  if (saved && !THEMES.some((t) => t.id === saved)) saved = null;
+  if (!saved) { try { saved = localStorage.getItem(THEME_KEY); } catch {} }
+  applyTheme(saved || "midnight", { save: !!(saved && new URLSearchParams(location.search).get("design")) });
 })();
+
+// game pages: re-decorate after a design switch (the home page rebuilds its own cards first)
+window.addEventListener("themechange", () => {
+  if (window._pageKind === "game") themeAssetsReady().then(designMount);
+});
 
 // Resolves once the current theme's canvas font is usable (or after a timeout).
 function themeFontReady() {
@@ -205,6 +421,27 @@ if (typeof p5 !== "undefined") {
     if (!this._renderer || !this._renderer.drawingContext) return;
     this.textFont(FONT);
   });
+
+  // Glow (Neon): bright fills/strokes cast a coloured shadow of their own colour.
+  // Skipped on big canvases (fullscreen games) where it would cost too much.
+  const R = p5.Renderer2D && p5.Renderer2D.prototype;
+  if (R) {
+    const glowFor = (r, css) => {
+      const ctx = r.drawingContext, g = THEME_FX.glow;
+      if (!g || r.width * r.height > 700000) { if (ctx.shadowBlur) ctx.shadowBlur = 0; return; }
+      const m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/.exec(css);
+      if (!m) return;
+      const l = (0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3]) / 255, a = m[4] === undefined ? 1 : +m[4];
+      if (l > 0.42 && a > 0.3) { ctx.shadowColor = css; ctx.shadowBlur = g; } else ctx.shadowBlur = 0;
+    };
+    const _sf = R._setFill || R.fill, _ss = R._setStroke;
+    if (R._setFill) {
+      R._setFill = function (css) { glowFor(this, css); return _sf.call(this, css); };
+    }
+    if (_ss) {
+      R._setStroke = function (css) { glowFor(this, css); return _ss.call(this, css); };
+    }
+  }
 }
 
 // Prepare a one-shot (noLoop) sketch, like the home previews, for the theme.
@@ -216,26 +453,36 @@ function themeSketch(p) {
 
 function _rgb(c) { return "rgb(" + c.join(",") + ")"; }
 
-// A miniature of the design: a framed board with a few tiles, a title bar and
-// a button in the theme's own colours, font and corner radius.
-function _themePreview(t, P) {
-  const c = (k) => _rgb(P[k]);
-  const r = Math.round(7 * (t.fx.corners ?? 1));
-  const cells = ["well", "panel", "mint", "panel", "sun", "well", "mint", "well", "panel"];
-  const hard = t.id === "pop" ? `box-shadow:2px 2px 0 ${c("ink")};` : "";
-  const edge = t.id === "pop" ? c("ink") : c(t.id === "brutal" ? "dim" : "line");
-  return `<span class="theme-prev" style="background:${c("bg")};border:1px solid ${edge};border-radius:${r}px;${hard}font-family:'${t.font}'">
-    <span class="tp-board" style="background:${c("board")};border:1px solid ${edge};border-radius:${Math.round(r / 2)}px">
-      ${cells.map(k => `<i style="background:${c(k)};border-radius:${Math.round(r / 4)}px"></i>`).join("")}
-    </span>
-    <span class="tp-side">
-      <b style="color:${c("ink")}">Aa</b>
-      <em style="background:${c("mint")};border-radius:${Math.round(r / 2)}px"></em>
-      <u style="background:${c("dim")}"></u>
-    </span>
-  </span>`;
+// Designs with continuous, heavy motion. With "reduce motion" on in the system
+// settings they are greyed out in the menu, and picking one asks first.
+const HEAVY_MOTION = new Set(["liquid", "neon", "y2k", "kinetic", "holo", "flap", "ascii", "comic", "sketch", "cutout"]);
+const _reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function _motionWarn(t, onConfirm) {
+  document.getElementById("motion-warn")?.remove();
+  const ov = document.createElement("div");
+  ov.id = "motion-warn";
+  ov.className = "motion-warn";
+  ov.innerHTML = `<div class="mw-box" role="alertdialog" aria-modal="true" aria-labelledby="mw-title">
+      <h2 id="mw-title">${t.name} is heavily animated</h2>
+      <p>"Reduce motion" is on in your system settings. This design moves a lot and may be uncomfortable.</p>
+      <div class="mw-actions">
+        <button type="button" class="mw-cancel">Cancel</button>
+        <button type="button" class="mw-ok primary">Apply anyway</button>
+      </div>
+    </div>`;
+  const close = () => { ov.remove(); document.removeEventListener("keydown", onKey, true); };
+  const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } };
+  ov.addEventListener("click", (e) => { e.stopPropagation(); if (e.target === ov) close(); });
+  ov.querySelector(".mw-cancel").addEventListener("click", (e) => { e.stopPropagation(); close(); });
+  ov.querySelector(".mw-ok").addEventListener("click", (e) => { e.stopPropagation(); close(); onConfirm(); });
+  document.addEventListener("keydown", onKey, true);
+  document.body.appendChild(ov);
+  ov.querySelector(".mw-cancel").focus();
 }
 
+// Each option shows "Games / small puzzles & toys" rendered in that design:
+// a lazy iframe running theme-sample.html with the design's real CSS.
 function mountThemePicker(container) {
   if (!container || container.querySelector(".theme-picker")) return;
   const wrap = document.createElement("div");
@@ -249,27 +496,48 @@ function mountThemePicker(container) {
       </svg><span>Design</span>
     </button>
     <div class="theme-menu" role="menu">
-      ${THEMES.map(t => {
-        const P = { ..._BASE, ...t.pal };
-        return `<button class="theme-opt" type="button" role="menuitemradio" data-theme="${t.id}" aria-checked="${t.id === THEME.id}">
-          ${_themePreview(t, P)}
-          <span><span class="theme-name" style="font-family:'${t.font}'">${t.name}</span><br><span class="theme-sub">${t.sub}</span></span>
-        </button>`;
-      }).join("")}
+      ${THEMES.map(t => `<button class="theme-opt" type="button" role="menuitemradio" data-theme="${t.id}" aria-label="${t.name}" aria-checked="${t.id === THEME.id}">
+          <span class="theme-frame"><iframe data-src="theme-sample.html?design=${t.id}" title="${t.name}" tabindex="-1" aria-hidden="true" loading="lazy"></iframe></span>
+        </button>`).join("")}
     </div>`;
   container.appendChild(wrap);
+  // cap every px value in a border-radius string (keeps the 4-corner / slash shape)
+function capPx(value, max) { return value.replace(/(\d+(?:\.\d+)?)px/g, (m, n) => Math.min(parseFloat(n), max) + "px"); }
+// each tile takes the border and corner radius of that design's card
+  wrap.querySelectorAll(".theme-frame iframe").forEach((f) => f.addEventListener("load", () => {
+    const probe = f.contentDocument?.querySelector("#home .card.probe");
+    if (!probe) return;
+    probe.style.animation = "none";                       // base radius, not a mid-morph value
+    const cs = f.contentWindow.getComputedStyle(probe);
+    const frame = f.parentElement;
+    frame.style.borderRadius = capPx(cs.borderRadius, 28);   // soft designs (liquid) are cut down to a calmer corner
+    frame.style.border = parseFloat(cs.borderTopWidth) > 0
+      ? `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}` : "none";
+  }));
   const btn = wrap.querySelector(".theme-btn");
+  // grey out the heavy designs while the system asks for reduced motion
+  const syncMotion = () => {
+    const reduce = _reduceMotion();
+    wrap.querySelectorAll(".theme-opt").forEach((o) => o.classList.toggle("is-muted", reduce && HEAVY_MOTION.has(o.dataset.theme)));
+  };
+  syncMotion();
+  matchMedia("(prefers-reduced-motion: reduce)").addEventListener?.("change", syncMotion);
   const close = () => { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
     const open = !wrap.classList.contains("open");
     wrap.classList.toggle("open", open);
     btn.setAttribute("aria-expanded", String(open));
-    if (open) THEMES.forEach(_loadFonts); // so each name shows in its own font
+    if (open) {
+      syncMotion();
+      wrap.querySelectorAll("iframe[data-src]").forEach((f) => { f.src = f.dataset.src; f.removeAttribute("data-src"); });
+    }
   });
   wrap.querySelectorAll(".theme-opt").forEach(o => o.addEventListener("click", (e) => {
     e.stopPropagation();
-    applyTheme(o.dataset.theme);
+    const id = o.dataset.theme;
+    if (!o.classList.contains("is-muted")) return applyTheme(id);
+    _motionWarn(THEMES.find((x) => x.id === id), () => applyTheme(id));
   }));
   document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) close(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });

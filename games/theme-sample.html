@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Design sample</title>
+<link rel="stylesheet" href="themes.css" />
+<link rel="stylesheet" href="shared.css" />
+<link rel="stylesheet" href="hub.css" />
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  #home { display: block; padding: 20px 12px; box-sizing: border-box; position: relative; height: 100vh; }
+  #home .hero { margin: 0; }
+  #home .flrow { flex-wrap: nowrap !important; }
+  /* the line art fills the whole tile behind the title (not part of the layout, so the title stays big) */
+  html[data-theme="brutal"] #home .hero .art-lines { display: block !important; position: absolute !important; left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; transform: none !important; z-index: 0; pointer-events: none; }
+  #home .hero h1, #home .hero .subtitle { position: relative; z-index: 1; }
+  #home h1, #home .subtitle { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div id="home">
+  <div class="hero">
+    <svg class="art-lines" viewBox="0 0 800 360" aria-hidden="true">
+      <rect pathLength="1" style="--d:0" x="300" y="50" width="200" height="200" rx="6" />
+      <path pathLength="1" style="--d:2" d="M367 50V250M433 50V250M300 117H500M300 183H500" />
+      <circle pathLength="1" class="spin" style="--d:4" cx="333" cy="83" r="20" />
+      <path pathLength="1" class="spin-r spin" style="--d:5" d="M382 132L418 168M418 132L382 168" />
+      <circle pathLength="1" class="spin" style="--d:6" cx="467" cy="216" r="20" />
+      <path pathLength="1" class="spin-r spin" style="--d:7" d="M315 198L351 234M351 198L315 234" />
+      <path pathLength="1" style="--d:3" d="M20 300q40-70 80 0t80 0 80 0 80 0" />
+      <path pathLength="1" style="--d:8" d="M20 300q40-70 80 0t80 0 80 0 80 0" transform="translate(0 20)" />
+      <circle pathLength="1" style="--d:5" cx="650" cy="130" r="64" />
+      <circle pathLength="1" style="--d:6" cx="650" cy="130" r="42" />
+      <circle pathLength="1" style="--d:7" cx="650" cy="130" r="20" />
+      <path pathLength="1" style="--d:8" d="M560 130H740M650 40V220" />
+      <rect pathLength="1" class="spin" style="--d:9" x="580" y="260" width="70" height="70" rx="14" />
+      <circle pathLength="1" style="--d:10" cx="600" cy="280" r="3" />
+      <circle pathLength="1" style="--d:10" cx="615" cy="295" r="3" />
+      <circle pathLength="1" style="--d:10" cx="630" cy="310" r="3" />
+      <path pathLength="1" style="--d:9" d="M60 60l60-40 60 40-60 40zM60 60v50l60 40V100M180 60v50l-60 40" />
+    </svg>
+    <h1></h1>
+    <p class="subtitle"></p>
+  </div>
+  <!-- invisible card: the menu reads its border and radius from here -->
+  <div class="card probe" style="position:absolute;left:-9999px;top:0;width:200px;height:100px"></div>
+</div>
+<script>
+window.THEME_SAMPLE = true;
+</script>
+<script src="themes.js"></script>
+<script>
+// Renders one design's look. Only the helpers from themes.js are used here:
+// no saved theme, no event listeners, no saved state.
+(function () {
+  const id = new URLSearchParams(location.search).get("design");
+  const t = THEMES.find((x) => x.id === id) || THEMES[0];
+  THEME = t;
+  FONT = t.font;
+  THEME_FX = { corners: 1, text: 1, ...t.fx };
+  _deepAssign(PAL, _BASE);
+  _deepAssign(PAL, t.pal);
+  document.documentElement.dataset.theme = t.id;
+  document.querySelector("#home h1").textContent = t.name;
+  document.querySelector("#home .subtitle").textContent = t.sub;
+  _loadFonts(t);
+  if (!t.assets) return;
+  const css = document.createElement("link");
+  css.rel = "stylesheet";
+  css.href = "designs/" + t.id + ".css";
+  document.head.appendChild(css);
+  if (!t.script) return;
+  // run the design's own decoration (letters, rows, banner), so the sample matches the page
+  const js = document.createElement("script");
+  js.src = "designs/" + t.id + ".js";
+  js.onload = () => {
+    try { const fx = DESIGN_FX[t.id]; if (fx && fx.enter) fx.enter(); } catch (e) { console.error(e); }
+    fit();
+  };
+  document.body.appendChild(js);
+})();
+
+// shrink the hero so long titles stay inside the tile
+function fit() {
+  // scale the whole tile with CSS zoom: text and layout shrink together, nothing wraps or clips
+  const hero = document.querySelector("#home .hero");
+  document.body.style.zoom = "";
+  const natural = (el) => { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width; };
+  const w = Math.max(natural(hero.querySelector("h1")), natural(hero.querySelector(".subtitle")), hero.scrollWidth);
+  const h = hero.getBoundingClientRect().height;
+  const k = Math.min(1, (innerWidth - 24) / w, (innerHeight - 40) / h);
+  if (k < 1) document.body.style.zoom = k.toFixed(3);
+}
+// flip-letter designs widen while they animate in, so measure again a few times
+addEventListener("load", () => { fit(); [400, 1500, 3000].forEach((ms) => setTimeout(fit, ms)); });
+</script>
+</body>
+</html>

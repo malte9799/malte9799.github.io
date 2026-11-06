@@ -8,6 +8,7 @@
 // The host broadcasts the round seed ("seed" message) at go(), so every client builds the very
 // same sheet; a mid-game "Nochmal" (N, host only) replays the same path without leaving the game.
 
+import { shell } from "../hub-kit.js";
 let loader = null;
 
 function loadKritzel() {
@@ -22,31 +23,18 @@ function loadKritzel() {
   return loader;
 }
 
-let styleEl = null;
-function injectStyle() {
-  if (styleEl) return;
-  styleEl = document.createElement("style");
-  styleEl.textContent = `
-    .hub-stage.hub-kritzel { position: fixed; inset: 0; z-index: 30; max-width: none; margin: 0;
-      padding: 0; border: 0; border-radius: 0; background: #f6ebd2; box-shadow: none; }
-    .hub-stage.hub-kritzel canvas { display: block; margin: 0 !important; touch-action: none; }
-    .hub-bar { position: relative; z-index: 40; }
-  `;
-  document.head.appendChild(styleEl);
-}
-
 export default {
   min: 2, max: 4,
   async mount(ctx) {
-    injectStyle();
-    ctx.root.innerHTML = `<p class="hub-loading">Lade Kritzel-Revier …</p>`;
+    const kit = shell(ctx, { title: "Kritzel-Revier" }), root = kit.body;
+    root.innerHTML = `<p class="hub-loading">Lade Kritzel-Revier …</p>`;
     try {
       await loadKritzel();
     } catch (e) {
-      ctx.root.innerHTML = `<p class="hub-loading">${e.message}</p>`;
+      root.innerHTML = `<p class="hub-loading">${e.message}</p>`;
       return {};
     }
-    ctx.root.innerHTML = "";
+    root.innerHTML = "";
     window.Multiplayer.closeUI();          // the lobby window must never block the game canvas
     window.__KR_NET__ = {
       send: (t, d, to) => ctx.send(t, d, to),
@@ -55,14 +43,14 @@ export default {
       get isHost() { return !!ctx.isHost; },
       get connected() { return true; },
       get players() { return ctx.players || []; },
-      get state() { return { code: "", status: "playing", game: "kritzel", min: 2, max: 4, players: ctx.players || [] }; },
+      get state() { return { code: "", status: "playing", game: "kritzel", min: 2, max: 4, hostId: ctx.hostId, players: ctx.players || [] }; },
       endGame: () => ctx.end(),
       start: () => false,
       configure: () => {},
       mountButton: () => {},
       openFromUrl: () => false,
     };
-    window.__KR_ROOT__ = ctx.root;
+    window.__KR_ROOT__ = root;
     window.__KR_PLAYERS__ = ctx.players;
     window.__kritzelHubInit();
     return {

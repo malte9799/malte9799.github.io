@@ -10,6 +10,7 @@
 // your opponent has to play. If that board is already decided (or full) they may play in any open one.
 // Win three small boards in a row to win the game.
 
+import { shell } from "../hub-kit.js";
 const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const MODES = { normal: ["Normal", "Ein Feld, drei in einer Reihe."], super: ["Super", "Neun Felder in einem – dein Zug bestimmt, wo der Gegner spielt."] };
@@ -97,6 +98,7 @@ export default {
   min: 2, max: 6,
 
   mount(ctx) {
+    const kit = shell(ctx, { title: "Tic Tac Toe" }), root = kit.body;
     const names = Object.fromEntries(ctx.players.map((p) => [p.id, p.name]));
     const ids = new Set(Object.keys(names));
     const order = ctx.players.map((p) => p.id);
@@ -106,12 +108,12 @@ export default {
     };
     freshBoard(st);
 
-    ctx.root.innerHTML = `<div class="ttt"><div class="ttt-head"><div class="ttt-seats"></div><div class="ttt-status" aria-live="polite"></div></div>
+    root.innerHTML = `<div class="ttt"><div class="ttt-head"><div class="ttt-seats"></div><div class="ttt-status" aria-live="polite"></div></div>
       <div class="ttt-stage"></div><div class="ttt-act"></div><div class="ttt-table"></div></div>`;
-    const $ = (s) => ctx.root.querySelector(s);
+    const $ = (s) => root.querySelector(s);
     const seatsEl = $(".ttt-seats"), status = $(".ttt-status"), stage = $(".ttt-stage"), act = $(".ttt-act"), table = $(".ttt-table");
     // colours come from the design's canvas palette (PAL), exactly like the single-player board
-    const rootEl = ctx.root.firstElementChild;
+    const rootEl = root.firstElementChild;
     function paint() {
       if (typeof PAL === "undefined") return;
       const rgb = (a) => `rgb(${a.join(",")})`, set = (k, a) => rootEl.style.setProperty(k, rgb(a));

@@ -173,10 +173,51 @@ function drawMyGame(p, w, h) {
 | `shuffleArray(arr, rnd?)` | Fisher–Yates; pass a seeded rnd for reproducible boards |
 | `easeInOutQuad(t)` | the house easing for slides/moves |
 
+## Art-directed designs
+
+Fifteen designs go beyond a recolour — each has its own layout, motion and
+decoration on the home page *and* on the game pages. They live in `designs/`:
+
+| id | look |
+|---|---|
+| `liquid` | gooey metaball blobs, melting card outlines, rippling title |
+| `neon` | tube-light signs, flickering letters, synthwave floor, canvas glow |
+| `y2k` | chrome title, glossy gel buttons, every card a blue "window" |
+| `kinetic` | variable-font letters that follow the pointer, scroll-driven marquees, list rows |
+| `cutout` | layered paper scenery, cut-out letters, taped cards |
+| `holo` | foil cards with pointer-tracked rainbow sheen and 3D tilt |
+| `ascii` | terminal + figlet banner; card previews are re-rendered as text, board has a pixels/ASCII toggle |
+| `comic` | halftone, panels, speech bubble, POW! bursts, click sound effects |
+| `flap` | departure board — real two-half flip tiles, live clock |
+| `sketch` | marker on graph paper, wobbly SVG-filtered outlines, drawn-on doodles |
+| `blueprint` | cyanotype sheet frame, FIG. numbers, dimension line, title block |
+| `pixel` | PICO-8 palette, sprites, previews quantised + dithered to 150×90 |
+| `bauhaus` | primary colours, circle/square/triangle, asymmetric hero |
+| `deco` | black & gold, sunburst, stepped ornaments, corner brackets |
+| `neobrutal` | flat colour blocks, stickers, hard shadows, ticker |
+
+Per design: an entry in `THEMES` (themes.js, with `assets: true`, and
+`script: true` if it has a script), `designs/<id>.css` (the usual
+`html[data-theme=<id>]` variable block + extra rules), and optionally
+`designs/<id>.js` which registers `DESIGN_FX[id] = { enter(), card(el, game, i) }`:
+
+- `enter()` runs once the page content exists (home grid built / game shell
+  built) and may return a cleanup function — it **must** undo everything it
+  added, because switching design runs it.
+- `card(el, game, i)` runs for every home card right after it is built; cards are
+  rebuilt on every design switch, so no cleanup is needed there.
+- `previewCanvas(el, cb)` waits for a card's p5 preview to exist (ASCII/pixel use it).
+- Canvas palettes are generated with `_derive({...})` from ~10 colours; pass
+  `over: { … }` to override single `PAL` keys. `fx.glow: n` makes bright
+  shapes cast an `n`px glow (Neon).
+- The stylesheet must style `button.primary` itself if it restyles `button`
+  (the generic rule would otherwise beat `--primary-bg`).
+
 ## Conventions
 
 - **Designs.** The player picks a design (Midnight, Classic, Studio, Paper,
-  Brutal, Pop) with the "Design" button; mechanics
+  Brutal, Pop, plus the 15 art-directed ones below) with the "Design" button
+  (or links straight to one with `index.html?design=<id>`); mechanics
   never change, only looks. So never hardcode colours in canvas code —
   spread `PAL`, e.g. `fill(...PAL.sun, 80)` or `p.stroke(...PAL.line)`.
   PAL is updated in place on a switch, so caching `const C = PAL.mint` is
@@ -256,6 +297,14 @@ Multiplayer.send("hand", cards, playerId);       // to one player only
 | `join(code, { name })` → Promise | join by code; resolves when the host answered, `null` if it never does (20 s) |
 | `leave()` | leave the room (the others keep playing) |
 | `send(type, data, toId?)` | game message; `type` is any string, `data` any JSON. Returns `false` while not connected |
+| `deliver(type, data, fromId)` | hand a message to your own listeners as if it came from `fromId` (used to replay a remembered state) |
+
+**Reload:** the room is cached in `sessionStorage` (this tab only, 2 h without activity). After a reload
+`multiplayer.js` takes the same seat again: the room code, the name and a seat token are reused, so the
+player ids stay the same. A player who is still listed (or who had a seat in a running game) is put back
+in; if nobody answers within 8 s, the room is opened again under the same code with you as host. The
+`start` event gets `resumed: true` when a running game is picked up this way. `player.id` is the seat
+token, not the WebRTC peer id, so it is stable across reloads.
 | `on(event, fn)` → `off()` | subscribe to an event (`"*"` gets `(event, data)` for all), `onMessage(type, fn)` is shorthand for `"message:<type>"` |
 | `setGame(id, { min, max })` | host: choose the game the room plays next (everybody gets a `game` event, the lobby shows it); `min`/`max` limit when `start()` works |
 | `start(options?)` | host: start for everybody (needs `min` players). `options` is any JSON every client receives |
@@ -338,3 +387,39 @@ itself; in the hub the module loads the same script (after setting `window.__KN_
 and the room as `net` (`send`, `onMessage`, `onEvent`, `me`, `isHost`, `hostId`, `players`, `end`, `leave`). Inside, the host
 picks the variant on a pre-game screen and announces `begin`; each roll is a seed that every client simulates locally
 (fixed physics step), the roller only sends the dice that came to rest and the field they wrote.
+
+## Multiplayer-Spiele im Hub
+
+Ein Hub-Spiel ist ein ES-Modul in `hub-games/`, das in `hub.js` (`MP_GAMES`) eingetragen wird. Es bekommt
+einen Kontext (`ctx`) und rendert in einen Rahmen aus `hub-kit.js`. Der Rahmen ist für alle Spiele gleich:
+
+- Kopfkarte mit Spieltitel, Raumcode und Spielerzahl
+- **„Zurück zur Lobby“**: Host beendet das Spiel für alle; Gast schließt nur die Ansicht (das Spiel läuft weiter)
+- **„Raum verlassen“**
+
+Das Spiel selbst rendert nur in `kit.body`. Es hat keine eigenen Lobby- oder Verlassen-Knöpfe.
+
+```js
+// hub-games/mein-spiel.js
+import { shell } from "../hub-kit.js";
+
+export default {
+  min: 2, max: 4,                              // Spieler, die das Spiel braucht
+  mount(ctx) {
+    const kit = shell(ctx, { title: "Mein Spiel" });
+    kit.body.innerHTML = `<p>Los geht’s</p>`;
+    // ctx: body via kit.body · players, me, isHost, hostId (live: window.Multiplayer.state)
+    //      send(type, data, toId?), onMessage(type, fn), onEvent("join"|"leave"|"host"|"players", fn)
+    //      end() (host: back to lobby), back() (guest: close view), leaveRoom(), room() → state, addCleanup(fn)
+    return {
+      go() { /* alle Clients starten gleichzeitig */ },
+      destroy() { /* Timer stoppen */ },
+    };
+  },
+};
+```
+
+Dann in `hub.js` ein Eintrag in `MP_GAMES`: `{ id: "mein-spiel", title: "Mein Spiel", desc: "…", min: 2, max: 4, preview: (p, w, h) => drawX(p, w, h), load: () => import("./hub-games/mein-spiel.js") }`.
+
+Zustand, den ein Gast nach einem Neuladen braucht, schickt der Host als `"state"`-Nachricht; sie wird pro Tab gemerkt
+und beim Wiedereinstieg eingespielt (siehe „Reload“ oben).

@@ -1,0 +1,177 @@
+/* ---- Paper cutout: layered coloured card, torn edges, tape, soft stacked shadows ---- */
+html[data-theme="cutout"] {
+  --bg: #174e52;
+  --board: #fcf6e4;
+  --panel: #fcf6e4;
+  --panel-2: #f4e8c4;
+  --panel-edge: #2b2d42;
+  --edge-hover: #e2574c;
+  --grid-line: #e4d8b4;
+  --hairline: transparent;
+  --ink: #2b2d42;
+  --muted: #6d6a7a;
+  --dim: #b9ae92;
+  --sun: #f4b830;
+  --mint: #3aa68a;
+  --rose: #e2574c;
+  --sky: #3c78be;
+  --lilac: #8c64aa;
+  --accent: #e2574c;
+  --toggle: #f4b830;
+  --toggle-fg: #2b2d42;
+
+  --paper-cream: #fcf6e4;
+  --paper-gold: #f4b830;
+  --paper-coral: #e2574c;
+  --paper-mint: #8fd0b8;
+  --paper-sky: #9cc4e8;
+  --stack: 0 1px 0 rgba(43, 45, 66, 0.12), 0 2px 0 rgba(43, 45, 66, 0.1), 0 3px 0 rgba(43, 45, 66, 0.08), 0 14px 18px -6px rgba(0, 0, 0, 0.4);
+
+  --ease: cubic-bezier(0.34, 1.35, 0.5, 1);
+  --font: "Fredoka", ui-rounded, system-ui, sans-serif;
+  --font-display: "Bagel Fat One", "Fredoka", sans-serif;
+  --ui-tracking: 0.01em;
+  --title-size: 38px;
+  --title-weight: 400;
+  --title-tracking: 0.01em;
+  --title-transform: none;
+  --hero-fill: none;
+  --hero-size: clamp(56px, 12vw, 120px);
+
+  --r-sm: 14px 10px 16px 9px;
+  --r-md: 12px 8px 14px 9px;
+  --r-lg: 8px 12px 7px 13px;
+  --r-xl: 10px 6px 12px 8px;
+  --border-w: 0px;
+
+  --page-bg: #174e52;
+  --wrap-shadow: var(--stack);
+  --btn-shadow: 0 2px 0 rgba(43, 45, 66, 0.22), 0 5px 8px -2px rgba(0, 0, 0, 0.3);
+  --btn-shadow-press: 0 0 0 rgba(0, 0, 0, 0);
+  --btn-press: translateY(2px);
+  --primary-bg: #e2574c;
+  --primary-hover: #ea6b61;
+  --primary-fg: #fff7e8;
+  --primary-border: transparent;
+  --primary-shadow: 0 2px 0 #a8372e, 0 6px 10px -2px rgba(0, 0, 0, 0.35);
+  --card-bg: #fcf6e4;
+  --card-shadow: var(--stack);
+  --card-hover-shadow: 0 1px 0 rgba(43, 45, 66, 0.12), 0 2px 0 rgba(43, 45, 66, 0.1), 0 3px 0 rgba(43, 45, 66, 0.08), 0 4px 0 rgba(43, 45, 66, 0.06), 0 26px 28px -8px rgba(0, 0, 0, 0.5);
+  --card-hover-lift: translateY(-8px) rotate(0deg) scale(1.015);
+  --modal-bg: #fcf6e4;
+  --modal-shadow: var(--stack), 0 30px 60px -10px rgba(0, 0, 0, 0.5);
+  --backdrop: rgba(10, 40, 44, 0.75);
+  --bar-bg: rgba(23, 78, 82, 0.92);
+  --chip-bg: #fcf6e4;
+  color-scheme: light;
+}
+
+html[data-theme="cutout"] body::after {
+  /* paper grain over everything */
+  content: ""; position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: 0.4; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.3 0 0 0 0 0.28 0 0 0 0 0.2 0 0 0 0.32 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+html[data-theme="cutout"] body { position: relative; }
+html[data-theme="cutout"] #home, html[data-theme="cutout"] #app { position: relative; z-index: 2; }
+
+/* hero scenery (injected): sun, clouds and three hill layers, each a sheet of paper */
+.cut-scene { position: absolute; top: 0; left: 0; width: 100%; height: 520px; z-index: 0; pointer-events: none; overflow: hidden; }
+.cut-scene svg { width: 100%; height: 100%; display: block; }
+.cut-scene g.l { filter: drop-shadow(0 -3px 3px rgba(0, 0, 0, 0.28)); transition: transform 0.6s var(--ease); }
+.cut-scene g.sun { filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.18)); }
+.cut-scene .cloud { animation: cut-float 14s ease-in-out infinite alternate; }
+.cut-scene .cloud.b { animation-duration: 19s; animation-delay: -6s; }
+@keyframes cut-float { to { transform: translateX(46px); } }
+
+/* title: every letter its own cut piece */
+html[data-theme="cutout"] #home h1 {
+  background: none; -webkit-background-clip: border-box; background-clip: border-box; color: var(--ink);
+  font-weight: 400; display: flex; justify-content: center; gap: clamp(2px, 1vw, 10px); line-height: 1; margin-bottom: 26px;
+}
+.cl {
+  display: inline-block; padding: 0.04em 0.16em 0.08em; border-radius: 10px 6px 12px 7px;
+  background: var(--c); color: var(--t, #2b2d42); rotate: var(--r); translate: 0 var(--y, 0);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1), 0 2px 0 rgba(0, 0, 0, 0.08), 0 8px 10px -4px rgba(0, 0, 0, 0.45);
+  animation: cut-drop 0.7s var(--ease) both; animation-delay: calc(var(--k) * 90ms + 150ms);
+  transition: rotate 0.35s var(--ease), translate 0.35s var(--ease);
+}
+.cl:hover { rotate: 0deg; translate: 0 -8px; }
+@keyframes cut-drop { from { transform: translateY(-120px) rotate(30deg); opacity: 0; } 70% { opacity: 1; } }
+html[data-theme="cutout"] #app h1 { display: flex; flex-wrap: nowrap; gap: 3px; }
+html[data-theme="cutout"] #app h1 .cl { font-size: 0.8em; }
+html[data-theme="cutout"] #home .subtitle {
+  display: inline-block; background: var(--paper-cream); color: #2b2d42; padding: 6px 18px 8px; font-weight: 600; font-size: 18px;
+  rotate: -1.5deg; border-radius: 4px 9px 5px 8px; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12), 0 8px 12px -4px rgba(0, 0, 0, 0.4);
+  clip-path: polygon(0 4%, 3% 0, 7% 5%, 12% 0, 100% 2%, 99% 96%, 95% 100%, 90% 94%, 85% 100%, 0 97%);
+}
+html[data-theme="cutout"] #home .hero { padding-top: 24px; margin-bottom: 70px; }
+html[data-theme="cutout"] #home .site-link { color: #fcf6e4; font-weight: 600; background: rgba(0, 0, 0, 0.18); padding: 6px 14px; border-radius: 999px; margin: 0 0 22px; }
+html[data-theme="cutout"] #home .site-link:hover { background: var(--paper-coral); color: #fff; }
+html[data-theme="cutout"] .back-link { color: #fcf6e4; font-weight: 600; }
+html[data-theme="cutout"] .back-link:hover { color: var(--paper-gold); }
+
+/* cards: coloured sheets with a torn label, taped on slightly crooked */
+html[data-theme="cutout"] #home .grid { gap: 40px 30px; padding-top: 6px; }
+html[data-theme="cutout"] #home .card { --pc: var(--paper-cream); --tilt: -1.4deg; background: var(--pc); rotate: var(--tilt); border: 0; overflow: visible; border-radius: 8px 12px 7px 13px; transition: transform 0.45s var(--ease), box-shadow 0.35s, rotate 0.45s var(--ease); }
+html[data-theme="cutout"] #home .card:nth-child(4n+1) { --pc: #fcf6e4; --tilt: -1.4deg; --lab: var(--paper-gold); }
+html[data-theme="cutout"] #home .card:nth-child(4n+2) { --pc: #fbe7b0; --tilt: 1.1deg; --lab: var(--paper-coral); }
+html[data-theme="cutout"] #home .card:nth-child(4n+3) { --pc: #f7cfc6; --tilt: -0.7deg; --lab: var(--paper-mint); }
+html[data-theme="cutout"] #home .card:nth-child(4n+4) { --pc: #d4ebe0; --tilt: 1.6deg; --lab: var(--paper-sky); }
+html[data-theme="cutout"] #home .card:hover { rotate: 0deg; }
+html[data-theme="cutout"] #home .card::before {
+  /* strip of tape */
+  content: ""; position: absolute; top: -13px; left: 50%; width: 84px; height: 26px; margin-left: -42px; z-index: 4;
+  background: rgba(255, 255, 255, 0.55); backdrop-filter: blur(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+  rotate: calc(var(--tilt) * -2.2);
+  clip-path: polygon(0 0, 100% 0, 97% 25%, 100% 50%, 97% 75%, 100% 100%, 0 100%, 3% 75%, 0 50%, 3% 25%);
+}
+html[data-theme="cutout"] #home .card:nth-child(3n+2)::before { background: rgba(244, 184, 48, 0.7); }
+html[data-theme="cutout"] #home .card:nth-child(3n)::before { background: rgba(226, 87, 76, 0.55); }
+html[data-theme="cutout"] #home .card .preview { margin: 14px 14px 0; background: var(--board); border-radius: 4px 6px 4px 7px; box-shadow: 0 0 0 5px #fff, 0 3px 0 5px rgba(43, 45, 66, 0.14); }
+html[data-theme="cutout"] #home .card-text { position: relative; border: 0; margin-top: 20px; padding: 16px 18px 18px; background: var(--lab); border-radius: 0 0 8px 12px; }
+html[data-theme="cutout"] #home .card-text::before {
+  /* torn zig-zag top edge */
+  content: ""; position: absolute; left: 0; right: 0; top: -9px; height: 10px;
+  background: linear-gradient(135deg, var(--lab) 50%, transparent 50%) 0 0 / 14px 10px, linear-gradient(225deg, var(--lab) 50%, transparent 50%) 0 0 / 14px 10px;
+}
+html[data-theme="cutout"] #home .card-title { font-family: var(--font-display); font-size: 23px; color: #2b2d42; letter-spacing: 0.01em; }
+html[data-theme="cutout"] #home .card-desc { color: rgba(43, 45, 66, 0.78); font-weight: 500; font-size: 15px; }
+html[data-theme="cutout"] #home .star-btn { background: #fcf6e4; border: 0; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18); z-index: 5; top: 20px; right: 20px; }
+
+/* game page */
+html[data-theme="cutout"] #app { position: relative; }
+html[data-theme="cutout"] .tag { color: #fcf6e4; font-weight: 500; }
+html[data-theme="cutout"] .status { color: #fcf6e4; }
+html[data-theme="cutout"] .status.solved { color: #9ff0d0; }
+html[data-theme="cutout"] .status.dead { color: #ffb0a8; }
+html[data-theme="cutout"] .hint-note { color: #fcf6e4; }
+html[data-theme="cutout"] .preset-row label { color: #fcf6e4; }
+html[data-theme="cutout"] #canvas-wrap:not(.fs) { overflow: visible; border: 10px solid #fcf6e4; border-radius: 6px; rotate: -0.5deg; background: var(--board); }
+html[data-theme="cutout"] #canvas-wrap:not(.fs)::before, html[data-theme="cutout"] #canvas-wrap:not(.fs)::after {
+  content: ""; position: absolute; top: -24px; width: 80px; height: 26px; z-index: 3; background: rgba(244, 184, 48, 0.75); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  clip-path: polygon(0 0, 100% 0, 97% 25%, 100% 50%, 97% 75%, 100% 100%, 0 100%, 3% 75%, 0 50%, 3% 25%);
+}
+html[data-theme="cutout"] #canvas-wrap:not(.fs)::before { left: -26px; rotate: -38deg; }
+html[data-theme="cutout"] #canvas-wrap:not(.fs)::after { right: -26px; rotate: 38deg; background: rgba(226, 87, 76, 0.7); }
+html[data-theme="cutout"] #canvas-wrap canvas { border-radius: 2px; }
+html[data-theme="cutout"] button, html[data-theme="cutout"] .preset-row select { background: #fcf6e4; border: 0; font-weight: 600; font-size: 15px; }
+html[data-theme="cutout"] button:hover { background: #fff; translate: 0 -2px; }
+html[data-theme="cutout"] button:active { translate: 0; }
+html[data-theme="cutout"] button.primary:hover { background: var(--primary-hover); }
+html[data-theme="cutout"] button.active, html[data-theme="cutout"] button.hint-confirm { background: var(--paper-gold); color: #2b2d42; }
+html[data-theme="cutout"] button.active:hover, html[data-theme="cutout"] button.hint-confirm:hover { background: #f8c64f; }
+html[data-theme="cutout"] .controls { background: #fcf6e4; box-shadow: var(--stack); border: 0; border-radius: 10px 6px 12px 8px; }
+html[data-theme="cutout"] .info-modal { border: 0; border-radius: 12px 6px 14px 8px; }
+html[data-theme="cutout"] .info-modal canvas { border: 0; border-radius: 6px; }
+html[data-theme="cutout"] .theme-menu { border: 0; }
+html[data-theme="cutout"] .theme-opt:hover { background: #f4e8c4; }
+html[data-theme="cutout"] .theme-btn { color: #2b2d42; }
+html[data-theme="cutout"] .preset-row::after { border-color: #2b2d42; }
+
+@media (max-width: 640px) { html[data-theme="cutout"] #home .hero { padding-top: 6px; } html[data-theme="cutout"] #home h1 { font-size: clamp(48px, 17vw, 100px); } }
+@media (prefers-reduced-motion: reduce) { .cl, .cut-scene .cloud { animation: none; } }
+
+/* primary button keeps its own colours over the design's generic button look */
+html[data-theme="cutout"] button.primary { background: var(--primary-bg); color: var(--primary-fg); border-color: var(--primary-border); }
+html[data-theme="cutout"] button.primary:hover { background: var(--primary-hover); color: var(--primary-fg); border-color: var(--primary-border); }

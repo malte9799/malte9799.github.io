@@ -27,6 +27,35 @@
 .hub-act button { flex: none; padding: 11px 22px; } .hub-act p, .hub-wait { margin: 0; font-size: 14px; color: var(--muted); }
 .hub-wait { margin-top: 16px; }
 .hub-stage { padding: 20px; border: var(--border-w) solid var(--hairline); border-radius: var(--r-xl); background: var(--card-bg); box-shadow: var(--card-shadow); }
+/* a running game is a page of its own: the lobby is replaced by the game, the header (back link, design picker) stays */
+#hub-overlay { display: block; }
+#hub-overlay[hidden] { display: none; }
+#hub-overlay > #hub-stage { width: 100%; }
+#hub-overlay > #hub-stage[hidden] { display: none; }
+body.hub-game-open #hub-lobby, body.hub-game-open #hub-solo, body.hub-game-open .hub-modes { display: none; }
+/* a game's own top bar (Kritzel-Revier builds one for the solo page) is replaced by the frame of the hub */
+body.hub-game-open #ui-overlay, body.hub-game-open #canvas-wrap { display: none !important; }
+
+/* the standard frame every hub game renders into (games/hub-kit.js) */
+.hk-page { padding: 0; border: 0; background: none; box-shadow: none; }
+.hk { display: flex; flex-direction: column; gap: 16px; max-width: 880px; margin: 0 auto; }
+.hk-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; padding: 16px 20px; border: var(--border-w) solid var(--hairline); border-radius: var(--r-xl); background: var(--card-bg); box-shadow: var(--card-shadow); }
+.hk-title { margin: 0; font: var(--title-weight) 24px/1.1 var(--font-display); letter-spacing: var(--title-tracking); text-transform: var(--title-transform); }
+.hk-meta { display: block; margin-top: 4px; font-size: 13px; color: var(--muted); }
+.hk-meta b { font-family: "Space Mono", ui-monospace, Menlo, monospace; letter-spacing: .12em; color: var(--ink); }
+.hk-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.hk-actions button { flex: none; padding: 10px 16px; }
+.hk-actions .hk-quiet { background: transparent; }
+.hk-body { min-width: 0; position: relative; min-height: 460px; }
+/* the canvas games fill the body: give them room, the frame above keeps its own height */
+.hub-kritzel .hk-body, .hub-kniffel .hk-body { height: calc(100vh - 200px); min-height: 520px; }
+.hub-kritzel .hk-body canvas { display: block; margin: 0 !important; touch-action: none; width: 100% !important; }
+@media (max-width: 640px) { .hub-kritzel .hk-body, .hub-kniffel .hk-body { height: calc(100dvh - 190px); } }
+body.hub-game-open { overflow-x: hidden; }
+/* Mau-Mau sits directly on the page: no extra card box around the table */
+.hub-stage.hub-maumau { background: none; border: none; box-shadow: none; padding: 0; width: 100%; }
+/* the mode switch is hidden while a room/game is on — display:flex would override [hidden] */
+.hub-modes[hidden] { display: none; }
 .hub-loading { margin: 24px; text-align: center; color: var(--muted); }
 
 /* Tic Tac Toe */
@@ -136,7 +165,8 @@
 #home .card-meta { margin-top: 8px; font: 600 11px var(--font); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
 #home .card[data-game] { cursor: pointer; }
 #home .card[aria-disabled="true"] { cursor: default; }
-#home .card[aria-disabled="true"]:not(.sel) { opacity: .65; }
+/* guests only watch the host choose: the cards stay fully readable, they just do not react */
+#home .card[aria-disabled="true"]:not(.sel) { cursor: default; }
 #home .card.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
 .hub-roomhead .hub-head { margin-bottom: 0; }
 
@@ -257,3 +287,61 @@
 @media (hover: none) {
   #home .star-btn { opacity: 0.7; transform: scale(1); }
 }
+
+/* Mäxchen */
+.mx { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; outline: none; }
+.mx-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; width: min(640px, 100%); }
+.mx-seats { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.mx-seat { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px; border: var(--border-w) solid var(--hairline); background: var(--chip-bg); transition: border-color .2s, box-shadow .2s, opacity .2s; }
+.mx-seat.a { --c: var(--mxp); } .mx-seat.b { --c: var(--mxo); }
+.mx-seat.turn { border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent); }
+.mx-seat.gone { opacity: .45; text-decoration: line-through; }
+.mx-seat.won { border-color: var(--mxp); }
+.mx-seat.lost { border-color: var(--rose); }
+.mx-vs { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: .12em; }
+.mx-nm { font-size: 14px; font-weight: 600; }
+.mx-pts { min-width: 22px; text-align: center; padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--rose) 16%, transparent); color: var(--rose); font-variant-numeric: tabular-nums; font-size: 13px; }
+.mx-meta { font-size: 12px; color: var(--muted); white-space: nowrap; margin-right: 92px; }
+.mx-board { position: relative; width: min(640px, 100%); border-radius: 18px; overflow: hidden; box-shadow: var(--wrap-shadow), 0 0 0 var(--border-w) var(--hairline); }
+.mx-board canvas { display: block; width: 100% !important; height: auto !important; }
+.mx-status { font-size: 17px; min-height: 26px; text-align: center; }
+.mx-status.mine { color: var(--ink); font-weight: 600; }
+.mx-status b { font-weight: 700; }
+.mx-act { display: flex; flex-direction: column; align-items: center; gap: 10px; width: min(640px, 100%); }
+.mx-act button { flex: none; }
+.mx-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.mx-row button { padding: 11px 22px; font-size: 15px; }
+.mx-row button.danger { border-color: color-mix(in srgb, var(--rose) 55%, transparent); color: var(--rose); }
+.mx-row button.danger:hover { background: color-mix(in srgb, var(--rose) 12%, transparent); border-color: var(--rose); }
+.mx-sec { padding: 9px 16px !important; font-size: 14px !important; color: var(--muted); }
+.mx-ranks { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 500px; padding: 10px 14px 12px; border: var(--border-w) solid var(--hairline); border-radius: 14px; background: var(--chip-bg); }
+.mx-ranks-hint { margin: 0; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; text-align: center; }
+.mx-ranks-hint span { color: var(--dim); text-transform: none; letter-spacing: 0; }
+.mx-grp { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mx-grp-t { flex: none; width: 44px; font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: .08em; text-align: right; }
+.mx-rank { flex: none; min-width: 48px; padding: 9px 10px; font-size: 14px; line-height: 1; font-variant-numeric: tabular-nums; }
+.mx-rank:disabled { opacity: .25; cursor: default; }
+.mx-rank.sel { border-color: var(--mxp); background: color-mix(in srgb, var(--mxp) 15%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mxp) 25%, transparent); }
+.mx-pick { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.mx-opt { padding: 10px 18px; display: flex; flex-direction: column; gap: 2px; align-items: center; }
+.mx-opt b { font-size: 16px; }
+.mx-opt span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.mx-opt.sel { border-color: var(--mxp); box-shadow: 0 0 0 3px color-mix(in srgb, var(--mxp) 25%, transparent); }
+.mx-score { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 0; padding: 0; list-style: none; }
+.mx-score li { display: flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 999px; border: var(--border-w) solid var(--hairline); background: var(--chip-bg); font-size: 13px; }
+.mx-score li.me { border-color: var(--mxp); }
+.mx-score li b { font-variant-numeric: tabular-nums; color: var(--rose); }
+.mx-note { margin: 0; font-size: 13px; color: var(--muted); }
+.mx-snd { position: absolute; top: 10px; right: 12px; z-index: 5; flex: none !important; width: auto !important; padding: 6px 12px !important; font-size: 12px !important; opacity: .85; }
+@media (max-width: 640px) {
+  .mx-status { font-size: 15px; }
+  .mx-meta { width: 100%; text-align: center; margin-right: 0; }
+}
+/* the Games banner (restored from the old start page): centred, big title, tagline under it */
+#home .hero { display: block; text-align: center; margin-bottom: 44px; }
+#home h1 {
+  font-family: var(--font-display); font-weight: var(--title-weight); letter-spacing: var(--title-tracking);
+  text-transform: var(--title-transform); font-size: var(--hero-size); line-height: 1.05; margin: 0 0 12px;
+  background: var(--hero-fill); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+#home .subtitle { font-size: 17px; color: var(--muted); margin: 0; }

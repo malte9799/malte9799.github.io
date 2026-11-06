@@ -1,3 +1,4 @@
+import { shell } from "../hub-kit.js";
 // Kniffel / Yahtzee / Yatzy / Generala for the multiplayer hub.
 // The game itself is the same script the solo page uses (games/kniffel.js, a factory `createKniffel`);
 // here it gets the hub's stage and the room: the host picks the variant on a pre-game screen and starts,
@@ -17,10 +18,11 @@ export default {
   min: 2, max: 6,
 
   async mount(ctx) {
+    const kit = shell(ctx, { title: "Kniffel" }), root = kit.body;
     window.__KN_HUB__ = true;                                   // the script must not start itself as the solo page
     if (!window.createKniffel) await load(SRC);
     const game = window.createKniffel({
-      root: ctx.root,
+      root,
       net: {
         send: (type, data, to) => ctx.send(type, data, to),
         onMessage: (type, fn) => ctx.onMessage(type, fn),
