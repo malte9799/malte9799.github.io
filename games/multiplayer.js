@@ -524,6 +524,11 @@
       this.qrEl.id = "mp-qr";
       document.body.append(this.el, this.qrEl);
       this.el.addEventListener("click", (e) => this.click(e));
+      // profile saves itself when the name field is left (or Enter is pressed)
+      this.el.addEventListener("change", (e) => {
+        if (e.target.id === "mp-pname") updateProfile({ name: e.target.value });
+        else if (e.target.id === "mp-name") store.set(cfg.nameKey, cleanName(e.target.value));
+      });
       this.qrEl.addEventListener("click", (e) => { if (e.target.closest("[data-act=qrclose]")) { this.qrOpen = false; this.render(); } });
       this.el.addEventListener("keydown", (e) => {
         if (e.key === "Escape") this.hide();
@@ -576,7 +581,7 @@
         h = `${head}</div><div class="mp-coderow">${codeBlock(R.code)}<button class="mp-qr-toggle" data-act="qr" aria-label="${t("qrShow")}" title="${t("qrShow")}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v0M17 17v4h4"/></svg></button></div>${linkBtn}
           ${R.game ? `<div class="mp-game"><span>${t("game")}</span><b>${esc(gameTitle(R.game))}</b></div>` : ""}
           <div class="mp-plh"><span>${t("players")}</span><b>${S.players.length}/${R.max}</b></div><ul class="mp-pl">${list}</ul>
-          <div class="mp-section mp-profile"><b>${t("profileT")}</b><div class="mp-row"><input id="mp-pname" maxlength="12" autocomplete="off" spellcheck="false" value="${esc(keepPname ?? R.name)}"><button class="mp-sec" data-act="profile">${t("saveProfile")}</button></div>${avRow(R.avatar)}${colRow(R.color)}</div>
+          <div class="mp-section mp-profile"><b>${t("profileT")}</b><div class="mp-row"><input id="mp-pname" maxlength="12" autocomplete="off" spellcheck="false" value="${esc(keepPname ?? R.name)}"></div>${avRow(R.avatar)}${colRow(R.color)}</div>
           <div class="mp-act">${act}${leaveBtn}</div>`;
       }
       box.innerHTML = h;
@@ -614,7 +619,6 @@
         case "pick": this.hide(); emit("pick", {}); break;       // host wants to choose the game: back to the page that shows the picker
         case "leave": leave(); break;
         case "avatar": updateProfile({ avatar: b.dataset.v, name: val("#mp-pname") ?? val("#mp-name") }); break;
-        case "profile": updateProfile({ name: val("#mp-pname") }); break;
         case "color": updateProfile({ color: b.dataset.v, name: val("#mp-pname") ?? val("#mp-name") }); break;
         case "share":
           navigator.share({ title: t("title"), text: t("shareText", { code: R.code }), url: roomUrl() }).catch(() => {});   // user cancelling the sheet rejects: ignore
