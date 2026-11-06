@@ -165,7 +165,8 @@ body.hub-game-open { overflow-x: hidden; }
 #home .card-meta { margin-top: 8px; font: 600 11px var(--font); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
 #home .card[data-game] { cursor: pointer; }
 #home .card[aria-disabled="true"] { cursor: default; }
-#home .card[aria-disabled="true"]:not(.sel) { opacity: .65; }
+/* guests only watch the host choose: the cards stay fully readable, they just do not react */
+#home .card[aria-disabled="true"]:not(.sel) { cursor: default; }
 #home .card.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
 .hub-roomhead .hub-head { margin-bottom: 0; }
 
