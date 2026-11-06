@@ -379,6 +379,36 @@ function drawClickRace(p, w, h) {
   });
 }
 
+// Shell Shock (hub only): hills, two tanks, one shell in flight
+function drawShellShock(p, w, h) {
+  previewBg(p, w, h);
+  // hills: a height field, filled down to the bottom
+  const nx = 24, ny = 12;
+  const rows = [];
+  for (let j = 0; j <= ny; j++) { const y = (j / ny) * h; const row = []; for (let i = 0; i <= nx; i++) { const x = (i / nx) * w; row.push([x, y]); } rows.push(row); }
+  p.noStroke();
+  p.fill(PAL.mint[0], PAL.mint[1], PAL.mint[2], 120);
+  p.beginShape(p.POLYGON);
+  p.vertex(0, h);
+  for (const row of rows) for (const pt of row) p.vertex(pt[0], pt[1]);
+  p.vertex(w, h);
+  p.endShape(p.POLYGON);
+  // tanks: "me" mint bottom-left, enemy sky top-right, one shell in flight
+  const tank = (x, y, a, col) => {
+    const dx = Math.cos(a), dy = Math.sin(a);
+    p.stroke(...PAL.ink, 120); p.strokeWeight(3);
+    p.line(x + dx * 6, y + dy * 6, x + dx * 11, y + dy * 11);
+    p.push(); p.translate(x, y); p.rotate(a);
+    p.noStroke(); p.fill(...col); p.ellipse(0, 0, 28, 20, 5);
+    p.noStroke(); p.fill(255, 255, 255, 40); p.ellipse(12, 0, 9, 11, 4);
+    p.pop();
+  };
+  tank(w * 0.28, h * 0.5, -0.6, PAL.mint);
+  tank(w * 0.72, h * 0.52, 2.2, PAL.sky);
+  p.noStroke(); p.fill(...PAL.sky, 220); p.circle(w * 0.6, h * 0.36, 6);
+}
+
+
 function drawFlood(p, w, h) {
   previewBg(p, w, h);
   const N = 10, cs = 26, SW = 44;

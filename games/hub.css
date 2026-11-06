@@ -49,8 +49,11 @@ body.hub-game-open #ui-overlay, body.hub-game-open #canvas-wrap { display: none 
 .hk-body { min-width: 0; position: relative; min-height: 460px; }
 /* the canvas games fill the body: give them room, the frame above keeps its own height */
 .hub-kritzel .hk-body, .hub-kniffel .hk-body { height: calc(100vh - 200px); min-height: 520px; }
-.hub-kritzel .hk-body canvas { display: block; margin: 0 !important; touch-action: none; width: 100% !important; }
+.hub-kritzel .hk-body canvas, .hub-kniffel .hk-body canvas { display: block; margin: 0 !important; touch-action: none; width: 100% !important; }
 @media (max-width: 640px) { .hub-kritzel .hk-body, .hub-kniffel .hk-body { height: calc(100dvh - 190px); } }
+.hub-shellshock .hk-body { height: calc(100vh - 200px); min-height: 520px; }
+.hub-shellshock .hk-body canvas { display: block; margin: 0 !important; touch-action: none; width: 100% !important; }
+@media (max-width: 640px) { .hub-shellshock .hk-body { height: calc(100dvh - 190px); } }
 body.hub-game-open { overflow-x: hidden; }
 /* Mau-Mau sits directly on the page: no extra card box around the table */
 .hub-stage.hub-maumau { background: none; border: none; box-shadow: none; padding: 0; width: 100%; }
@@ -139,14 +142,21 @@ body.hub-game-open { overflow-x: hidden; }
 @media (prefers-reduced-motion: reduce) { .tb.hot, .fresh .mk path, .fresh .mk circle { animation: none; } }
 
 /* click race */
-.cr { display: grid; justify-items: center; gap: 16px; }
-.cr-clock { font: 800 44px var(--font-display); font-variant-numeric: tabular-nums; }
+.cr { display: grid; justify-items: center; gap: 16px; }.cr-clock { font: 800 44px var(--font-display); font-variant-numeric: tabular-nums; }
 .cr-btn { flex: none; width: min(320px, 100%); min-height: 120px; font-size: 24px; border-radius: var(--r-lg); touch-action: manipulation; user-select: none; }
 .cr-btn:disabled { opacity: .5; cursor: default; }
 .cr-board { width: min(380px, 100%); margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .cr-board li { display: flex; justify-content: space-between; padding: 8px 14px; border-radius: var(--r-sm); background: var(--chip-bg); border: var(--border-w) solid var(--hairline); }
 .cr-board li.me { border-color: color-mix(in srgb, var(--accent) 55%, transparent); } .cr-board b { font-variant-numeric: tabular-nums; }
 .cr-note { min-height: 22px; color: var(--muted); } .cr-note b { color: var(--ink); }
+
+/* Shell Shock */
+.ss { display: grid; justify-items: center; gap: 12px; width: 100%; }
+.ss-canvas { position: relative; width: 100%; }
+.ss-canvas canvas { display: block; width: 100%; height: auto; touch-action: none; border-radius: var(--r-lg); }
+.ss-act { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 30px; flex-wrap: wrap; }
+.ss-note { margin: 0; font-size: 13px; color: var(--muted); }
+.ss-act #ss-again { flex: none; padding: 11px 26px; font-size: 15px; }
 
 
 .hub-foot { margin-top: auto; padding-top: 48px; display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; }

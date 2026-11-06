@@ -20,6 +20,7 @@ const MP_GAMES = [
   { id: "maumau", title: "Mau-Mau", desc: "UNO-Regeln: Farbe bekennen, +2, Aussetzen – und rechtzeitig UNO! rufen", min: 2, max: 6, preview: (p, w, h) => drawMaumau(p, w, h), load: () => import("./hub-games/maumau.js") },
   { id: "clickrace", title: "Klick-Rennen", desc: "15 Sekunden, wer klickt mehr?", min: 2, max: 6, preview: (p, w, h) => drawClickRace(p, w, h), load: () => import("./hub-games/clickrace.js") },
   { id: "kritzel", title: "Kritzel-Revier", desc: "Echtzeit: kritzle das größte Revier – Flecken blockieren, Sterne geben Turbo", min: 2, max: 4, preview: (p, w, h) => drawKritzel(p, w, h), load: () => import("./hub-games/kritzel.js") },
+  { id: "shellshock", title: "Shell Shock", desc: "Hügel, Panzer, Salve – letzter Panzer gewinnt", min: 2, max: 2, preview: (p, w, h) => drawShellShock(p, w, h), load: () => import("./hub-games/shellshock.js") },
 ];
 window.MP_GAMES = MP_GAMES;                        // multiplayer.js reads the game titles from here
 
