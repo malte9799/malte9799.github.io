@@ -562,7 +562,7 @@
       const copyIco = `<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A2.5 2.5 0 0 1 7.5 4H15"/></svg>`;
       const shareIco = `<svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"/></svg>`;
       const shareBtn = navigator.share ? `<button class="mp-sec mp-wide mp-copy" data-act="share">${shareIco}${t("share")}</button>` : "";   // native share sheet (AirDrop, Messages, …) where the browser has one
-      const linkBtn = `<div class="mp-linkrow">${shareBtn}<button class="mp-sec mp-wide mp-copy" data-act="copy">${copyIco}${this.copied ? t("copied") : t("copyLink")}</button></div>`;
+      const linkBtn = shareBtn + `<button class="mp-sec mp-wide mp-copy" data-act="copy">${copyIco}${this.copied ? t("copied") : t("copyLink")}</button>`;
       let h;
       if (!R) {
         h = `${head}<p class="mp-sub">${t("sub", { max: cfg.max })}</p></div>
