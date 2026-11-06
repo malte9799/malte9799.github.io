@@ -43,7 +43,7 @@ export default {
       get isHost() { return !!ctx.isHost; },
       get connected() { return true; },
       get players() { return ctx.players || []; },
-      get state() { return { code: "", status: "playing", game: "kritzel", min: 2, max: 4, players: ctx.players || [] }; },
+      get state() { return { code: "", status: "playing", game: "kritzel", min: 2, max: 4, hostId: ctx.hostId, players: ctx.players || [] }; },
       endGame: () => ctx.end(),
       start: () => false,
       configure: () => {},

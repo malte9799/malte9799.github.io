@@ -153,11 +153,30 @@ if (!HUB() && MP) {
 }
 wireNet();
 
+// Guests do not rely on a direct WebRTC link to each other: the host is linked to everybody, but
+// two guests may never connect. So a guest sends its positions and pickups to the host only, and
+// the host relays them to the other guests ("rpos" / "rpick", tagged with the original sender).
+// The host itself broadcasts straight to everybody.
+function netOut(type, d) {
+  if (MP.isHost) MP.send(type, d);
+  else MP.send(type, d, MP.state && MP.state.hostId);
+}
+
+function relayFromHost(from, type, d) {
+  if (!MP.isHost) return;
+  for (const q of painters) {
+    if (q.you || q.id === from) continue;
+    MP.send("r" + type, { id: from, d }, q.id);
+  }
+}
+
 // (re)register the game's net handlers on whatever net MP currently is
 function wireNet() {
   if (!MP) return;
-  MP.onMessage("pos", (m) => onNetPos(m.from, m.data));
-  MP.onMessage("pick", (m) => onNetPick(m.from, m.data));
+  MP.onMessage("pos", (m) => { onNetPos(m.from, m.data); relayFromHost(m.from, "pos", m.data); });
+  MP.onMessage("pick", (m) => { onNetPick(m.from, m.data); relayFromHost(m.from, "pick", m.data); });
+  MP.onMessage("rpos", (m) => { if (!MP.isHost && m.data) onNetPos(m.data.id, m.data.d); });
+  MP.onMessage("rpick", (m) => { if (!MP.isHost && m.data) onNetPick(m.data.id, m.data.d); });
   MP.onMessage("over", (m) => onNetOver(m.data));
   MP.onMessage("seed", (m) => { if (HUB() && m.data) beginWith(Number(m.data.seed) || ((Math.random() * 1e9) | 0), Number(m.data.secs)); });
   MP.on("leave", (p) => onPlayerGone(p.id, p.name));
@@ -618,7 +637,7 @@ function checkPickups() {
     if (pk.taken || simT < pk.t) return;
     if (Math.hypot((pk.c + 0.5) * CELL - me.x, (pk.r + 0.5) * CELL - me.y) < CELL * 0.9) {
       claimPickup(pk, meIdx, true);
-      if (MP && mode === "mp") MP.send("pick", { i });
+      if (MP && mode === "mp") netOut("pick", { i });
     }
   });
 }
@@ -1258,7 +1277,7 @@ function draw() {
       const me = painters[meIdx];
       if (me && me.alive && mode === "mp" && MP && millis() - lastPosSend > POS_MS) {
         lastPosSend = millis();
-        MP.send("pos", { x: Math.round(me.x), y: Math.round(me.y) });
+        netOut("pos", { x: Math.round(me.x), y: Math.round(me.y) });
       }
     }
     // host on the game page: hand the room back to the lobby once the result has been seen.
