@@ -513,7 +513,7 @@
   // Two states: a form (name, create room, join with code) and the lobby (code, link, players, start).
   // Ids and classes are all prefixed mp- and styled in multiplayer.css from the theme variables.
   const ui = {
-    el: null, qrEl: null, open: false, copied: false, qrOpen: false, lastCode: "", buttons: new Set(),
+    el: null, qrEl: null, profEl: null, open: false, copied: false, qrOpen: false, profOpen: false, lastCode: "", buttons: new Set(),
 
     ensure() {
       if (this.el) return;
@@ -522,13 +522,19 @@
       this.el.innerHTML = `<div class="mp-box" role="dialog" aria-modal="true"></div>`;
       this.qrEl = document.createElement("aside");
       this.qrEl.id = "mp-qr";
-      document.body.append(this.el, this.qrEl);
+      // the profile panel on the left (like the QR board on the right)
+      this.profEl = document.createElement("aside");
+      this.profEl.id = "mp-prof";
+      document.body.append(this.el, this.qrEl, this.profEl);
       this.el.addEventListener("click", (e) => this.click(e));
+      this.profEl.addEventListener("click", (e) => this.click(e));
       // profile saves itself when the name field is left (or Enter is pressed)
-      this.el.addEventListener("change", (e) => {
+      const onChange = (e) => {
         if (e.target.id === "mp-pname") updateProfile({ name: e.target.value });
         else if (e.target.id === "mp-name") store.set(cfg.nameKey, cleanName(e.target.value));
-      });
+      };
+      this.el.addEventListener("change", onChange);
+      this.profEl.addEventListener("change", onChange);
       this.qrEl.addEventListener("click", (e) => { if (e.target.closest("[data-act=qrclose]")) { this.qrOpen = false; this.render(); } });
       this.el.addEventListener("keydown", (e) => {
         if (e.key === "Escape") this.hide();
@@ -581,15 +587,30 @@
         h = `${head}</div><div class="mp-coderow">${codeBlock(R.code)}<button class="mp-qr-toggle" data-act="qr" aria-label="${t("qrShow")}" title="${t("qrShow")}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v0M17 17v4h4"/></svg></button></div>${linkBtn}
           ${R.game ? `<div class="mp-game"><span>${t("game")}</span><b>${esc(gameTitle(R.game))}</b></div>` : ""}
           <div class="mp-plh"><span>${t("players")}</span><b>${S.players.length}/${R.max}</b></div><ul class="mp-pl">${list}</ul>
-          <div class="mp-section mp-profile"><b>${t("profileT")}</b><div class="mp-row"><input id="mp-pname" maxlength="12" autocomplete="off" spellcheck="false" value="${esc(keepPname ?? R.name)}"></div>${avRow(R.avatar)}${colRow(R.color)}</div>
+          <div class="mp-me"><button type="button" class="mp-me-big" data-act="prof" aria-label="${t("profileT")}" style="${R.color ? "background:" + R.color : ""}">${R.avatar ? esc(R.avatar) : initial(R.name)}</button><small>${t("profileT")}</small></div>
           <div class="mp-act">${act}${leaveBtn}</div>`;
       }
       box.innerHTML = h;
       this.renderQR();
     },
 
+    // the profile panel on the left: name, avatar and colour (shown from the big icon in the lobby window)
+    renderProf() {
+      if (!this.profEl) return;
+      const show = this.open && !!R && R.status !== "connecting" && this.profOpen;
+      this.profEl.classList.toggle("show", show);
+      if (!show) return;
+      const keep = (this.profEl.querySelector("#mp-pname") || {}).value;
+      this.profEl.innerHTML = `<button class="mp-qr-close" data-act="profclose" aria-label="${t("close")}">✕</button><h4>${t("profileT")}</h4><label for="mp-pname">${t("yourName")}</label><input id="mp-pname" maxlength="12" autocomplete="off" spellcheck="false" value="${esc(keep ?? R.name)}">${this.pickers(R.avatar, R.color)}`;
+    },
+
+    pickers(av, col) {
+      return `<div class="mp-lbl">${t("avatar")}</div><div class="mp-avs">${AVATARS.map((a) => `<button type="button" class="mp-av-pick${a === av ? " on" : ""}" data-act="avatar" data-v="${a}" aria-label="${a}">${a}</button>`).join("")}</div><div class="mp-lbl">${t("color")}</div><div class="mp-avs">${COLORS.map((c) => `<button type="button" class="mp-col-pick${c === col ? " on" : ""}" data-act="color" data-v="${c}" aria-label="${c}" style="background:${c}"></button>`).join("")}</div>`;
+    },
+
     // the invitation board on the right edge of the screen; never shifts the lobby window
     renderQR() {
+      this.renderProf();
       if (!this.qrEl) return;
       const show = this.open && !!R && R.status === "lobby";
       this.qrEl.classList.toggle("show", show);
@@ -608,7 +629,7 @@
       if (e.target === this.el) return this.hide();
       const b = e.target.closest && e.target.closest("[data-act]");
       if (!b) return;
-      const val = (id) => (this.el.querySelector(id) || {}).value;
+      const val = (id) => ((this.profEl && this.profEl.querySelector(id)) || this.el.querySelector(id) || {}).value;
       switch (b.dataset.act) {
         case "close": this.hide(); break;
         case "qr": this.qrOpen = !this.qrOpen; this.render(); break;   // phones: the QR board sits behind this button
@@ -618,6 +639,8 @@
         case "end": endGame(); break;
         case "pick": this.hide(); emit("pick", {}); break;       // host wants to choose the game: back to the page that shows the picker
         case "leave": leave(); break;
+        case "prof": this.profOpen = !this.profOpen; this.renderProf(); break;   // the big own icon opens the profile panel
+        case "profclose": this.profOpen = false; this.renderProf(); break;
         case "avatar": updateProfile({ avatar: b.dataset.v, name: val("#mp-pname") ?? val("#mp-name") }); break;
         case "color": updateProfile({ color: b.dataset.v, name: val("#mp-pname") ?? val("#mp-name") }); break;
         case "share":
