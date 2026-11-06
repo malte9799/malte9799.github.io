@@ -21,6 +21,7 @@ const GAMES = [
   { id: "blackjack",   title: "Blackjack",     desc: "hit · stand · beat the dealer", preview: drawBlackjack },
   { id: "kniffel",     title: "Kniffel · Yahtzee", desc: "roll · hold · write it down", preview: drawKniffel },
   { id: "kritzel",     title: "Kritzel-Revier",    desc: "kritzle das größte Revier",   preview: drawKritzel },
+  { id: "circlecapture", title: "Circle Capture", desc: "claim · expand · dominate", preview: drawCircleCapture },
 ];
 
 // ---- preview renderers ----
