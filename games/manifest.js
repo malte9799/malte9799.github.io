@@ -21,6 +21,7 @@ const GAMES = [
   { id: "blackjack",   title: "Blackjack",     desc: "hit · stand · beat the dealer", preview: drawBlackjack },
   { id: "kniffel",     title: "Kniffel · Yahtzee", desc: "roll · hold · write it down", preview: drawKniffel },
   { id: "kritzel",     title: "Kritzel-Revier",    desc: "kritzle das größte Revier",   preview: drawKritzel },
+  { id: "neonbombe",   title: "Neon-Bombe",        desc: "Heiße Kartoffel · wer hält sie beim Bumm?", preview: drawNeonBombe },
 ];
 
 // ---- preview renderers ----
@@ -883,4 +884,39 @@ function drawMaumau(p, w, h) {
   p.push(); p.translate(452, 240); p.rotate(-0.1);
   p.fill(53, 182, 176); p.rect(-42, -14, 84, 28, 14); p.stroke(255); p.strokeWeight(2.5); p.noFill(); p.rect(-42, -14, 84, 28, 14); p.noStroke();
   p.fill(255); p.textStyle(p.BOLD); p.textSize(13); p.text("MAU!", 0, 0.5); p.pop();
+}
+
+// Neon-Bombe (preview): der Kreis der Spieler um die leuchtende Bombe in der Mitte.
+function drawNeonBombe(p, w, h) {
+  p.background(10, 11, 26);
+  p.noStroke();
+  for (let k = 3; k >= 1; k--) {
+    p.fill(0, 240, 255, 20);
+    p.ellipse(w / 2, h / 2, w * (0.5 + k * 0.14), h * (0.5 + k * 0.14));
+  }
+  const cx = w / 2, cy = h / 2, R = 110;
+  const cols = [[0,240,255],[255,0,255],[255,212,0],[0,255,136]];
+  for (let i = 0; i < 4; i++) {
+    const a = -p.PI / 2 + i * p.PI / 2;
+    const x = cx + p.cos(a) * R, y = cy + p.sin(a) * R;
+    p.fill(...cols[i]);
+    p.circle(x, y, 14);
+    p.fill(255);
+    p.textSize(12); p.textAlign(p.CENTER, p.CENTER);
+    p.textStyle(p.BOLD);
+    p.text("S" + (i + 1), x, y - 22);
+  }
+  // Bombe in der Mitte, Spieler 1 (cyan) hält sie
+  p.noFill();
+  p.stroke(0, 240, 255, 150);
+  p.strokeWidth(3);
+  p.circle(cx, cy, 70);
+  p.noStroke();
+  p.fill(0, 240, 255);
+  p.rect(cx - 16, cy - 11, 32, 22, 6);
+  p.fill(255, 255, 220);
+  p.circle(cx, cy - 20, 4);
+  p.fill(255);
+  p.textSize(14);
+  p.text("NEON-BOMBE", cx, cy + 55);
 }
