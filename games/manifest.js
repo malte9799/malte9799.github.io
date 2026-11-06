@@ -909,7 +909,7 @@ function drawNeonBombe(p, w, h) {
   // Bombe in der Mitte, Spieler 1 (cyan) hält sie
   p.noFill();
   p.stroke(0, 240, 255, 150);
-  p.strokeWidth(3);
+  p.strokeWeight(3);
   p.circle(cx, cy, 70);
   p.noStroke();
   p.fill(0, 240, 255);
