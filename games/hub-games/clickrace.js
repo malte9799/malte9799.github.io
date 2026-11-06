@@ -1,18 +1,20 @@
 // Click race for the multiplayer hub: everybody clicks for 15 seconds, most clicks win.
 // Shows the go() hook (all clients start at the same moment) and the "host announces the result" pattern.
 
+import { shell } from "../hub-kit.js";
 const DURATION = 15, esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 export default {
   min: 2, max: 6,
 
   mount(ctx) {
+    const kit = shell(ctx, { title: "Klick-Rennen" }), root = kit.body;
     const score = Object.fromEntries(ctx.players.map((p) => [p.id, 0]));
     const names = Object.fromEntries(ctx.players.map((p) => [p.id, p.name]));
     let phase = "wait", left = DURATION, tick = 0, result = null;
 
-    ctx.root.innerHTML = `<div class="cr"><div class="cr-clock">–</div><button class="primary cr-btn" disabled>Warte auf die anderen …</button><ol class="cr-board"></ol><div class="cr-note"></div></div>`;
-    const clock = ctx.root.querySelector(".cr-clock"), btn = ctx.root.querySelector(".cr-btn"), ol = ctx.root.querySelector(".cr-board"), note = ctx.root.querySelector(".cr-note");
+    root.innerHTML = `<div class="cr"><div class="cr-clock">–</div><button class="primary cr-btn" disabled>Warte auf die anderen …</button><ol class="cr-board"></ol><div class="cr-note"></div></div>`;
+    const clock = root.querySelector(".cr-clock"), btn = root.querySelector(".cr-btn"), ol = root.querySelector(".cr-board"), note = root.querySelector(".cr-note");
 
     function render() {
       const rows = Object.keys(score).sort((a, b) => score[b] - score[a]);

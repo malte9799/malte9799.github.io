@@ -27,13 +27,31 @@
 .hub-act button { flex: none; padding: 11px 22px; } .hub-act p, .hub-wait { margin: 0; font-size: 14px; color: var(--muted); }
 .hub-wait { margin-top: 16px; }
 .hub-stage { padding: 20px; border: var(--border-w) solid var(--hairline); border-radius: var(--r-xl); background: var(--card-bg); box-shadow: var(--card-shadow); }
-/* a running game opens in a window above the page; the page behind it stays put */
-#hub-overlay { position: fixed; inset: 0; z-index: 90; display: flex; overflow-y: auto; padding: 56px 16px 24px; background: var(--backdrop); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: info-fade 0.2s ease; }
+/* a running game is a page of its own: the lobby is replaced by the game, the header (back link, design picker) stays */
+#hub-overlay { display: block; }
 #hub-overlay[hidden] { display: none; }
-#hub-overlay > #hub-stage { margin: auto; width: 100%; }
+#hub-overlay > #hub-stage { width: 100%; }
 #hub-overlay > #hub-stage[hidden] { display: none; }
-.hub-overlay-x { position: fixed; top: 12px; right: 14px; z-index: 91; width: 40px; height: 40px; padding: 0; line-height: 1; font-size: 18px; }
-body.hub-game-open { overflow: hidden; }
+body.hub-game-open #hub-lobby, body.hub-game-open #hub-solo, body.hub-game-open .hub-modes { display: none; }
+/* a game's own top bar (Kritzel-Revier builds one for the solo page) is replaced by the frame of the hub */
+body.hub-game-open #ui-overlay, body.hub-game-open #canvas-wrap { display: none !important; }
+
+/* the standard frame every hub game renders into (games/hub-kit.js) */
+.hk-page { padding: 0; border: 0; background: none; box-shadow: none; }
+.hk { display: flex; flex-direction: column; gap: 16px; max-width: 880px; margin: 0 auto; }
+.hk-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; padding: 16px 20px; border: var(--border-w) solid var(--hairline); border-radius: var(--r-xl); background: var(--card-bg); box-shadow: var(--card-shadow); }
+.hk-title { margin: 0; font: var(--title-weight) 24px/1.1 var(--font-display); letter-spacing: var(--title-tracking); text-transform: var(--title-transform); }
+.hk-meta { display: block; margin-top: 4px; font-size: 13px; color: var(--muted); }
+.hk-meta b { font-family: "Space Mono", ui-monospace, Menlo, monospace; letter-spacing: .12em; color: var(--ink); }
+.hk-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.hk-actions button { flex: none; padding: 10px 16px; }
+.hk-actions .hk-quiet { background: transparent; }
+.hk-body { min-width: 0; position: relative; min-height: 460px; }
+/* the canvas games fill the body: give them room, the frame above keeps its own height */
+.hub-kritzel .hk-body, .hub-kniffel .hk-body { height: calc(100vh - 200px); min-height: 520px; }
+.hub-kritzel .hk-body canvas { display: block; margin: 0 !important; touch-action: none; width: 100% !important; }
+@media (max-width: 640px) { .hub-kritzel .hk-body, .hub-kniffel .hk-body { height: calc(100dvh - 190px); } }
+body.hub-game-open { overflow-x: hidden; }
 /* Mau-Mau sits directly on the page: no extra card box around the table */
 .hub-stage.hub-maumau { background: none; border: none; box-shadow: none; padding: 0; width: 100%; }
 /* the mode switch is hidden while a room/game is on — display:flex would override [hidden] */
@@ -147,7 +165,8 @@ body.hub-game-open { overflow: hidden; }
 #home .card-meta { margin-top: 8px; font: 600 11px var(--font); letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
 #home .card[data-game] { cursor: pointer; }
 #home .card[aria-disabled="true"] { cursor: default; }
-#home .card[aria-disabled="true"]:not(.sel) { opacity: .65; }
+/* guests only watch the host choose: the cards stay fully readable, they just do not react */
+#home .card[aria-disabled="true"]:not(.sel) { cursor: default; }
 #home .card.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent); }
 .hub-roomhead .hub-head { margin-bottom: 0; }
 

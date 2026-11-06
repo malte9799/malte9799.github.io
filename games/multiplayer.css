@@ -120,3 +120,54 @@ button.mp-launch.mp-live::after { content: ""; width: 7px; height: 7px; margin-l
 #mp-dock .mp-dock-nm em { margin-left: 6px; font-size: 11px; color: var(--muted); }
 
 #mp-ui button.mp-copy + button.mp-copy { margin-top: 8px; }
+
+/* profile: name + avatar examples (lobby window, also on the pre-room form) */
+.mp-avs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.mp-av-pick { width: 38px; height: 38px; padding: 0; border-radius: 50%; font-size: 20px; line-height: 1; display: grid; place-items: center; border: 2px solid var(--hairline); background: var(--chip-bg); }
+.mp-av-pick.on { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+.mp-profile .mp-row input { flex: 1; min-width: 0; }
+
+/* the avatar icon itself is a bit bigger (emoji or initial) */
+#mp-ui .mp-av { font-size: 19px; }
+#mp-dock .mp-dock-av { font-size: 19px; }
+
+/* profile panel on the left (name, avatar, colour) */
+#mp-prof { position: fixed; left: max(24px, 3.5vw); top: 50%; z-index: 120; width: min(280px, 28vw); display: none; padding: 18px 20px 16px; text-align: left; background: var(--modal-bg); border: var(--border-w) solid var(--hairline); border-radius: var(--r-xl); box-shadow: var(--modal-shadow); color: var(--ink); font-family: var(--font); transform: translateY(-50%); }
+#mp-prof.show { display: block; animation: mp-fade .3s var(--ease); }
+#mp-prof h4 { margin: 0 0 12px; font: 600 12px var(--font); letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+#mp-prof label, #mp-prof .mp-lbl { display: block; margin: 12px 0 6px; font: 600 11.5px var(--font); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+#mp-prof input { width: 100%; box-sizing: border-box; padding: 9px 12px; border: var(--border-w) solid var(--hairline); border-radius: var(--r-sm); background: var(--board); color: var(--ink); font: 500 15px var(--font); }
+#mp-prof .mp-qr-close { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border: var(--border-w) solid var(--panel-edge); border-radius: var(--r-sm); background: var(--board); color: var(--ink); font: 600 16px var(--font); cursor: pointer; }
+.mp-col-pick { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--hairline); }
+.mp-col-pick.on { border-color: var(--ink); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 25%, transparent); }
+@media (max-width: 899px), (max-aspect-ratio: 21/20) {
+  #mp-prof { left: 50%; top: 50%; width: min(86vw, 340px); z-index: 400; transform: translate(-50%, -50%); box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.55); }
+}
+
+/* the own avatar, big, in the lobby window */
+.mp-me { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 4px 0 14px; }
+.mp-me-big { width: 96px; height: 96px; padding: 0; border-radius: 50%; border: 3px solid var(--hairline); font-size: 48px; line-height: 1; display: grid; place-items: center; color: var(--primary-fg); background: var(--primary-bg); cursor: pointer; }
+.mp-me small { font: 600 11.5px var(--font); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+
+/* the generic button rules of the page would round these into squares: pin the circles down */
+#mp-ui .mp-me-big { border-radius: 50%; width: 96px; height: 96px; min-width: 0; padding: 0; }
+#mp-prof { width: min(320px, 30vw); }
+#mp-prof .mp-avs { gap: 6px; }
+#mp-prof .mp-av-pick, #mp-prof .mp-col-pick { flex: none; border-radius: 50%; width: 34px; height: 34px; min-width: 0; padding: 0; font-size: 18px; }
+#mp-prof .mp-col-pick { width: 28px; height: 28px; }
+@media (max-width: 899px), (max-aspect-ratio: 21/20) {
+  #mp-prof { width: min(86vw, 340px); }
+}
+
+/* the own icon above the player list: big circle, big emoji (the theme buttons would shrink it) */
+#mp-ui .mp-me-big { width: 104px; height: 104px; font-size: 56px !important; line-height: 1; }
+
+/* phones: the profile panel sits behind the own icon (toggle), like the QR board */
+@media (max-width: 899px), (max-aspect-ratio: 21/20) {
+  #mp-prof:not(.mp-prof-open) { display: none; }
+}
+
+/* the close cross of the side panels is only needed on phones; on the desktop they stay open with the room */
+@media (min-width: 900px) and (min-aspect-ratio: 21/20) {
+  #mp-qr .mp-qr-close, #mp-prof .mp-qr-close { display: none; }
+}

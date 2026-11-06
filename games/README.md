@@ -297,6 +297,14 @@ Multiplayer.send("hand", cards, playerId);       // to one player only
 | `join(code, { name })` → Promise | join by code; resolves when the host answered, `null` if it never does (20 s) |
 | `leave()` | leave the room (the others keep playing) |
 | `send(type, data, toId?)` | game message; `type` is any string, `data` any JSON. Returns `false` while not connected |
+| `deliver(type, data, fromId)` | hand a message to your own listeners as if it came from `fromId` (used to replay a remembered state) |
+
+**Reload:** the room is cached in `sessionStorage` (this tab only, 2 h without activity). After a reload
+`multiplayer.js` takes the same seat again: the room code, the name and a seat token are reused, so the
+player ids stay the same. A player who is still listed (or who had a seat in a running game) is put back
+in; if nobody answers within 8 s, the room is opened again under the same code with you as host. The
+`start` event gets `resumed: true` when a running game is picked up this way. `player.id` is the seat
+token, not the WebRTC peer id, so it is stable across reloads.
 | `on(event, fn)` → `off()` | subscribe to an event (`"*"` gets `(event, data)` for all), `onMessage(type, fn)` is shorthand for `"message:<type>"` |
 | `setGame(id, { min, max })` | host: choose the game the room plays next (everybody gets a `game` event, the lobby shows it); `min`/`max` limit when `start()` works |
 | `start(options?)` | host: start for everybody (needs `min` players). `options` is any JSON every client receives |
@@ -379,3 +387,39 @@ itself; in the hub the module loads the same script (after setting `window.__KN_
 and the room as `net` (`send`, `onMessage`, `onEvent`, `me`, `isHost`, `hostId`, `players`, `end`, `leave`). Inside, the host
 picks the variant on a pre-game screen and announces `begin`; each roll is a seed that every client simulates locally
 (fixed physics step), the roller only sends the dice that came to rest and the field they wrote.
+
+## Multiplayer-Spiele im Hub
+
+Ein Hub-Spiel ist ein ES-Modul in `hub-games/`, das in `hub.js` (`MP_GAMES`) eingetragen wird. Es bekommt
+einen Kontext (`ctx`) und rendert in einen Rahmen aus `hub-kit.js`. Der Rahmen ist für alle Spiele gleich:
+
+- Kopfkarte mit Spieltitel, Raumcode und Spielerzahl
+- **„Zurück zur Lobby“**: Host beendet das Spiel für alle; Gast schließt nur die Ansicht (das Spiel läuft weiter)
+- **„Raum verlassen“**
+
+Das Spiel selbst rendert nur in `kit.body`. Es hat keine eigenen Lobby- oder Verlassen-Knöpfe.
+
+```js
+// hub-games/mein-spiel.js
+import { shell } from "../hub-kit.js";
+
+export default {
+  min: 2, max: 4,                              // Spieler, die das Spiel braucht
+  mount(ctx) {
+    const kit = shell(ctx, { title: "Mein Spiel" });
+    kit.body.innerHTML = `<p>Los geht’s</p>`;
+    // ctx: body via kit.body · players, me, isHost, hostId (live: window.Multiplayer.state)
+    //      send(type, data, toId?), onMessage(type, fn), onEvent("join"|"leave"|"host"|"players", fn)
+    //      end() (host: back to lobby), back() (guest: close view), leaveRoom(), room() → state, addCleanup(fn)
+    return {
+      go() { /* alle Clients starten gleichzeitig */ },
+      destroy() { /* Timer stoppen */ },
+    };
+  },
+};
+```
+
+Dann in `hub.js` ein Eintrag in `MP_GAMES`: `{ id: "mein-spiel", title: "Mein Spiel", desc: "…", min: 2, max: 4, preview: (p, w, h) => drawX(p, w, h), load: () => import("./hub-games/mein-spiel.js") }`.
+
+Zustand, den ein Gast nach einem Neuladen braucht, schickt der Host als `"state"`-Nachricht; sie wird pro Tab gemerkt
+und beim Wiedereinstieg eingespielt (siehe „Reload“ oben).
