@@ -55,6 +55,7 @@ let exploding = false;
 let shake = 0, flash = 0;
 let parts = [];
 let audioCtx = null;
+let celebrated = false;   // Konfetti nur einmal pro Sieg
 
 const HOLD_MIN = 0.7;     // Mindesthaltezeit vor Weitergabe (Sekunden)
 const NEON = [
@@ -188,6 +189,7 @@ function nextRound() {
   bombSince = nowSec();
   phase = "play";
   exploding = false;
+  celebrated = false;
   snapAndBroadcast();
   if (isHost) {
     setTimeout(() => { if (myGen === roundGen && phase === "play") doExplosion(); }, fuseDur * 1000);
@@ -571,7 +573,10 @@ function drawResult(cx, cy) {
   }
   textSize(15); fill(170, 170, 185);
   text("„Neue Runde“ für ein weiteres Spiel.", cx, y + 150);
-  if (SOUND && winnerId && frameCount % 120 < 20) celebrate(2);
+  if (SOUND && winnerId && !celebrated) {
+    celebrate(2);
+    celebrated = true;
+  }
 }
 
 // ---- Info-Modal-Vorschau (looping p5 Demo) ----
@@ -604,8 +609,26 @@ netWire();
 
 // p5's global mode starts on window.load. If this script loads after that,
 // setup()/draw() may never have been called → no canvas, nothing renders.
-// Fallback: create the canvas and start the draw loop manually.
+// Fallback: create a p5 instance manually and bind its methods/properties
+// to window so setup()/draw() can use global p5 functions (createCanvas, background, etc.).
 if (typeof setup === "function" && typeof draw === "function" && !document.querySelector("canvas")) {
-  setup();
-  (function loop() { draw(); requestAnimationFrame(loop); })();
+  const p = new p5(function(instance) {
+    instance.setup = function() { setup(); };
+    instance.draw = function() { draw(); };
+  });
+  // Expose p5 instance methods as window globals (same as p5 global mode)
+  const proto = p.constructor.prototype;
+  for (const key of Object.getOwnPropertyNames(proto)) {
+    if (key !== 'constructor' && typeof proto[key] === 'function' && !(key in window)) {
+      window[key] = proto[key].bind(p);
+    }
+  }
+  // Expose key p5 properties as window globals
+  for (const key of ['width', 'height', 'frameCount', 'mouseX', 'mouseY', 'displayWidth', 'displayHeight', 'windowWidth', 'windowHeight']) {
+    Object.defineProperty(window, key, {
+      get: function() { return p[key]; },
+      set: function(v) { p[key] = v; },
+      configurable: true
+    });
+  }
 }
