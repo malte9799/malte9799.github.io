@@ -87,7 +87,7 @@ const I18N = {
     playersN: (n) => "Players (" + n + "/6)", start: "Start game", needTwo: "Waiting for more players…", waitHost: "Waiting for the host to start…",
     connecting: "Connecting…", leave: "Leave", roomFull: "That room is full or already playing.", noRoom: "No room found with that code.",
     netFail: "Couldn't connect. Check your internet connection.", hostLeft: "The host left the game.",
-    mpTurn: (n) => n + " is playing…", yourTurn: "Your turn — roll the dice!", win: (n) => n + " wins!", rematch: "Rematch", you: "you", hostTag: "host",
+    mpTurn: (n) => n + " is playing…", yourTurn: "Your turn — roll the dice!", turnMine: "Your turn",win: (n) => n + " wins!", rematch: "Rematch", you: "you", hostTag: "host",
     mnTag: "Roll · Hold · Write it down", mnResume: "Resume", mnResumeSub: "Your game is still running", mnResumeMp: "Back to the multiplayer game",
     mnSolo: "Single player", mnSoloAgain: "New single-player game", mnSoloSub: "Chase your own high score — 13 rounds",
     mnSure: "Sure?", mnSureSub: "The running game is lost — tap again",
@@ -138,7 +138,7 @@ const I18N = {
     playersN: (n) => "Spieler (" + n + "/6)", start: "Spiel starten", needTwo: "Warte auf weitere Spieler …", waitHost: "Warte auf den Start durch den Host …",
     connecting: "Verbinde …", leave: "Verlassen", roomFull: "Der Raum ist voll oder das Spiel läuft schon.", noRoom: "Kein Raum mit diesem Code gefunden.",
     netFail: "Verbindung fehlgeschlagen. Prüfe deine Internetverbindung.", hostLeft: "Der Host hat das Spiel verlassen.",
-    mpTurn: (n) => n + " ist dran …", yourTurn: "Du bist dran – würfle!", win: (n) => n + " gewinnt!", rematch: "Revanche", you: "du", hostTag: "Host",
+    mpTurn: (n) => n + " ist dran …", yourTurn: "Du bist dran – würfle!", turnMine: "Du bist dran",win: (n) => n + " gewinnt!", rematch: "Revanche", you: "du", hostTag: "Host",
     mnTag: "Würfeln · Halten · Aufschreiben", mnResume: "Weiterspielen", mnResumeSub: "Dein Spiel läuft noch", mnResumeMp: "Zurück zum Mehrspielerspiel",
     mnSolo: "Einzelspieler", mnSoloAgain: "Neues Einzelspiel", mnSoloSub: "Allein auf Punktejagd – 13 Runden",
     mnSure: "Sicher?", mnSureSub: "Das laufende Spiel geht verloren – nochmal tippen",
@@ -1205,15 +1205,17 @@ function renderCard() {
   const rows = cardRows().map((r, i) => rowHTML(r, i + 2, cols)).join("");
   const secs = v.id !== "blue";
   const nextTh = (d) => t("th_" + THEMES[(S.theme + d + THEMES.length) % THEMES.length].id);
+  // in a multiplayer game the name is the player's own name from the room (read-only); solo it is typed here
+  const me = MP && MP.players.find((p) => p.id === MP.myId);
   cardEl.innerHTML = `<div class="kn-paper">
-    <div class="kn-themes">
-      <button class="kn-th" data-th="-1" title="${t("theme")}: ${nextTh(-1)}" aria-label="${t("theme")}: ${nextTh(-1)}"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
-      <button class="kn-th" data-th="1" title="${t("theme")}: ${nextTh(1)}" aria-label="${t("theme")}: ${nextTh(1)}"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
-    </div>
     <div class="kn-head">
       <div class="kn-ttl"><span class="t">${hw(R().name, 0.1, "big")}</span><span class="s">${hw(t("sub_" + v.id), 0.5)}</span>
         <svg class="kn-ul" viewBox="0 0 100 8" preserveAspectRatio="none"><path pathLength="1" d="M1 5.5C18 1.5 38 7 58 3.5S88 4 99 2.5"/></svg></div>
-      <div class="kn-name"><span>${hw(t("name"), 0.6)}</span><input id="kn-name" maxlength="16" spellcheck="false" autocomplete="off" placeholder="${esc(t("player"))}" value="${esc(S.name)}"></div>
+      <div class="kn-name"><span>${hw(t("name"), 0.6)}</span><input id="kn-name" maxlength="16" spellcheck="false" autocomplete="off"${me ? " readonly" : ""} placeholder="${esc(t("player"))}" value="${esc(me ? me.name : S.name)}">
+        <div class="kn-themes">
+          <button class="kn-th" data-th="-1" title="${t("theme")}: ${nextTh(-1)}" aria-label="${t("theme")}: ${nextTh(-1)}"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button class="kn-th" data-th="1" title="${t("theme")}: ${nextTh(1)}" aria-label="${t("theme")}: ${nextTh(1)}"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div></div>
     </div>
     <div class="kn-tbl" style="--n:${cols}">
       <div class="kn-r hd top" style="--h:1;--b:.3s"><div class="kn-c l sec">${secs ? hw(t("secUpper"), 0.4) : ""}</div><div class="kn-c h"></div>${hdr}</div>
@@ -1226,7 +1228,7 @@ function renderCard() {
   shown = {};
   Q.length = 0;
   const nm = cardEl.querySelector("#kn-name");
-  nm.addEventListener("input", () => { S.name = nm.value; save(); });
+  if (!me) nm.addEventListener("input", () => { S.name = nm.value; save(); });
   nm.addEventListener("keydown", (e) => { e.stopPropagation(); if (e.key === "Enter") nm.blur(); });
   sync(false);
   markColumn();
@@ -1299,6 +1301,10 @@ function buildNum(value, key) {
   if (key === "yb" && value <= 3) {
     for (let i = 0; i < value; i++) add(CHECK, `translate(${i * 7 + 0.6 + rnd(-0.2, 0.2)} ${1 + rnd(-0.3, 0.3)}) rotate(${rnd(-5, 5)} 3 5)`);
     w = value * 7 + 1;
+  } else if (value === 0 && CATS.includes(key)) {
+    // a field that scored nothing is struck through instead of being written as 0
+    add("M0.6 10.4 C4.8 7.6 9.6 4.4 14.6 1.4", "translate(0 0)");
+    w = 15.2;
   } else {
     let x = 0.8;
     for (const ch of String(value)) {
@@ -1438,7 +1444,8 @@ const CSS = `
 .kn-top b { font-size: 20px; letter-spacing: .05em; color: #ffe6a6; font-weight: 700; }
 .kn-top span { font-size: 14px; color: #ecdab0; opacity: .9; }
 .kn-bottom { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; }
-.kn-prompt { min-height: 20px; max-width: 560px; font-size: 15px; font-style: italic; color: #f4e3bc; text-shadow: 0 1px 4px #000; text-align: center; padding: 0 16px; line-height: 1.3; }
+/* a fixed two-line box: the prompt text changes length, and layout() positions the table from this box's height */
+.kn-prompt { height: 2.6em; max-width: 560px; font-size: 15px; font-style: italic; color: #f4e3bc; text-shadow: 0 1px 4px #000; text-align: center; padding: 0 16px; line-height: 1.3; }
 .kn-ctl { display: flex; align-items: center; gap: 22px; }
 #kn-root .kn-roll { pointer-events: auto; cursor: pointer; position: relative; display: flex; align-items: center; gap: 12px; padding: 0 26px; height: 56px; min-width: 210px; justify-content: center;
   font: 700 21px Georgia, serif; letter-spacing: .16em; text-transform: uppercase; color: #3d2106; border: 0; border-radius: 30px;
@@ -1496,8 +1503,9 @@ const CSS = `
 .v-mono .kn-lab, .v-mono .hw { text-transform: uppercase; }
 .v-mono .kn-ttl .t { transform: skewX(-6deg); }
 
-.kn-themes { position: absolute; right: calc(var(--u) * .5); top: calc(var(--u) * .06); display: flex; gap: calc(var(--u) * .2); z-index: 3; }
-#kn-root .kn-th { flex: none; width: calc(var(--u) * .78); height: calc(var(--u) * .78); min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 50%; cursor: pointer; color: var(--ink);
+/* the theme arrows sit at the right end of the name row, clear of the page's own "Design" button */
+.kn-themes { flex: none; display: flex; align-items: flex-end; gap: calc(var(--u) * .24); margin-left: calc(var(--u) * .1); padding-bottom: 1px; z-index: 3; }
+#kn-root .kn-th { flex: none; width: calc(var(--u) * .98); height: calc(var(--u) * .98); min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 50%; cursor: pointer; color: var(--ink);
   background: transparent; border: var(--lh) solid var(--line); box-shadow: none; transition: background .15s, transform .1s; }
 #kn-root .kn-th:hover { background: var(--hl); color: var(--ink); border-color: var(--line); box-shadow: none; }
 #kn-root .kn-th:active { transform: scale(.9); }
@@ -1517,6 +1525,7 @@ const CSS = `
 .kn-name > span { line-height: 1; padding-bottom: 2px; }
 .kn-name input { flex: 1; min-width: 0; border: 0; border-bottom: var(--lh) solid var(--line); background: transparent; font: inherit; font-size: calc(var(--u) * .9); line-height: 1.1;
   color: var(--pen); outline: none; padding: 0 4px; -webkit-user-select: text; user-select: text; }
+.kn-name input[readonly] { cursor: default; }
 .kn-name input::placeholder { color: var(--pencil); opacity: .5; }
 
 .kn-tbl { display: block; }
@@ -1682,7 +1691,9 @@ function updateHUD() {
   rollBtn.querySelector("kbd").textContent = t("rollKey");
   [...dotsEl.children].forEach((d, i) => d.classList.toggle("on", i < G.rolls && !over));
   dotsEl.title = t("left", G.rolls);
-  promptEl.textContent = G.phase === "wait" ? t("mpTurn", MP.players[MP.turn].name) : G.phase === "idle" ? (MP ? t("yourTurn") : t("pIdle")) : G.phase === "choose" ? (G.rolls > 0 ? t("pHold") : t("pPick")) : "";
+  const hint = G.phase === "wait" ? t("mpTurn", MP.players[MP.turn].name) : G.phase === "idle" ? (MP ? t("yourTurn") : t("pIdle")) : G.phase === "choose" ? (G.rolls > 0 ? t("pHold") : t("pPick")) : "";
+  // while you are at the table in a multiplayer game, say so on every step of your turn (idle already says it)
+  promptEl.textContent = MP && G.phase === "choose" ? t("turnMine") + " – " + hint : hint;
   setStatus(t("round", over ? ROUNDS : filled + 1) + " · " + total, over ? "solved" : null);
   const u = document.getElementById("kn-t-undo");
   if (u) u.disabled = !!MP || !(G.snap && G.phase === "idle");
