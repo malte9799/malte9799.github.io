@@ -597,8 +597,9 @@
     // the profile panel on the left: name, avatar and colour (shown from the big icon in the lobby window)
     renderProf() {
       if (!this.profEl) return;
-      const show = this.open && !!R && R.status !== "connecting" && this.profOpen;
+      const show = this.open && !!R && R.status !== "connecting";      // always on the desktop; on phones it is behind the toggle (CSS)
       this.profEl.classList.toggle("show", show);
+      this.profEl.classList.toggle("mp-prof-open", this.profOpen);
       if (!show) return;
       const keep = (this.profEl.querySelector("#mp-pname") || {}).value;
       this.profEl.innerHTML = `<button class="mp-qr-close" data-act="profclose" aria-label="${t("close")}">✕</button><h4>${t("profileT")}</h4><label for="mp-pname">${t("yourName")}</label><input id="mp-pname" maxlength="12" autocomplete="off" spellcheck="false" value="${esc(keep ?? R.name)}">${this.pickers(R.avatar, R.color)}`;
