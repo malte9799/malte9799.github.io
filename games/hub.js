@@ -36,23 +36,12 @@ mountThemePicker($("hub"));                       // the design button, top righ
 
 let run = null;          // the game that is running (or loading) right now; null in the lobby
 
-// ---- mode: Mehrspieler / Einzelspieler ----
-// Not in a room: the heading is two buttons. In a room (or while a game runs) it is the plain "Mehrspieler" heading.
-// The choice is remembered; ?mode=solo|multi overrides it, and an invite link (?room=CODE) always means multi.
+// ---- views: no room → the single-player grid; in a room (or while a game runs) → only multiplayer games ----
+// The global multiplayer button (MP dock) is the way into a room. An invite link (?room=CODE) opens the room view.
 
 const params = new URLSearchParams(location.search);
 let fromLink = !!params.get("room");              // opened through an invite link: no "open a new room" card until you are in a room
-let mode = "multi";
-try { if (localStorage.getItem("games_mode") === "solo") mode = "solo"; } catch {}
-if (params.get("mode") === "solo" || params.get("mode") === "multi") mode = params.get("mode");
-if (fromLink) mode = "multi";
 const inRoom = () => { const s = MP.state; return !!s && s.status !== "connecting"; };
-
-function setMode(m) {
-  mode = m;
-  try { localStorage.setItem("games_mode", m); } catch {}
-  renderLobby();
-}
 
 // ---- Einzelspieler: the card grid of the old start page (home.js) ----
 
@@ -88,6 +77,7 @@ function buildMpCards() {
         <div class="card-meta">${players(game)}</div>
       </div>`;
     grid.appendChild(c);
+    designCard(c, game, idx);                     // design decoration, e.g. the y2k window bar
     mpSketches.push(new p5(function (p) {
       p.setup = function () {
         p.createCanvas(600, 360).parent(c.querySelector(".preview"));
@@ -118,15 +108,12 @@ window.addEventListener("themechange", () => themeFontReady().then(buildMpCards)
 function renderLobby() {
   const s = MP.state, room = inRoom();
   if (room) fromLink = false;
-  const view = run || room ? "multi" : mode;
-  const showMulti = !run && view === "multi", showSolo = !run && view === "solo";
+  const showMulti = !!run || room || fromLink;    // in a room (or invited by link): multiplayer games only
+  const showSolo = !showMulti;                    // outside a room: single-player games
 
   $("hub-lobby").hidden = !showMulti;
   $("hub-solo").hidden = !showSolo;
   if (showSolo) ensureSolo();
-  $("hub-title").hidden = !room;                  // heading while in a room …
-  $("hub-modes").hidden = room;                   // … two buttons otherwise
-  for (const b of $("hub-modes").children) b.setAttribute("aria-pressed", String(b.dataset.mode === view));
 
   const top = $("hub-top"), act = $("hub-act");
   if (!showMulti) return;
@@ -143,7 +130,7 @@ function renderLobby() {
   const why = !g ? "Wähle ein Spiel." : n < g.min ? `Warte auf Mitspieler (mind. ${g.min}).` : n > g.max ? `Zu viele Spieler für dieses Spiel (max. ${g.max}).` : "";
   top.innerHTML = `<div class="hub-card hub-roomhead"><div class="hub-head"><h2>Spiel wählen</h2><span class="hub-meta">Raum <b>${esc(s.code)}</b> · ${n} Spieler</span></div></div>`;
   act.innerHTML = s.isHost
-    ? `<div class="hub-act"><button class="primary" id="hub-start" ${why ? "disabled" : ""}>Spiel starten</button>${why ? `<p>${esc(why)}</p>` : ""}</div>`
+    ? `<div class="hub-act">${why ? `<p>${esc(why)}</p>` : `<p class="hub-wait">Klick auf ein Spiel, um es zu starten.</p>`}</div>`
     : `<p class="hub-wait">Der Host wählt das Spiel${g ? ` – aktuell: <b>${esc(g.title)}</b>` : ""}.</p>`;
   syncCards();
 }
@@ -185,9 +172,15 @@ function openHow() {
   b.querySelector(".hub-how-x").focus();
 }
 
+// no room yet: picking a game opens one. Host: a click chooses the game and starts it at once
+// (start() checks the player count, so a game that needs more players just stays in the lobby).
 function pickCard(card) {
-  if (!inRoom()) MP.openUI();                      // no room yet: picking a game starts with opening one
-  else if (MP.isHost) { const g = def(card.dataset.game); if (g) MP.setGame(g.id, { min: g.min, max: g.max }); }
+  if (!inRoom()) { MP.openUI(); return; }
+  if (!MP.isHost) return;
+  const g = def(card.dataset.game);
+  if (!g) return;
+  MP.setGame(g.id, { min: g.min, max: g.max });
+  MP.start(startOpts());
 }
 
 document.addEventListener("click", (e) => {
@@ -196,9 +189,7 @@ document.addEventListener("click", (e) => {
   const t = e.target.closest("button");
   if (!t) return;
   if (t.id === "hub-how") openHow();
-  else if (t.dataset.mode) setMode(t.dataset.mode);
   else if (t.id === "hub-open") MP.openUI();
-  else if (t.id === "hub-start") MP.start(startOpts());
 });
 document.addEventListener("keydown", (e) => {
   const card = e.target.closest && e.target.closest("#hub-grid .card");
