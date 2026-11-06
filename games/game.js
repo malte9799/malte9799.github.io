@@ -37,6 +37,8 @@ function initGame(cfg) {
   document.title = cfg.title + " · Games";
   _buildShell();
   _wireShell();
+  window._pageKind = "game";
+  themeAssetsReady().then(designMount);   // design-specific decoration (designs/<id>.js)
 }
 
 // ---- shell construction ----

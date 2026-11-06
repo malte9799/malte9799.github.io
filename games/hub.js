@@ -16,7 +16,11 @@
 const MP_GAMES = [
   { id: "tictactoe", title: "Tic Tac Toe", desc: "Normal oder Super – zu zweit am Brett, der Rest schaut zu und rotiert", min: 2, max: 6, preview: (p, w, h) => drawTicTacToe(p, w, h), load: () => import("./hub-games/tictactoe.js") },
   { id: "kniffel", title: "Kniffel", desc: "Würfeln, halten, aufschreiben – Kniffel, Yahtzee, Yatzy, Generala", min: 2, max: 6, preview: (p, w, h) => drawKniffel(p, w, h), load: () => import("./hub-games/kniffel.js") },
+  { id: "maexchen", title: "Mäxchen", desc: "Lügenwürfel: höher ankündigen oder bezweifeln? Bluff-Duell am Filztisch", min: 2, max: 6, preview: (p, w, h) => drawMaexchen(p, w, h), load: () => import("./hub-games/maexchen.js") },
+  { id: "maumau", title: "Mau-Mau", desc: "UNO-Regeln: Farbe bekennen, +2, Aussetzen – und rechtzeitig UNO! rufen", min: 2, max: 6, preview: (p, w, h) => drawMaumau(p, w, h), load: () => import("./hub-games/maumau.js") },
   { id: "clickrace", title: "Klick-Rennen", desc: "15 Sekunden, wer klickt mehr?", min: 2, max: 6, preview: (p, w, h) => drawClickRace(p, w, h), load: () => import("./hub-games/clickrace.js") },
+  { id: "kritzel", title: "Kritzel-Revier", desc: "Echtzeit: kritzle das größte Revier – Flecken blockieren, Sterne geben Turbo", min: 2, max: 4, preview: (p, w, h) => drawKritzel(p, w, h), load: () => import("./hub-games/kritzel.js") },
+  { id: "leftleftleft", title: "Left! Left! Left!", desc: "Fahrer fährt, Beifahrer navigiert – Ansagen rechtzeitig machen", min: 2, max: 2, preview: (p, w, h) => drawLeftLeftLeft(p, w, h), load: () => import("./hub-games/leftleftleft.js") },
 ];
 window.MP_GAMES = MP_GAMES;                        // multiplayer.js reads the game titles from here
 
@@ -34,23 +38,12 @@ mountThemePicker($("hub"));                       // the design button, top righ
 
 let run = null;          // the game that is running (or loading) right now; null in the lobby
 
-// ---- mode: Mehrspieler / Einzelspieler ----
-// Not in a room: the heading is two buttons. In a room (or while a game runs) it is the plain "Mehrspieler" heading.
-// The choice is remembered; ?mode=solo|multi overrides it, and an invite link (?room=CODE) always means multi.
+// ---- views: no room → the single-player grid; in a room (or while a game runs) → only multiplayer games ----
+// The global multiplayer button (MP dock) is the way into a room. An invite link (?room=CODE) opens the room view.
 
 const params = new URLSearchParams(location.search);
 let fromLink = !!params.get("room");              // opened through an invite link: no "open a new room" card until you are in a room
-let mode = "multi";
-try { if (localStorage.getItem("games_mode") === "solo") mode = "solo"; } catch {}
-if (params.get("mode") === "solo" || params.get("mode") === "multi") mode = params.get("mode");
-if (fromLink) mode = "multi";
 const inRoom = () => { const s = MP.state; return !!s && s.status !== "connecting"; };
-
-function setMode(m) {
-  mode = m;
-  try { localStorage.setItem("games_mode", m); } catch {}
-  renderLobby();
-}
 
 // ---- Einzelspieler: the card grid of the old start page (home.js) ----
 
@@ -86,6 +79,7 @@ function buildMpCards() {
         <div class="card-meta">${players(game)}</div>
       </div>`;
     grid.appendChild(c);
+    designCard(c, game, idx);                     // design decoration, e.g. the y2k window bar
     mpSketches.push(new p5(function (p) {
       p.setup = function () {
         p.createCanvas(600, 360).parent(c.querySelector(".preview"));
@@ -116,15 +110,12 @@ window.addEventListener("themechange", () => themeFontReady().then(buildMpCards)
 function renderLobby() {
   const s = MP.state, room = inRoom();
   if (room) fromLink = false;
-  const view = run || room ? "multi" : mode;
-  const showMulti = !run && view === "multi", showSolo = !run && view === "solo";
+  const showMulti = !!run || room || fromLink;    // in a room (or invited by link): multiplayer games only
+  const showSolo = !showMulti;                    // outside a room: single-player games
 
   $("hub-lobby").hidden = !showMulti;
   $("hub-solo").hidden = !showSolo;
   if (showSolo) ensureSolo();
-  $("hub-title").hidden = !room;                  // heading while in a room …
-  $("hub-modes").hidden = room;                   // … two buttons otherwise
-  for (const b of $("hub-modes").children) b.setAttribute("aria-pressed", String(b.dataset.mode === view));
 
   const top = $("hub-top"), act = $("hub-act");
   if (!showMulti) return;
@@ -141,20 +132,22 @@ function renderLobby() {
   const why = !g ? "Wähle ein Spiel." : n < g.min ? `Warte auf Mitspieler (mind. ${g.min}).` : n > g.max ? `Zu viele Spieler für dieses Spiel (max. ${g.max}).` : "";
   top.innerHTML = `<div class="hub-card hub-roomhead"><div class="hub-head"><h2>Spiel wählen</h2><span class="hub-meta">Raum <b>${esc(s.code)}</b> · ${n} Spieler</span></div></div>`;
   act.innerHTML = s.isHost
-    ? `<div class="hub-act"><button class="primary" id="hub-start" ${why ? "disabled" : ""}>Spiel starten</button>${why ? `<p>${esc(why)}</p>` : ""}</div>`
+    ? `<div class="hub-act">${why ? `<p>${esc(why)}</p>` : `<p class="hub-wait">Klick auf ein Spiel, um es zu starten.</p>`}</div>`
     : `<p class="hub-wait">Der Host wählt das Spiel${g ? ` – aktuell: <b>${esc(g.title)}</b>` : ""}.</p>`;
   syncCards();
 }
 
 function renderTools() {
-  const s = MP.state;
-  let b = $("hub-end");
-  const need = !!s && s.isHost && s.status === "playing";
-  if (need && !b) {
-    b = document.createElement("button"); b.id = "hub-end"; b.textContent = "Zurück zur Lobby";
-    b.onclick = () => MP.endGame();
-    $("hub-tools").prepend(b);
-  } else if (!need && b) b.remove();
+  // "Zurück zur Lobby" and "Raum verlassen" live in the frame of the game itself (hub-kit.js)
+
+  // a game is running but its page was closed: offer to bring it back
+  let show = $("hub-show");
+  const hidden = !!run && !run.open;
+  if (hidden && !show) {
+    show = document.createElement("button"); show.id = "hub-show"; show.className = "primary"; show.textContent = "Spiel anzeigen";
+    show.onclick = () => showStage(true);
+    $("hub-tools").prepend(show);
+  } else if (!hidden && show) show.remove();
 }
 
 // ---- "Wie funktioniert’s?" modal ----
@@ -183,9 +176,15 @@ function openHow() {
   b.querySelector(".hub-how-x").focus();
 }
 
+// no room yet: picking a game opens one. Host: a click chooses the game and starts it at once
+// (start() checks the player count, so a game that needs more players just stays in the lobby).
 function pickCard(card) {
-  if (!inRoom()) MP.openUI();                      // no room yet: picking a game starts with opening one
-  else if (MP.isHost) { const g = def(card.dataset.game); if (g) MP.setGame(g.id, { min: g.min, max: g.max }); }
+  if (!inRoom()) { MP.openUI(); return; }
+  if (!MP.isHost) return;
+  const g = def(card.dataset.game);
+  if (!g) return;
+  MP.setGame(g.id, { min: g.min, max: g.max });
+  MP.start(startOpts());
 }
 
 document.addEventListener("click", (e) => {
@@ -194,9 +193,7 @@ document.addEventListener("click", (e) => {
   const t = e.target.closest("button");
   if (!t) return;
   if (t.id === "hub-how") openHow();
-  else if (t.dataset.mode) setMode(t.dataset.mode);
   else if (t.id === "hub-open") MP.openUI();
-  else if (t.id === "hub-start") MP.start(startOpts());
 });
 document.addEventListener("keydown", (e) => {
   const card = e.target.closest && e.target.closest("#hub-grid .card");
@@ -204,6 +201,16 @@ document.addEventListener("keydown", (e) => {
 });
 
 // ---- running a game ----
+
+// The last game state every client has seen is kept for this tab (sessionStorage), so a reload can pick the
+// game up again where it was. Games that broadcast a "state" message (Tic Tac Toe, Mäxchen, Mau-Mau) are
+// restored that way; games that keep their state elsewhere start over in the same room.
+const STATE_KEY = "mp_game_state";
+function cacheState(runId, data) { try { sessionStorage.setItem(STATE_KEY, JSON.stringify({ run: runId, data })); } catch {} }
+function cachedState(runId) {
+  try { const c = JSON.parse(sessionStorage.getItem(STATE_KEY) || "null"); return c && c.run === runId ? c : null; } catch { return null; }
+}
+function clearCachedState() { try { sessionStorage.removeItem(STATE_KEY); } catch {} }
 
 function makeCtx(rt, players, options) {
   const clean = [];
@@ -213,25 +220,30 @@ function makeCtx(rt, players, options) {
     get me() { return MP.me; },
     get isHost() { return MP.isHost; },
     get hostId() { return MP.state && MP.state.hostId; },
-    send: (type, data, to) => MP.send(key(type), data, to),
+    send: (type, data, to) => { if (type === "state") cacheState(rt.id, data); return MP.send(key(type), data, to); },
     onMessage(type, fn) { const off = MP.onMessage(key(type), fn); clean.push(off); return off; },
     onEvent(ev, fn) { const off = MP.on(ev, fn); clean.push(off); return off; },
     addCleanup: (fn) => clean.push(fn),
-    end: () => MP.endGame(),
+    end: () => MP.endGame(),                       // host: the game ends for everybody, back to the lobby
+    back: () => showStage(false),                  // guest: only this view closes, the game goes on
+    leaveRoom: () => MP.leave(),
+    room: () => MP.state,
     _cleanup() { for (const f of clean.splice(0)) { try { f(); } catch (e) { console.error(e); } } },
   };
 }
 
-async function startGame({ game, options, players }) {
+async function startGame({ game, options, players, resumed }) {
   stopGame();
   const g = def(game);
   const id = options && options.run;
   const root = $("hub-stage");
   if (!g || !id) { MP.endGame(); return; }
   const rt = { id, root, ready: new Set([MP.me.id]), mounted: false, went: false, offs: [], timer: 0, ctx: null, inst: null };
+  rt.offs.push(MP.onMessage(id + "/state", ({ data }) => cacheState(id, data)));   // remember what the host last showed us
   run = rt;
-  root.hidden = false; root.className = "hub-stage hub-" + g.id;
+  root.hidden = false; root.className = "hub-stage hk-page hub-" + g.id;
   root.innerHTML = `<p class="hub-loading">Lade ${esc(g.title)} …</p>`;
+  showStage(true);
   renderLobby(); renderTools();
 
   const key = (t) => id + "/" + t;
@@ -254,7 +266,11 @@ async function startGame({ game, options, players }) {
     rt.inst = (await mod.mount(rt.ctx)) || {};
     if (run !== rt) { try { rt.inst.destroy && rt.inst.destroy(); } catch {} rt.ctx._cleanup(); return; }
     rt.mounted = true;
-    if (MP.isHost) { rt.timer = setTimeout(() => { if (run === rt && !rt.went) { MP.send(key("hub:go")); go(); } }, READY_TIMEOUT); maybeGo(); }
+    if (resumed && !MP.isHost) {                                  // back after a reload: the game is already running for the others
+      const c = cachedState(id);
+      if (c) MP.deliver(key("state"), c.data, MP.state.hostId);
+      go();
+    } else if (MP.isHost) { rt.timer = setTimeout(() => { if (run === rt && !rt.went) { MP.send(key("hub:go")); go(); } }, READY_TIMEOUT); maybeGo(); }
     else MP.send(key("hub:ready"), null, MP.state.hostId);
   } catch (e) {
     console.error(e);
@@ -271,12 +287,38 @@ function stopGame() {
   try { rt.inst && rt.inst.destroy && rt.inst.destroy(); } catch (e) { console.error(e); }
   if (rt.ctx) rt.ctx._cleanup();
   rt.root.innerHTML = ""; rt.root.hidden = true; rt.root.className = "";
+  showStage(false);
 }
+
+// the game window: open/closed. Closing only hides it; the game keeps running until the host ends it.
+function showStage(open) {
+  $("hub-overlay").hidden = !open;
+  document.body.classList.toggle("hub-game-open", open);
+  if (run) run.open = open;
+  renderTools();
+}
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && run && run.open) showStage(false); });
 
 MP.on("start", startGame);
 MP.on("pick", () => { const el = $("hub-grid"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); });
-for (const ev of ["end", "close"]) MP.on(ev, () => { stopGame(); renderLobby(); renderTools(); });
+for (const ev of ["end", "close"]) MP.on(ev, () => { stopGame(); clearCachedState(); renderLobby(); renderTools(); });
 for (const ev of ["players", "game", "status", "host", "join", "error"]) MP.on(ev, () => { renderLobby(); renderTools(); });
 
 renderLobby();
 MP.openFromUrl();
+
+// Vorschau der Karte: Straße mit Kurve, Autoinnenraum unten (statisch, nur einmal gezeichnet)
+function drawLeftLeftLeft(p, w, h) {
+  p.background(159, 216, 240);
+  p.noStroke();
+  p.fill(79, 154, 58); p.rect(0, h * 0.5, w, h * 0.5);
+  p.stroke(74, 74, 80); p.strokeWeight(54); p.noFill();
+  p.bezier(w * 0.15, h * 1.0, w * 0.2, h * 0.55, w * 0.7, h * 0.7, w * 0.85, h * 0.45);
+  p.stroke(242, 239, 224); p.strokeWeight(4);
+  p.drawingContext.setLineDash([14, 22]);
+  p.bezier(w * 0.15, h * 1.0, w * 0.2, h * 0.55, w * 0.7, h * 0.7, w * 0.85, h * 0.45);
+  p.drawingContext.setLineDash([]);
+  p.noStroke(); p.fill(194, 58, 58); p.rect(0, h * 0.82, w, h * 0.18);
+  p.fill(154, 154, 154); p.rect(w * 0.2, h * 0.7, w * 0.6, h * 0.12);
+  p.fill(21, 21, 21); p.circle(w * 0.42, h * 0.84, h * 0.2);
+}

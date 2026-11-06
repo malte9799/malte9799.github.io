@@ -89,11 +89,17 @@ function buildHome(grid) {
           game.preview(p, 600, 360);
         };
       }));
+      designCard(a, game, idx);   // design-specific decoration (designs/<id>.js)
     });
   }
 
   // previews are drawn once, so wait for the canvas font before drawing them,
   // and redraw them whenever the design changes
-  themeFontReady().then(buildCards);
-  window.addEventListener("themechange", () => themeFontReady().then(buildCards));
+  // (a design's stylesheet/script must be in before its cards are built)
+  const rebuild = () => Promise.all([themeFontReady(), themeAssetsReady()]).then(() => {
+    buildCards();
+    designMount();
+  });
+  rebuild();
+  window.addEventListener("themechange", rebuild);
 }

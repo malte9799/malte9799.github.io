@@ -1,0 +1,159 @@
+/* ---- Bauhaus: primary colours, circle · square · triangle, hard grid, lowercase ---- */
+html[data-theme="bauhaus"] {
+  --bg: #f0e8d6;
+  --board: #f9f4e7;
+  --panel: #f9f4e7;
+  --panel-2: #f6c000;
+  --panel-edge: #141414;
+  --edge-hover: #d62828;
+  --grid-line: #141414;
+  --hairline: #141414;
+  --ink: #141414;
+  --muted: #55514a;
+  --dim: #a8a190;
+  --sun: #f6c000;
+  --mint: #008666;
+  --rose: #d62828;
+  --sky: #0052b4;
+  --lilac: #603e92;
+  --accent: #d62828;
+  --toggle: #0052b4;
+  --toggle-fg: #0052b4;
+
+  --bh-red: #d62828;
+  --bh-yel: #f6c000;
+  --bh-blu: #0052b4;
+  --bh-blk: #141414;
+  --bh-cream: #f9f4e7;
+
+  --ease: cubic-bezier(0.7, 0, 0.2, 1);
+  --font: "Jost", "Futura", "Century Gothic", system-ui, sans-serif;
+  --font-display: var(--font);
+  --ui-tracking: 0.01em;
+  --title-size: 38px;
+  --title-weight: 800;
+  --title-tracking: -0.04em;
+  --title-transform: lowercase;
+  --hero-fill: none;
+  --hero-size: clamp(76px, 17vw, 200px);
+
+  --r-sm: 0;
+  --r-md: 0;
+  --r-lg: 0;
+  --r-xl: 0;
+  --border-w: 3px;
+
+  --page-bg: var(--bg);
+  --wrap-shadow: 10px 10px 0 #d62828;
+  --btn-shadow: none;
+  --btn-shadow-press: none;
+  --btn-press: translate(2px, 2px);
+  --primary-bg: #d62828;
+  --primary-hover: #141414;
+  --primary-fg: #f9f4e7;
+  --primary-border: #141414;
+  --primary-shadow: none;
+  --card-bg: #f9f4e7;
+  --card-shadow: none;
+  --card-hover-shadow: 8px 8px 0 #141414;
+  --card-hover-lift: translate(-6px, -6px);
+  --modal-bg: #f9f4e7;
+  --modal-shadow: 12px 12px 0 #0052b4;
+  --backdrop: rgba(240, 232, 214, 0.82);
+  --bar-bg: rgba(240, 232, 214, 0.95);
+  --chip-bg: #f9f4e7;
+  color-scheme: light;
+}
+html[data-theme="bauhaus"] body::before { /* the thick top rule: three primary blocks */
+  content: ""; position: fixed; left: 0; right: 0; top: 0; height: 10px; z-index: 50; pointer-events: none;
+  background: linear-gradient(90deg, #d62828 0 33.33%, #f6c000 33.33% 66.66%, #0052b4 66.66% 100%);
+}
+html[data-theme="bauhaus"] ::selection { background: #f6c000; color: #141414; }
+
+/* hero: asymmetric — title on the left, composition on the right */
+html[data-theme="bauhaus"] #home { max-width: 1120px; padding-top: 70px; }
+html[data-theme="bauhaus"] #home .hero { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: 40px; align-items: end; text-align: left; margin-bottom: 56px; padding-bottom: 28px; border-bottom: 10px solid #141414; position: relative; }
+html[data-theme="bauhaus"] #home .hero > * { grid-column: 1; }
+html[data-theme="bauhaus"] #home .site-link { justify-self: start; font-weight: 700; text-transform: lowercase; font-size: 16px; color: #141414; border-bottom: 3px solid #d62828; padding: 0 0 2px; margin: 0 0 30px; }
+html[data-theme="bauhaus"] #home .site-link:hover { background: #f6c000; color: #141414; }
+html[data-theme="bauhaus"] #home h1 {
+  background: none; -webkit-background-clip: border-box; background-clip: border-box; color: #141414;
+  font-weight: 800; letter-spacing: -0.055em; line-height: 0.78; margin: 0 0 20px; text-transform: lowercase;
+}
+html[data-theme="bauhaus"] #home h1::after { content: ""; display: block; width: 46%; height: 18px; background: #d62828; margin-top: 22px; }
+html[data-theme="bauhaus"] #home .subtitle { font-size: 21px; font-weight: 500; color: #141414; max-width: 22ch; line-height: 1.25; }
+.bh-comp { grid-column: 2 !important; grid-row: 1 / span 4; width: 100%; max-height: 340px; justify-self: end; overflow: visible; }
+.bh-comp .sq { transform-box: fill-box; transform-origin: center; animation: bh-turn 40s linear infinite; mix-blend-mode: multiply; }
+.bh-comp .ci, .bh-comp .tr { mix-blend-mode: multiply; }
+.bh-comp .ha { transform-box: fill-box; transform-origin: 50% 100%; animation: bh-rock 7s ease-in-out infinite alternate; }
+@keyframes bh-turn { to { transform: rotate(360deg); } }
+@keyframes bh-rock { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
+.bh-comp:hover .sq { animation-duration: 6s; }
+@media (max-width: 760px) {
+  html[data-theme="bauhaus"] #home .hero { grid-template-columns: 1fr; }
+  .bh-comp { grid-column: 1 !important; grid-row: auto; max-height: 190px; order: -1; justify-self: start; margin-bottom: 20px; }
+}
+
+/* cards: flat colour blocks, one shape each */
+html[data-theme="bauhaus"] #home .grid { gap: 30px 26px; }
+html[data-theme="bauhaus"] #home .card {
+  --cb: #f9f4e7; --cf: #141414; --cs: #0052b4;
+  border: 3px solid #141414; border-radius: 0; background: var(--cb); color: var(--cf); overflow: visible;
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+html[data-theme="bauhaus"] #home .card:nth-child(5n+1) { --cb: #d62828; --cf: #f9f4e7; --cs: #f6c000; }
+html[data-theme="bauhaus"] #home .card:nth-child(5n+2) { --cb: #f6c000; --cf: #141414; --cs: #141414; }
+html[data-theme="bauhaus"] #home .card:nth-child(5n+3) { --cb: #0052b4; --cf: #f9f4e7; --cs: #f6c000; }
+html[data-theme="bauhaus"] #home .card:nth-child(5n+4) { --cb: #141414; --cf: #f9f4e7; --cs: #d62828; }
+html[data-theme="bauhaus"] #home .card:nth-child(5n+5) { --cb: #f9f4e7; --cf: #141414; --cs: #0052b4; }
+html[data-theme="bauhaus"] #home .card:hover { transform: translate(-6px, -6px); box-shadow: 8px 8px 0 #141414; }
+html[data-theme="bauhaus"] #home .card .preview { background: var(--board); border-bottom: 3px solid #141414; overflow: hidden; }
+html[data-theme="bauhaus"] #home .card canvas { transition: transform 0.6s var(--ease); }
+html[data-theme="bauhaus"] #home .card:hover canvas { transform: scale(1.06); }
+html[data-theme="bauhaus"] #home .card-text { border: 0; padding: 14px 70px 18px 16px; position: relative; min-height: 86px; }
+html[data-theme="bauhaus"] #home .card-title { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; text-transform: lowercase; color: var(--cf); line-height: 1; }
+html[data-theme="bauhaus"] #home .card-desc { color: var(--cf); opacity: 0.85; font-weight: 500; font-size: 15px; margin-top: 6px; }
+html[data-theme="bauhaus"] #home .card-text::after {
+  content: ""; position: absolute; right: 16px; top: 50%; width: 38px; height: 38px; margin-top: -19px; background: var(--cs);
+  transition: transform 0.5s var(--ease);
+}
+html[data-theme="bauhaus"] #home .card:nth-child(3n+1) .card-text::after { border-radius: 50%; }
+html[data-theme="bauhaus"] #home .card:nth-child(3n+2) .card-text::after { border-radius: 0; }
+html[data-theme="bauhaus"] #home .card:nth-child(3n) .card-text::after { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+html[data-theme="bauhaus"] #home .card:hover .card-text::after { transform: rotate(180deg) scale(1.15); }
+html[data-theme="bauhaus"] #home .card:nth-child(3n+1):hover .card-text::after { transform: scale(1.3); }
+html[data-theme="bauhaus"] #home .star-btn { border: 3px solid #141414; border-radius: 0; background: #f9f4e7; color: #141414; top: 0; right: 0; width: 40px; height: 40px; }
+html[data-theme="bauhaus"] #home .star-btn.starred { background: #f6c000; }
+html[data-theme="bauhaus"] #home .star-btn.starred .star-icon { fill: #141414; }
+html[data-theme="bauhaus"] #home .card.reveal { --reveal-from: translateX(-34px); }
+
+/* game page */
+html[data-theme="bauhaus"] header { border-bottom: 8px solid #141414; padding-bottom: 10px; margin-bottom: 22px; align-items: flex-end; }
+html[data-theme="bauhaus"] #app h1 { font-size: 54px; line-height: 0.85; letter-spacing: -0.05em; }
+html[data-theme="bauhaus"] #app h1::after { content: "."; color: #d62828; }
+html[data-theme="bauhaus"] .tag { font-weight: 600; font-size: 14px; color: #141414; text-transform: lowercase; background: #f6c000; padding: 3px 8px; }
+html[data-theme="bauhaus"] .back-link { font-weight: 700; text-transform: lowercase; font-size: 16px; color: #141414; }
+html[data-theme="bauhaus"] .back-link:hover { background: #f6c000; color: #141414; }
+html[data-theme="bauhaus"] #canvas-wrap:not(.fs) { border-width: 4px; }
+html[data-theme="bauhaus"] .status { font-weight: 600; font-size: 16px; color: #141414; text-transform: lowercase; }
+html[data-theme="bauhaus"] .status .dot { border-radius: 0; background: #141414; width: 12px; height: 12px; }
+html[data-theme="bauhaus"] .status.solved { color: #008666; }
+html[data-theme="bauhaus"] .status.solved .dot { background: #008666; border-radius: 50%; box-shadow: none; }
+html[data-theme="bauhaus"] .status.dead .dot { background: #d62828; clip-path: polygon(50% 0, 100% 100%, 0 100%); box-shadow: none; }
+html[data-theme="bauhaus"] button, html[data-theme="bauhaus"] .preset-row select { background: #f9f4e7; font-weight: 700; text-transform: lowercase; font-size: 16px; letter-spacing: 0; }
+html[data-theme="bauhaus"] button:hover { background: #f6c000; border-color: #141414; }
+html[data-theme="bauhaus"] button.primary:hover { background: #141414; }
+html[data-theme="bauhaus"] button.active, html[data-theme="bauhaus"] button.hint-confirm { background: #0052b4; color: #f9f4e7; border-color: #141414; }
+html[data-theme="bauhaus"] button.active:hover, html[data-theme="bauhaus"] button.hint-confirm:hover { background: #003f8c; }
+html[data-theme="bauhaus"] .preset-row label, html[data-theme="bauhaus"] .hint-note { color: #141414; font-weight: 500; }
+html[data-theme="bauhaus"] .preset-row::after { border-color: #141414; }
+html[data-theme="bauhaus"] .controls { box-shadow: 6px 6px 0 #f6c000; }
+html[data-theme="bauhaus"] .info-title { font-size: 30px; }
+html[data-theme="bauhaus"] .theme-menu { box-shadow: 8px 8px 0 #141414; }
+html[data-theme="bauhaus"] .theme-opt:hover { background: #f6c000; }
+html[data-theme="bauhaus"] .theme-opt:hover .theme-sub { color: #141414; }
+@media (prefers-reduced-motion: reduce) { .bh-comp .sq, .bh-comp .ha { animation: none; } }
+
+/* primary button keeps its own colours over the design's generic button look */
+html[data-theme="bauhaus"] button.primary { background: var(--primary-bg); color: var(--primary-fg); border-color: var(--primary-border); }
+html[data-theme="bauhaus"] button.primary:hover { background: var(--primary-hover); color: var(--primary-fg); border-color: var(--primary-border); }

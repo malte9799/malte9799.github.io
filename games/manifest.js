@@ -20,7 +20,7 @@ const GAMES = [
   { id: "netwalk",     title: "Netwalk",       desc: "rotate pipes · power the grid", preview: drawNetwalk },
   { id: "blackjack",   title: "Blackjack",     desc: "hit · stand · beat the dealer", preview: drawBlackjack },
   { id: "kniffel",     title: "Kniffel · Yahtzee", desc: "roll · hold · write it down", preview: drawKniffel },
-  { id: "leftleftleft", title: "Left! Left! Left!", desc: "Fahrer fährt, Beifahrer navigiert", preview: drawLeftLeftLeft },
+  { id: "kritzel",     title: "Kritzel-Revier",    desc: "kritzle das größte Revier",   preview: drawKritzel },
 ];
 
 // ---- preview renderers ----
@@ -642,23 +642,245 @@ function drawKniffel(p, w, h) {
   p.pop();
 }
 
-function drawLeftLeftLeft(p, w, h) {
-  // Static preview: low-poly car interior with route map in passenger footwell
-  p.background(135, 206, 235); // sky
-  p.fill(30, 120, 40); p.rect(0, h * 0.6, w, h * 0.4, 8); // grass/road area
-  p.fill(240, 240, 240); p.rect(0, h * 0.6, w, h * 0.4, 8); // road stripe placeholder
-  // car interior (red)
-  p.fill(163, 58, 58); p.rect(0, 0, w, h * 0.55, 8);
-  // dashboard
-  p.fill(136, 136, 136); p.rect(0, h * 0.35, w, h * 0.25, 8);
-  // steering wheel
-  p.fill(17, 17, 17); p.circle(w * 0.42, h * 0.5, w * 0.06); p.circle(w * 0.42, h * 0.5, w * 0.03);
-  // route map UI (bottom)
-  p.fill(216, 195, 165); p.rect(w * 0.35, h * 0.55, w * 0.3, h * 0.32, 8);
-  p.fill(83, 64, 74); p.textAlign(p.LEFT, p.CENTER); p.textSize(13);
-  p.text("Routenkarte", w * 0.38, h * 0.62);
-  p.textAlign(p.CENTER, p.CENTER); p.textSize(40);
-  p.fill(163, 58, 58); p.text("↑", w * 0.5, h * 0.75);
-  p.fill(83, 64, 74); p.textSize(12); p.textAlign(p.CENTER, p.CENTER);
-  p.text("Geradeaus", w * 0.5, h * 0.86);
+// Mäxchen (hub only): the pub table — covered cups, one open claim, chalk marks
+function drawMaexchen(p, w, h) {
+  previewBg(p, w, h);
+  const CLR = {
+    woodLo: [64, 41, 27], wood: [98, 63, 41], woodHi: [128, 85, 55],
+    feltLo: [19, 53, 41], feltHi: [43, 95, 72], chalk: [238, 232, 212],
+    red: [198, 62, 50], brass: [214, 176, 104], die: [246, 237, 213], dieLo: [212, 197, 166], pip: [56, 46, 38],
+  };
+  p.textAlign(p.CENTER, p.CENTER);
+  const die = (x, y, s, v, ang) => {
+    p.push(); p.translate(x, y); p.rotate(ang); p.noStroke();
+    p.fill(0, 0, 0, 26); p.rect(-s / 2 + 2, -s / 2 + 4, s, s, s * 0.22);
+    p.fill(...CLR.dieLo); p.rect(-s / 2, -s / 2 + 2, s, s, s * 0.22);
+    p.fill(...CLR.die); p.rect(-s / 2, -s / 2, s, s, s * 0.22);
+    p.fill(255, 255, 255, 20); p.rect(-s / 2, -s / 2, s, s * 0.42, s * 0.22, s * 0.22, 0, 0);
+    const PIPS = { 1: [[0, 0]], 2: [[-.27, -.27], [.27, .27]], 3: [[-.27, -.27], [0, 0], [.27, .27]], 4: [[-.27, -.27], [.27, -.27], [-.27, .27], [.27, .27]], 5: [[-.27, -.27], [.27, -.27], [0, 0], [-.27, .27], [.27, .27]], 6: [[-.27, -.27], [.27, -.27], [-.27, 0], [.27, 0], [-.27, .27], [.27, .27]] };
+    p.fill(v === 1 ? CLR.red[0] : CLR.pip[0], v === 1 ? CLR.red[1] : CLR.pip[1], v === 1 ? CLR.red[2] : CLR.pip[2]);
+    for (const [fx, fy] of PIPS[v] || []) p.circle(fx * s, fy * s, s * 0.13);
+    p.pop();
+  };
+  const cup = (x, y, s) => {
+    p.push(); p.translate(x, y); p.noStroke();
+    p.fill(0, 0, 0, 18); p.ellipse(0, s * 0.46, s * 1.0, s * 0.24);
+    p.fill(...CLR.dieLo); p.rect(-s * 0.36, -s * 0.42, s * 0.72, s * 0.84, s * 0.15);
+    p.fill(...CLR.die); p.rect(-s * 0.36, -s * 0.46, s * 0.72, s * 0.84, s * 0.15);
+    p.fill(...CLR.red); p.rect(-s * 0.36, s * 0.06, s * 0.72, s * 0.15);
+    p.fill(255, 255, 255, 26); p.rect(-s * 0.36, -s * 0.46, s * 0.72, s * 0.28, s * 0.15, s * 0.15, 0, 0);
+    p.fill(...CLR.chalk); p.textSize(s * 0.42); p.textStyle(p.BOLD); p.text("?", 0, s * 0.05);
+    p.pop();
+  };
+  // the table
+  for (let i = 8; i >= 0; i--) {
+    const t = 1 - i / 8;
+    p.fill(CLR.woodLo[0] + (CLR.woodHi[0] - CLR.woodLo[0]) * t, CLR.woodLo[1] + (CLR.woodHi[1] - CLR.woodLo[1]) * t, CLR.woodLo[2] + (CLR.woodHi[2] - CLR.woodLo[2]) * t);
+    p.rect(20 + i, 26 + i, w - 40 - i * 2, h - 52 - i * 2, 20 - i * 1.2);
+  }
+  for (let i = 6; i >= 0; i--) {
+    const t = 1 - i / 6;
+    p.fill(CLR.feltLo[0] + (CLR.feltHi[0] - CLR.feltLo[0]) * t, CLR.feltLo[1] + (CLR.feltHi[1] - CLR.feltLo[1]) * t, CLR.feltLo[2] + (CLR.feltHi[2] - CLR.feltLo[2]) * t);
+    p.rect(28 + i, 34 + i, w - 56 - i * 2, h - 68 - i * 2, 13 - i * 0.9);
+  }
+  p.noStroke(); p.textStyle(p.BOLD);
+  // top: the opponent's covered cups
+  cup(w / 2 - 46, 92, 62); cup(w / 2 + 46, 92, 62);
+  p.fill(...CLR.chalk, 170); p.textSize(12); p.text("MIA · 2 STRICHE", w / 2, 58);
+  // centre: the plaque with the live claim
+  p.fill(0, 0, 0, 55); p.rect(w / 2 - 128, 152, 256, 74, 14);
+  p.fill(...CLR.wood); p.rect(w / 2 - 132, 148, 256, 74, 14);
+  p.fill(...CLR.woodHi); p.rect(w / 2 - 132, 148, 256, 38, 14, 14, 10, 10);
+  p.noFill(); p.stroke(...CLR.brass, 180); p.strokeWeight(2); p.rect(w / 2 - 127, 153, 246, 64, 11);
+  p.noStroke(); p.fill(...CLR.chalk); p.textSize(30); p.text("5·5", w / 2, 174);
+  p.textSize(12); p.fill(...CLR.chalk, 190); p.text("PASCH 5ER · VON BEN", w / 2, 200);
+  p.stroke(...CLR.brass, 110); p.strokeWeight(4); p.strokeCap(p.ROUND);
+  p.line(w / 2 - 96, 214, w / 2 + 96, 214);
+  p.stroke(...(CLR.red)); p.line(w / 2 - 96, 214, w / 2 - 96 + 0.6 * 192, 214);
+  p.noStroke();
+  // bottom: my dice, one #pip in red
+  die(w / 2 - 46, 272, 62, 5, -0.04); die(w / 2 + 46, 272, 62, 3, 0.04);
+  p.fill(...CLR.chalk, 170); p.textSize(12); p.text("DU · 1 STRICH", w / 2, 318);
+  // strike chips
+  for (let k = 0; k < 2; k++) { p.fill(...CLR.red, 220); p.circle(w / 2 + 130 + k * 16, 58, 12); }
+  p.fill(...PAL.sky, 220); p.circle(w / 2 + 130, 318, 12);
+}
+
+// Kritzel-Revier: crayons scribbling territory on a sheet of drawing paper
+function drawKritzel(p, w, h) {
+  const PAPER = [246, 235, 210], PAPER_HI = [252, 245, 228], INK = [62, 47, 32], LINE = [214, 197, 160];
+  const RED = [226, 84, 62], RED_D = [150, 42, 30], TEAL = [32, 156, 142], TEAL_D = [16, 100, 92];
+  const STAR = [243, 192, 44], STAR_D = [166, 116, 18];
+  const rnd = (n) => { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); };
+
+  p.background(...PAPER);
+  p.noStroke();
+  for (let k = 0; k < 130; k++) { p.fill(120, 96, 60, 14); p.circle(rnd(k + 1) * w, rnd(k + 51) * h, 1.6 + rnd(k + 101) * 2); }
+  // the sheet
+  p.fill(60, 42, 20, 35); p.rect(56, 62, w - 112, h - 122, 14);
+  p.fill(...PAPER_HI, 170); p.stroke(...INK, 220); p.strokeWeight(3); p.rect(50, 56, w - 112, h - 122, 14);
+  p.noStroke();
+  // faint grid
+  p.stroke(...LINE, 160); p.strokeWeight(1);
+  const cs = 30, gx = 60, gy = 66, GC = 16, GR = 7;
+  for (let i = 1; i < GC; i++) p.line(gx + i * cs, gy, gx + i * cs, gy + GR * cs);
+  for (let j = 1; j < GR; j++) p.line(gx, gy + j * cs, gx + GC * cs, gy + j * cs);
+  p.noStroke();
+  // scribbled territory (red bottom-left, teal top-right)
+  const scribble = (c, r, col, dark) => {
+    const x = gx + c * cs, y = gy + r * cs, j = (c * 7 + r * 13) % 9 - 4;
+    p.push(); p.translate(x + cs / 2 + j * 0.5, y + cs / 2 + ((c * 3 + r * 11) % 5 - 2) * 0.5);
+    p.rotate((((c * 5 + r * 7) % 9) - 4) * 0.014);
+    p.fill(...col, 225); p.rect(-cs / 2 - 2, -cs / 2 - 2, cs + 4, cs + 4, 4);
+    p.stroke(...dark, 90); p.strokeWeight(2); p.strokeCap(p.ROUND);
+    p.line(-cs * 0.3, -cs * 0.25, cs * 0.28, cs * 0.05);
+    p.line(-cs * 0.2, cs * 0.22, cs * 0.32, -cs * 0.3);
+    p.noStroke(); p.pop();
+  };
+  [[0, 4], [1, 4], [2, 4], [1, 5], [2, 5], [3, 5], [2, 6], [3, 6], [4, 6], [1, 3], [0, 5], [2, 3]].forEach(([c, r]) => scribble(c, r, RED, RED_D));
+  [[11, 0], [12, 0], [13, 0], [12, 1], [13, 1], [14, 1], [13, 2], [14, 0], [10, 1], [14, 2]].forEach(([c, r]) => scribble(c, r, TEAL, TEAL_D));
+  // coffee stain
+  p.push(); p.translate(gx + 8.5 * cs, gy + 4.4 * cs);
+  p.fill(150, 104, 58, 46); p.ellipse(0, 0, 52, 46);
+  p.noFill(); p.stroke(122, 80, 42, 130); p.strokeWeight(3); p.ellipse(0, 0, 56, 50);
+  p.noStroke(); p.fill(140, 96, 54, 90); p.circle(34, 16, 7); p.pop();
+  // glitter star
+  p.push(); p.translate(gx + 7.5 * cs, gy + 2.5 * cs); p.rotate(-0.1);
+  p.fill(...STAR, 70); p.beginShape();
+  for (let k = 0; k < 10; k++) { const a = -p.PI / 2 + k * p.PI / 5, rr = k % 2 ? 11 : 24; p.vertex(p.cos(a) * rr, p.sin(a) * rr); }
+  p.endShape(p.CLOSE);
+  p.fill(...STAR); p.stroke(...STAR_D); p.strokeWeight(2); p.beginShape();
+  for (let k = 0; k < 10; k++) { const a = -p.PI / 2 + k * p.PI / 5, rr = k % 2 ? 5.5 : 13; p.vertex(p.cos(a) * rr, p.sin(a) * rr); }
+  p.endShape(p.CLOSE); p.noStroke(); p.pop();
+  // crayons with faces + name tags
+  const crayon = (x, y, col, dark, tilt) => {
+    p.push(); p.translate(x, y); p.rotate(tilt);
+    p.noStroke(); p.fill(60, 42, 20, 40); p.ellipse(0, 17, 24, 8);
+    p.stroke(...dark); p.strokeWeight(2); p.fill(...col); p.rect(-8, -21, 16, 34, 5, 5, 2, 2);
+    p.noStroke(); p.fill(...col); p.triangle(-8, 13, 8, 13, 0, 24);
+    p.fill(240, 226, 196); p.rect(-8, 9, 16, 5);
+    p.fill(...col.map((v) => Math.min(255, v + 40))); p.rect(-8, -7, 16, 9, 2);
+    p.fill(255, 252, 246); p.circle(-3.2, -15, 5.4); p.circle(3.2, -15, 5.4);
+    p.fill(48, 34, 22); p.circle(-2.6, -15, 2.6); p.circle(3.8, -15, 2.6);
+    p.pop();
+  };
+  const tag = (x, y, txt) => {
+    p.textFont("Comic Sans MS"); p.textStyle(p.BOLD); p.textSize(11);
+    const tw = p.textWidth(txt) + 14;
+    p.noStroke(); p.fill(252, 246, 232, 230); p.stroke(...INK, 90); p.strokeWeight(1.2);
+    p.rect(x - tw / 2, y - 9, tw, 17, 8);
+    p.noStroke(); p.fill(...INK); p.textAlign(p.CENTER, p.CENTER); p.text(txt, x, y + 0.5);
+  };
+  crayon(gx + 5.5 * cs, gy + 4.6 * cs, RED, RED_D, -0.18); tag(gx + 5.5 * cs, gy + 4.6 * cs - 37, "Du");
+  crayon(gx + 10.5 * cs, gy + 5.5 * cs, TEAL, TEAL_D, 0.22); tag(gx + 10.5 * cs, gy + 5.5 * cs - 37, "Mia");
+  // clock + score chips
+  p.textFont("Comic Sans MS"); p.textStyle(p.BOLD); p.textAlign(p.CENTER, p.CENTER);
+  p.fill(...INK); p.textSize(24); p.text("0:21", gx + GC * cs / 2, gy - 22);
+  p.fill(...LINE, 220); p.rect(gx + GC * cs / 2 - 70, gy - 10, 140, 5, 2.5);
+  p.fill(...RED); p.rect(gx + GC * cs / 2 - 70, gy - 10, 140 * 0.3, 5, 2.5);
+  p.textSize(15);
+  p.textAlign(p.RIGHT, p.CENTER);
+  p.fill(...RED); p.circle(gx + GC * cs - 66, gy + GR * cs + 22, 14);
+  p.fill(...INK); p.text("38", gx + GC * cs - 22, gy + GR * cs + 22);
+  p.textAlign(p.LEFT, p.CENTER);
+  p.fill(...TEAL); p.circle(gx + 66, gy + GR * cs + 22, 14);
+  p.fill(...INK); p.text("31", gx + 78, gy + GR * cs + 22);
+}
+
+// Mau-Mau (hub only): the wooden parlour table — striped card backs fanned
+// along the edges, a slumping discard pile, sticker-style hand cards
+function drawMaumau(p, w, h) {
+  p.background(141, 63, 46);
+  p.noStroke();
+  // wooden planks
+  for (let i = 0; i < 8; i++) {
+    p.fill(120 + (i % 2) * 14, 50 + (i % 2) * 10, 34 + (i % 2) * 8, 200);
+    p.rect(0, i * 45, w, 45);
+    p.fill(60, 22, 12, 120); p.rect(0, i * 45, w, 2);
+  }
+  for (let k = 0; k < 200; k++) {                       // wood grain
+    const a = ((k * 197 + 31) % 97) / 97, b = ((k * 283 + 59) % 89) / 89;
+    p.fill(70, 26, 14, 30);
+    p.rect(a * w, b * h, 10 + (k % 5) * 6, 1.2);
+  }
+  p.fill(0, 0, 0, 50);
+  for (let i = 6; i >= 0; i--) { p.fill(40, 10, 4, 14); p.rect(14 - i, 10 - i, w - 28 + i * 2, h - 20 + i * 2, 20); }
+  p.textAlign(p.CENTER, p.CENTER);
+  const SUIT = { r: [217, 58, 43], y: [231, 156, 15], g: [47, 145, 71], b: [43, 111, 190], w: [42, 45, 52] };
+  const SYM = { 10: "⊘", 11: "⇄", 12: "+2", 14: "+4" };
+  const backCard = (x, y, s, rot) => {                  // striped back with MAU tag
+    p.push(); p.translate(x, y); p.rotate(rot);
+    const cw = s, ch = s / 0.66;
+    p.fill(0, 0, 0, 60); p.rect(-cw / 2 + 2, -ch / 2 + 4, cw, ch, 7);
+    for (let i = -5; i < 7; i++) {
+      const STRIPE = [[232, 77, 138], [245, 166, 35], [53, 182, 176], [123, 92, 214]][((i % 4) + 4) % 4];
+      p.fill(...STRIPE);
+      p.quad(-cw / 2 + i * cw / 4, -ch / 2, -cw / 2 + (i + 1) * cw / 4, -ch / 2, -cw / 2 + (i + 1) * cw / 4 - 6, ch / 2, -cw / 2 + i * cw / 4 - 6, ch / 2);
+    }
+    p.noFill(); p.stroke(255); p.strokeWeight(2.5); p.rect(-cw / 2, -ch / 2, cw, ch, 7); p.noStroke();
+    p.fill(38, 33, 42); p.rect(-cw * 0.32, -7, cw * 0.64, 14, 5);
+    p.fill(255, 217, 77); p.textStyle(p.BOLD); p.textSize(cw * 0.2); p.text("MAU", 0, 0.5);
+    p.pop();
+  };
+  const card = (x, y, s, suit, sym, rot, ring) => {     // sticker-style face
+    p.push(); p.translate(x, y); p.rotate(rot);
+    const cw = s, ch = s / 0.66;
+    p.fill(0, 0, 0, 55); p.rect(-cw / 2 + 2, -ch / 2 + 4, cw, ch, 7);
+    p.fill(...SUIT[suit]); p.rect(-cw / 2, -ch / 2, cw, ch, 7);
+    p.fill(255, 255, 255, 55); p.rect(-cw / 2, -ch / 2, cw, ch * 0.5, 7, 7, 12, 12);
+    p.textStyle(p.BOLD);
+    p.fill(253, 246, 232);
+    p.textSize(cw * 0.17); p.text(sym, -cw * 0.34, -ch * 0.4);
+    p.push(); p.rotate(p.PI); p.text(sym, -cw * 0.34, -ch * 0.4); p.pop();
+    p.push(); p.rotate(-0.05); p.textSize(cw * (sym.length > 1 ? 0.4 : 0.58));
+    p.fill(60, 20, 8, 90); p.text(sym, 1.5, cw * 0.04 + 1.5);
+    p.fill(253, 246, 232); p.text(sym, 0, cw * 0.04); p.pop();
+    p.noFill(); p.stroke(255); p.strokeWeight(2.5); p.rect(-cw / 2, -ch / 2, cw, ch, 7); p.noStroke();
+    if (ring) { p.stroke(255, 217, 77); p.strokeWeight(4); p.rect(-cw / 2 - 4, -ch / 2 - 4, cw + 8, ch + 8, 10); p.noStroke(); }
+    p.pop();
+  };
+  // opponent fans: top row + left edge, chips like name tags
+  const chip = (x, y, label, n) => {
+    p.fill(0, 0, 0, 50); p.rect(x - 52, y - 12, 104, 24, 12);
+    p.fill(253, 246, 232); p.rect(x - 54, y - 14, 104, 24, 12);
+    p.fill(91, 42, 22); p.textStyle(p.BOLD); p.textSize(12); p.text(label, x - 8, y - 2);
+    p.fill(253, 246, 232); p.textSize(11); p.fill(91, 42, 22);
+    p.fill(91, 42, 22); p.circle(x + 38, y - 2, 16);
+    p.fill(253, 246, 232); p.text(String(n), x + 38, y - 1.5);
+  };
+  for (let i = 0; i < 6; i++) backCard(178 + i * 44 + Math.sin(i * 2.1) * 2, 44 + Math.abs(2.5 - i) * 3, 40, (i - 2.5) * 0.075);
+  chip(298, 96, "MIA", 6);
+  p.push(); p.translate(38, 170); p.rotate(p.PI / 2);
+  for (let i = 0; i < 4; i++) backCard(i * 30 + i * 1.5, Math.abs(1.5 - i) * 3, 34, (i - 1.5) * 0.1);
+  p.pop();
+  chip(40, 96, "BEN", 4);
+  p.fill(238, 164, 28); p.circle(96, 84, 26);
+  p.fill(60, 42, 5); p.textStyle(p.BOLD); p.textSize(11); p.text("UNO!", 96, 84);
+  // direction + discard pile (red 5 slumping on ghosts)
+  p.stroke(255, 244, 226, 130); p.strokeWeight(3.5); p.strokeCap(p.ROUND); p.noFill();
+  p.arc(280, 172, 30, 30, -0.5, 3.4);
+  p.line(288, 154, 280, 161); p.line(280, 161, 289, 164);
+  p.noStroke();
+  p.push(); p.translate(352, 176); p.rotate(0.16); p.fill(46, 18, 9); p.rect(-24, -37, 48, 74, 7); p.pop();
+  p.push(); p.translate(350, 178); p.rotate(-0.12); p.fill(46, 18, 9); p.rect(-24, -37, 48, 74, 7); p.pop();
+  card(352, 178, 50, "r", "5", 0.03, false);
+  // deck with count
+  backCard(216, 172, 52, -0.04);
+  p.fill(253, 246, 232); p.circle(246, 210, 22); p.fill(91, 42, 22); p.textSize(11); p.text("34", 246, 210.5);
+  // my fanned hand, the yellow 4 raised
+  card(150, 296, 48, "g", "7", -0.14);
+  card(198, 302, 48, "b", "3", -0.07);
+  card(246, 306, 48, "y", "4", 0, true);
+  card(294, 306, 48, "r", "⇄", 0.07);
+  card(342, 302, 48, "g", "+2", 0.14);
+  card(392, 296, 48, "w", "", 0.2);
+  // my name tag
+  p.fill(245, 188, 68); p.circle(66, 306, 26); p.stroke(255); p.strokeWeight(2.5); p.noFill(); p.circle(66, 306, 26); p.noStroke();
+  p.fill(91, 42, 22); p.textStyle(p.BOLD); p.textSize(13); p.text("D", 66, 306);
+  p.fill(255, 233, 184); p.rect(84, 294, 96, 24, 12); p.stroke(255); p.strokeWeight(2); p.noFill(); p.rect(84, 294, 96, 24, 12); p.noStroke();
+  p.fill(91, 42, 22); p.textSize(12); p.text("DU", 108, 306); p.text("5", 166, 306);
+  // "play" buttons like the app
+  p.push(); p.translate(452, 240); p.rotate(-0.1);
+  p.fill(53, 182, 176); p.rect(-42, -14, 84, 28, 14); p.stroke(255); p.strokeWeight(2.5); p.noFill(); p.rect(-42, -14, 84, 28, 14); p.noStroke();
+  p.fill(255); p.textStyle(p.BOLD); p.textSize(13); p.text("MAU!", 0, 0.5); p.pop();
 }
