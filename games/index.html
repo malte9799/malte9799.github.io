@@ -97,7 +97,7 @@ if (_gameName) {
       `<a class="back-link" href="index.html">← Games</a><header><h1>Not found</h1></header>` +
       `<p class="tag" style="text-align:left">There's no game called “${_gameName.replace(/[<>&"]/g, "")}”.</p>`;
   };
-  if (ok) loadScript("games/" + _gameName + ".js", null, notFound);
+  if (ok) loadScript("/games/" + _gameName + ".js", null, notFound);
   else notFound();
 } else {
   // Hub view: manifest.js (previews) and home.js (single-player card grid) are only loaded here so
