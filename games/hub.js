@@ -137,16 +137,9 @@ function renderLobby() {
 }
 
 function renderTools() {
-  const s = MP.state;
-  let b = $("hub-end");
-  const need = !!s && s.isHost && s.status === "playing";
-  if (need && !b) {
-    b = document.createElement("button"); b.id = "hub-end"; b.textContent = "Zurück zur Lobby";
-    b.onclick = () => MP.endGame();
-    $("hub-tools").prepend(b);
-  } else if (!need && b) b.remove();
+  // "Zurück zur Lobby" and "Raum verlassen" live in the frame of the game itself (hub-kit.js)
 
-  // a game is running but its window was closed: offer to bring it back
+  // a game is running but its page was closed: offer to bring it back
   let show = $("hub-show");
   const hidden = !!run && !run.open;
   if (hidden && !show) {
@@ -208,6 +201,16 @@ document.addEventListener("keydown", (e) => {
 
 // ---- running a game ----
 
+// The last game state every client has seen is kept for this tab (sessionStorage), so a reload can pick the
+// game up again where it was. Games that broadcast a "state" message (Tic Tac Toe, Mäxchen, Mau-Mau) are
+// restored that way; games that keep their state elsewhere start over in the same room.
+const STATE_KEY = "mp_game_state";
+function cacheState(runId, data) { try { sessionStorage.setItem(STATE_KEY, JSON.stringify({ run: runId, data })); } catch {} }
+function cachedState(runId) {
+  try { const c = JSON.parse(sessionStorage.getItem(STATE_KEY) || "null"); return c && c.run === runId ? c : null; } catch { return null; }
+}
+function clearCachedState() { try { sessionStorage.removeItem(STATE_KEY); } catch {} }
+
 function makeCtx(rt, players, options) {
   const clean = [];
   const key = (type) => rt.id + "/" + type;
@@ -216,24 +219,28 @@ function makeCtx(rt, players, options) {
     get me() { return MP.me; },
     get isHost() { return MP.isHost; },
     get hostId() { return MP.state && MP.state.hostId; },
-    send: (type, data, to) => MP.send(key(type), data, to),
+    send: (type, data, to) => { if (type === "state") cacheState(rt.id, data); return MP.send(key(type), data, to); },
     onMessage(type, fn) { const off = MP.onMessage(key(type), fn); clean.push(off); return off; },
     onEvent(ev, fn) { const off = MP.on(ev, fn); clean.push(off); return off; },
     addCleanup: (fn) => clean.push(fn),
-    end: () => MP.endGame(),
+    end: () => MP.endGame(),                       // host: the game ends for everybody, back to the lobby
+    back: () => showStage(false),                  // guest: only this view closes, the game goes on
+    leaveRoom: () => MP.leave(),
+    room: () => MP.state,
     _cleanup() { for (const f of clean.splice(0)) { try { f(); } catch (e) { console.error(e); } } },
   };
 }
 
-async function startGame({ game, options, players }) {
+async function startGame({ game, options, players, resumed }) {
   stopGame();
   const g = def(game);
   const id = options && options.run;
   const root = $("hub-stage");
   if (!g || !id) { MP.endGame(); return; }
   const rt = { id, root, ready: new Set([MP.me.id]), mounted: false, went: false, offs: [], timer: 0, ctx: null, inst: null };
+  rt.offs.push(MP.onMessage(id + "/state", ({ data }) => cacheState(id, data)));   // remember what the host last showed us
   run = rt;
-  root.hidden = false; root.className = "hub-stage hub-" + g.id;
+  root.hidden = false; root.className = "hub-stage hk-page hub-" + g.id;
   root.innerHTML = `<p class="hub-loading">Lade ${esc(g.title)} …</p>`;
   showStage(true);
   renderLobby(); renderTools();
@@ -258,7 +265,11 @@ async function startGame({ game, options, players }) {
     rt.inst = (await mod.mount(rt.ctx)) || {};
     if (run !== rt) { try { rt.inst.destroy && rt.inst.destroy(); } catch {} rt.ctx._cleanup(); return; }
     rt.mounted = true;
-    if (MP.isHost) { rt.timer = setTimeout(() => { if (run === rt && !rt.went) { MP.send(key("hub:go")); go(); } }, READY_TIMEOUT); maybeGo(); }
+    if (resumed && !MP.isHost) {                                  // back after a reload: the game is already running for the others
+      const c = cachedState(id);
+      if (c) MP.deliver(key("state"), c.data, MP.state.hostId);
+      go();
+    } else if (MP.isHost) { rt.timer = setTimeout(() => { if (run === rt && !rt.went) { MP.send(key("hub:go")); go(); } }, READY_TIMEOUT); maybeGo(); }
     else MP.send(key("hub:ready"), null, MP.state.hostId);
   } catch (e) {
     console.error(e);
@@ -285,12 +296,11 @@ function showStage(open) {
   if (run) run.open = open;
   renderTools();
 }
-$("hub-overlay-x").onclick = () => { if (MP.isHost && run) MP.endGame(); else showStage(false); };
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && run && run.open) showStage(false); });
 
 MP.on("start", startGame);
 MP.on("pick", () => { const el = $("hub-grid"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); });
-for (const ev of ["end", "close"]) MP.on(ev, () => { stopGame(); renderLobby(); renderTools(); });
+for (const ev of ["end", "close"]) MP.on(ev, () => { stopGame(); clearCachedState(); renderLobby(); renderTools(); });
 for (const ev of ["players", "game", "status", "host", "join", "error"]) MP.on(ev, () => { renderLobby(); renderTools(); });
 
 renderLobby();

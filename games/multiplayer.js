@@ -35,7 +35,7 @@
       full: "Der Raum ist voll oder das Spiel läuft schon.", noRoom: "Kein Raum mit diesem Code gefunden.",
       netFail: "Verbindung fehlgeschlagen. Prüfe deine Internetverbindung.", hostLeft: "Der Host hat den Raum verlassen.",
       qrShow: "QR-Code anzeigen", qrHide: "QR-Code ausblenden", qrTitle: "Mitspieler einladen", qrHint: "QR-Code scannen – öffnet direkt diesen Raum", close: "Schließen", button: "Mehrspieler",
-      inGame: "Spiel läuft", back: "Zurück zur Lobby",
+      inGame: "Spiel läuft", back: "Zurück zur Lobby", lobbyBtn: "Lobby", profileT: "Profil", avatar: "Avatar", color: "Hintergrund", saveProfile: "Speichern", saved: "Gespeichert ✓",
     },
     en: {
       title: "Multiplayer", sub: "Up to {max} friends — no account, direct connection.", yourName: "Your name", player: "Player",
@@ -46,7 +46,7 @@
       full: "That room is full or already playing.", noRoom: "No room found with that code.",
       netFail: "Couldn't connect. Check your internet connection.", hostLeft: "The host left the room.",
       qrShow: "Show QR code", qrHide: "Hide QR code", qrTitle: "Invite players", qrHint: "Scan the QR code — it opens this room directly", close: "Close", button: "Multiplayer",
-      inGame: "Game running", back: "Back to lobby",
+      inGame: "Game running", back: "Back to lobby", lobbyBtn: "Lobby", profileT: "Profile", avatar: "Avatar", color: "Background", saveProfile: "Save", saved: "Saved ✓",
     },
   };
 
@@ -61,19 +61,49 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const cleanName = (n) => String(n || "").trim().slice(0, 12) || t("player");
   const makeCode = () => { let c = ""; for (let i = 0; i < CODE_LEN; i++) c += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]; return c; };
-  const cleanPlayers = (a) => (Array.isArray(a) ? a.slice(0, 12).map((p) => ({ id: String(p.id), name: cleanName(p.name) })) : []);
+  // avatars: a small set of examples for now (emoji); later more can be added here
+  const AVATARS = ["🦊", "🐸", "🐙", "🦄", "🐼", "🚀", "🌵", "🍄", "🐧", "🤖"];
+  const AVATAR_KEY = "mp_avatar";
+  const cleanAvatar = (a) => (AVATARS.includes(a) ? a : "");
+  // background colours for the avatar circle
+  const COLORS = ["#f87171", "#fb923c", "#facc15", "#4ade80", "#2dd4bf", "#60a5fa", "#a78bfa", "#f472b6", "#94a3b8"];
+  const COLOR_KEY = "mp_color";
+  const cleanColor = (c) => (COLORS.includes(c) ? c : "");
+  const cleanPlayers = (a) => (Array.isArray(a) ? a.slice(0, 12).map((p) => ({ id: String(p.id), name: cleanName(p.name), avatar: cleanAvatar(p.avatar), color: cleanColor(p.color) })) : []);
 
+  const myColor = () => (COLORS.includes(store.get("mp_color")) ? store.get("mp_color") : "");
+  const myAvatar = () => AVATARS.includes(store.get(AVATAR_KEY)) ? store.get(AVATAR_KEY) : "";
   const store = {
     get: (k) => { try { return localStorage.getItem(k) || ""; } catch { return ""; } },
     set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
   };
 
+  // Room session cache: the room survives a page reload in the same tab (sessionStorage, so it ends with the tab
+  // and after SESSION_TTL without activity). Only the room code, the name and the seat token are kept.
+  const SESSION_KEY = "mp_session", SESSION_TTL = 2 * 60 * 60 * 1000, RESUME_WAIT = 8000;
+  const GRACE_MS = 20000;                          // a player who drops out of a running game keeps the seat this long (reload, flaky network)
+  const keep = {
+    get() {
+      try {
+        const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+        return s && s.code && s.token && Date.now() - s.at < SESSION_TTL ? s : null;
+      } catch { return null; }
+    },
+    set(v) { try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(v)); } catch {} },
+    clear() { try { sessionStorage.removeItem(SESSION_KEY); } catch {} },
+  };
+  const makeToken = () => Math.random().toString(36).slice(2, 12) + Date.now().toString(36);
+
   // ---- state ----
   // R is the room we are in (null when not in one):
-  //   { code, selfId, name, hostId, status: "connecting"|"lobby"|"playing", game, options, players: [{ id, name }], max }
+  //   { code, selfId, token, name, hostId, status: "connecting"|"lobby"|"playing", game, options, players: [{ id, name }], max }
+  // Player ids are the seat tokens (stable across reloads), NOT the WebRTC peer ids, which change on every page load.
+  // tokenPeer / peerTok map between a seat token and the peer it currently talks through.
   let R = null;
-  let net = null;                                  // { send(msg, targetId?), leave(), selfId }
-  let peers = new Set();                           // WebRTC peers currently connected
+  let net = null;                                  // { send(msg, peerId?), leave(), selfId }
+  let tokenPeer = new Map();                       // seat token -> peer id
+  let peerTok = new Map();                         // peer id -> seat token
+  let graceTimers = new Map();                     // seat token -> timer that finally removes a player who dropped out of a game
   let connectTimer = 0;
   let session = 0;                                 // bumps on every host()/join()/leave(), so stale async work can bail out
   let lastError = "";
@@ -91,33 +121,43 @@
   const snapshot = () => R && {
     code: R.code, selfId: R.selfId, hostId: R.hostId, isHost: R.hostId === R.selfId, status: R.status,
     game: R.game, options: R.options, max: R.max, min: cfg.min,
-    players: R.players.map((p) => ({ id: p.id, name: p.name, host: p.id === R.hostId, you: p.id === R.selfId })),
+    players: R.players.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar || "", color: p.color || "", host: p.id === R.hostId, you: p.id === R.selfId })),
   };
 
   // ---- connection ----
-  async function netOpen(code) {
+  async function netOpen(code, token) {
     // via Function so the Vite dev server doesn't rewrite it (it would prepend an `import` to this classic script and break loading)
     const mod = await new Function("u", "return import(u)")(TRYSTERO);
     const room = mod.joinRoom({ appId: cfg.appId }, code);
     const a = room.makeAction("mp");
-    const send = (msg, target) => (Array.isArray(a) ? a[0](msg, target) : a.send(msg, target ? { target } : undefined));
-    const handler = (m, meta) => onWire(m, typeof meta === "string" ? meta : meta && meta.peerId);
+    const raw = (msg, peer) => (Array.isArray(a) ? a[0](msg, peer) : a.send(msg, peer ? { target: peer } : undefined));
+    // every message says who sent it (f = seat token), so the receiver knows the sender without a handshake
+    const send = (msg, peer) => raw({ ...msg, f: token }, peer);
+    // messages of a room we already left (kept open for a moment, see leave()) are ignored: net no longer points at it
+    let mine = null;
+    const handler = (m, meta) => { if (mine && net === mine) onWire(m, typeof meta === "string" ? meta : meta && meta.peerId); };
     if (Array.isArray(a)) a[1](handler); else a.onMessage = handler;
-    room.onPeerJoin = (id) => {
-      peers.add(id);
+    room.onPeerJoin = (peer) => {
+      if (!R || net !== mine) return;
+      send({ t: "hi" }, peer);                                   // introduce ourselves, so both sides know each other's token
+      if (R.hostId === R.selfId) { if (R.status !== "connecting") send(wireLobby(), peer); }
       // a guest introduces itself to everybody it meets; the host answers by sending the player list
-      if (R && R.hostId !== R.selfId && R.status === "connecting") send({ t: "hello", name: R.name }, id);
+      else if (R.status === "connecting") send({ t: "hello", name: R.name, avatar: R.avatar, color: R.color }, peer);
     };
-    room.onPeerLeave = (id) => { peers.delete(id); onPeerLeave(id); };
-    net = { send, selfId: mod.selfId, leave: () => { try { room.leave(); } catch {} net = null; } };
+    room.onPeerLeave = (peer) => { if (net === mine) onPeerLeave(peer); };
+    mine = { send, selfId: mod.selfId, leave: () => { try { room.leave(); } catch {} } };
+    net = mine;
     return net;
   }
 
   function wipe() {
     clearTimeout(connectTimer);
+    for (const tm of graceTimers.values()) clearTimeout(tm);
+    graceTimers = new Map();
     if (net) net.leave();
-    peers = new Set();
+    tokenPeer = new Map(); peerTok = new Map();
     R = null; net = null;
+    keep.clear();
   }
 
   function fail(msg) {
@@ -135,12 +175,13 @@
     const name = cleanName(opts.name ?? store.get(cfg.nameKey));
     if (opts.name) store.set(cfg.nameKey, name);
     lastError = "";
-    R = { code: makeCode(), selfId: null, name, hostId: null, status: "connecting", game: cfg.game, options: null, players: [], max: cfg.max };
+    const token = makeToken();
+    R = { code: makeCode(), selfId: token, token, name, hostId: null, status: "connecting", game: cfg.game, options: null, players: [], max: cfg.max, avatar: myAvatar(), color: myColor() };
     ui.render();
-    try { await netOpen(R.code); } catch (e) { console.error(e); if (my === session) fail(t("netFail")); throw e; }
+    try { await netOpen(R.code, token); } catch (e) { console.error(e); if (my === session) fail(t("netFail")); throw e; }
     if (my !== session) return;
-    R.selfId = R.hostId = net.selfId;
-    R.players = [{ id: R.selfId, name }];
+    R.hostId = R.selfId;
+    R.players = [{ id: R.selfId, name, avatar: R.avatar, color: R.color }];
     R.status = "lobby";
     emit("status", "lobby"); emit("join", playerOf(R.selfId)); emit("players", snapshot().players);
     ui.render();
@@ -155,11 +196,11 @@
     const name = cleanName(opts.name ?? store.get(cfg.nameKey));
     store.set(cfg.nameKey, name);
     lastError = ""; ui.lastCode = code;
-    R = { code, selfId: null, name, hostId: null, status: "connecting", game: cfg.game, options: null, players: [], max: cfg.max };
+    const token = makeToken();
+    R = { code, selfId: token, token, name, hostId: null, status: "connecting", game: cfg.game, options: null, players: [], max: cfg.max, avatar: myAvatar(), color: myColor() };
     ui.render();
-    try { await netOpen(code); } catch (e) { console.error(e); if (my === session) fail(t("netFail")); throw e; }
+    try { await netOpen(code, token); } catch (e) { console.error(e); if (my === session) fail(t("netFail")); throw e; }
     if (my !== session) return;
-    R.selfId = net.selfId;
     connectTimer = setTimeout(() => { if (my === session && R && R.status === "connecting") fail(t("noRoom")); }, 20000);
     ui.render();
     return new Promise((resolve) => {                       // resolves with the room once the host answered, null if it never does
@@ -171,6 +212,13 @@
   function leave() {
     if (!R) return;
     session++;
+    // say goodbye, so the others drop us at once instead of keeping our seat for the grace period
+    if (net && R.status !== "connecting") {
+      const old = net;
+      try { old.send({ t: "bye" }); } catch {}
+      net = null;                                              // our own handler ignores the room from now on
+      setTimeout(() => old.leave(), 400);                      // give the goodbye time to leave the channel
+    }
     wipe();
     emit("close", { reason: "left" });
     ui.render();
@@ -183,35 +231,53 @@
   // { t: "start", game, options, players }   host -> everybody
   // { t: "end" }                      host -> everybody  game over, back to lobby
   // { t: "g", k: type, d: data }      anybody -> anybody  game message
-  const playerOf = (id) => { const p = R && R.players.find((x) => x.id === id); return p ? { id: p.id, name: p.name, host: p.id === R.hostId, you: p.id === R.selfId } : null; };
-  const wireLobby = () => ({ t: "lobby", players: R.players, hostId: R.hostId, status: R.status, game: R.game, options: R.options, max: R.max });
+  const playerOf = (id) => { const p = R && R.players.find((x) => x.id === id); return p ? { id: p.id, name: p.name, avatar: p.avatar || "", color: p.color || "", host: p.id === R.hostId, you: p.id === R.selfId } : null; };
+  const wireLobby = () => ({ t: "lobby", players: R.players.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar || "", color: p.color || "" })), hostId: R.hostId, status: R.status, game: R.game, options: R.options, max: R.max });
   const broadcastLobby = () => { if (net && R && R.hostId === R.selfId) net.send(wireLobby()); };
 
-  function onWire(m, from) {
-    if (!m || typeof m !== "object" || !from || !R) return;
+  // peer id (or undefined = everybody) for a seat token; unknown token → null (never fall back to a broadcast)
+  const peerFor = (tok) => (tok ? tokenPeer.get(tok) || null : undefined);
+
+  function onWire(m, peer) {
+    if (!m || typeof m !== "object" || !net || !R) return;
+    const from = typeof m.f === "string" ? m.f : "";
+    if (!from) return;
+    tokenPeer.set(from, peer); peerTok.set(peer, from);     // every message teaches us where this seat talks from
+    if (graceTimers.has(from)) { clearTimeout(graceTimers.get(from)); graceTimers.delete(from); }   // it is back
+    if (from === R.selfId) return;
     const isHost = R.hostId === R.selfId;
     switch (m.t) {
+      case "hi":
+        break;
+      case "bye":                                             // left on purpose: no grace period
+        if (R.players.some((p) => p.id === from)) { tokenPeer.delete(from); peerTok.delete(peer); dropPlayer(from); }
+        break;
       case "hello": {
         if (!isHost || R.status === "connecting") return;
-        if (R.status === "playing" || R.players.length >= R.max) return net.send({ t: "full" }, from);
         if (!R.players.some((p) => p.id === from)) {
+          // a seat that was taken during a running game may come back to it; anybody else is refused while a game runs
+          const back = R.status === "playing" && !!R.seated && R.seated.has(from);
+          if (!back && (R.status === "playing" || R.players.length >= R.max)) return net.send({ t: "full" }, peer);
           let name = cleanName(m.name), n = 1;
           while (R.players.some((p) => p.name === name)) name = cleanName(m.name).slice(0, 10) + ++n;
-          R.players.push({ id: from, name });
+          R.players.push({ id: from, name, avatar: cleanAvatar(m.avatar), color: cleanColor(m.color) });
           emit("join", playerOf(from)); emit("players", snapshot().players);
         }
         broadcastLobby(); ui.render();
         break;
       }
       case "full":
-        if (!isHost && R.status === "connecting") fail(t("full"));
+        if (!isHost) fail(t("full"));
         break;
       case "lobby": {
-        if (isHost) return;
-        const hid = String(m.hostId || "");
-        // accept the list from the host, or from the successor when the old host is gone
-        if (!(from === R.hostId || (hid === from && R.hostId !== R.selfId && !peers.has(R.hostId)))) return;
-        applyLobby(m, from);
+        const claims = String(m.hostId || "") === from;     // the sender says it is the host
+        if (!claims) return;
+        // who may speak for the room: whoever we are connecting to; otherwise the current host, the successor
+        // when the old host is gone, and of two hosts (after a reload both may think so) the lower token wins
+        if (R.hostId && from !== R.hostId) {
+          if (isHost ? !(from < R.selfId) : !(!tokenPeer.has(R.hostId) || from < R.hostId)) return;
+        }
+        applyLobby(m, from, peer);
         break;
       }
       case "start":
@@ -223,6 +289,14 @@
       case "end":
         if (from === R.hostId && !isHost) onEnd();
         break;
+      case "profile": {                                       // someone changed name or avatar
+        const p = R.players.find((x) => x.id === from);
+        if (!p) break;
+        p.name = cleanName(m.name); p.avatar = cleanAvatar(m.avatar); p.color = cleanColor(m.color);
+        if (isHost) broadcastLobby();
+        emit("players", snapshot().players); ui.render();
+        break;
+      }
       case "g":
         if (R.status === "connecting" || !R.players.some((p) => p.id === from)) return;
         emit("message", { type: String(m.k), data: m.d, from, player: playerOf(from) });
@@ -231,8 +305,8 @@
     }
   }
 
-  function applyLobby(m, from) {
-    const was = R.status, prev = R.players, prevHost = R.hostId;
+  function applyLobby(m, from, peer) {
+    const prev = R.players, prevHost = R.hostId;
     clearTimeout(connectTimer);
     R.hostId = from;
     R.players = cleanPlayers(m.players);
@@ -240,19 +314,50 @@
     const prevGame = R.game;
     R.game = m.game ? String(m.game) : null;
     R.options = m.options ?? null;
-    const st = m.status === "playing" ? "playing" : "lobby";
     // players who joined / left since the last list
     for (const p of R.players) if (!prev.some((x) => x.id === p.id)) emit("join", playerOf(p.id));
     for (const p of prev) if (!R.players.some((x) => x.id === p.id)) emit("leave", { id: p.id, name: p.name, host: p.id === prevHost, you: false });
     if (prevHost !== from && prevHost) emit("host", { hostId: from, previous: prevHost, you: false });
-    if (was !== st) { R.status = st; emit("status", st); }
+    const listed = R.players.some((p) => p.id === R.selfId);
+    const running = m.status === "playing";
+    // a running game is joined only with a seat in it; otherwise we wait in the lobby (and ask to be let in below)
+    if (running && listed) { if (R.status !== "playing") onStart({ game: R.game, options: R.options, players: R.players, resumed: true }); }
+    else if (!running && R.status !== "lobby") { R.status = "lobby"; emit("status", "lobby"); }
     if (prevGame !== R.game) emit("game", R.game);
     emit("players", snapshot().players);
+    // not in the list yet (joining, or back after a reload): ask the host to seat us
+    if (!listed && R.hostId !== R.selfId) net.send({ t: "hello", name: R.name, avatar: R.avatar, color: R.color }, peer);
     ui.render();
   }
 
-  function onPeerLeave(id) {
-    if (!R) return;
+  function onPeerLeave(peer) {
+    const id = peerTok.get(peer);
+    peerTok.delete(peer);
+    // stale leave of a connection the player already replaced (reload): nothing to do
+    if (!id || tokenPeer.get(id) !== peer) return;
+    tokenPeer.delete(id);
+    if (!R || !R.players.some((p) => p.id === id)) return;
+    // a running game keeps the seat of a player who drops out for GRACE_MS: no "leave" reaches the game, so nothing
+    // is forfeited, and the same player comes back to the same seat. The host role still moves on at once.
+    if (R.status === "playing" && id !== R.selfId) {
+      if (id === R.hostId) electHost(id);
+      clearTimeout(graceTimers.get(id));
+      graceTimers.set(id, setTimeout(() => { graceTimers.delete(id); if (R && !tokenPeer.has(id)) dropPlayer(id); }, GRACE_MS));
+      ui.render();
+      return;
+    }
+    dropPlayer(id);
+  }
+
+  // the player who has been in the room the longest takes over the host role; everybody computes the same answer
+  function electHost(previous) {
+    const next = R.players.find((p) => p.id !== previous);
+    R.hostId = next ? next.id : R.selfId;
+    emit("host", { hostId: R.hostId, previous, you: R.hostId === R.selfId });
+    if (R.hostId === R.selfId) broadcastLobby();
+  }
+
+  function dropPlayer(id) {
     const gone = R.players.find((p) => p.id === id);
     if (!gone) return;
     const wasHost = id === R.hostId;
@@ -260,20 +365,18 @@
     emit("leave", { id: gone.id, name: gone.name, host: wasHost, you: false });
     if (wasHost) {
       if (R.status === "connecting") return fail(t("hostLeft"));
-      // the player who has been in the room the longest takes over; everybody computes the same answer
-      R.hostId = R.players[0] ? R.players[0].id : R.selfId;
-      emit("host", { hostId: R.hostId, previous: id, you: R.hostId === R.selfId });
-      if (R.hostId === R.selfId) broadcastLobby();
+      electHost(id);
     } else if (R.hostId === R.selfId) broadcastLobby();
     emit("players", snapshot().players);
     ui.render();
   }
 
-  function onStart({ game, options, players }) {
+  function onStart({ game, options, players, resumed }) {
     R.status = "playing"; R.game = game; R.options = options;
     R.players = R.players.filter((p) => players.some((x) => x.id === p.id));
+    R.seated = new Set(players.map((p) => p.id));           // who may come back to this game after a reload
     emit("status", "playing");
-    emit("start", { game, options, players: snapshot().players, isHost: R.hostId === R.selfId });
+    emit("start", { game, options, players: snapshot().players, isHost: R.hostId === R.selfId, resumed: !!resumed });
     ui.render();
   }
 
@@ -319,8 +422,65 @@
   /** send a game message to everybody else (or only to the player with id `to`) */
   function send(type, data, to) {
     if (!net || !R || R.status === "connecting") return false;
-    net.send({ t: "g", k: String(type), d: data }, to);
+    const peer = peerFor(to);
+    if (peer === null) return false;                        // that player is not reachable right now: drop, never broadcast a private message
+    net.send({ t: "g", k: String(type), d: data }, peer);
     return true;
+  }
+
+  /** hand a message to our own listeners as if it had come from `from` (used to replay a remembered game state after a reload) */
+  function deliver(type, data, from) {
+    const ev = { type: String(type), data, from, player: playerOf(from) };
+    emit("message", ev); emit("message:" + ev.type, ev);
+  }
+
+  // ---- reload: pick the room up again ----
+  // The saved seat token is used again. If the room still runs, the host (or a successor) seats us; if nobody
+  // answers within RESUME_WAIT, the room is alone or gone, so we open it again under the same code as host.
+  function resume(saved) {
+    if (R) return;
+    const my = ++session;
+    lastError = "";
+    R = { code: saved.code, selfId: saved.token, token: saved.token, name: saved.name, hostId: null, status: "connecting", game: cfg.game, options: null, players: [], max: cfg.max, avatar: myAvatar(), color: myColor() };
+    ui.render();
+    netOpen(saved.code, saved.token).then(() => {
+      if (my !== session || !R) return;
+      connectTimer = setTimeout(() => { if (my === session && R && R.status === "connecting") becomeHost(); }, RESUME_WAIT);
+    }, (e) => { console.error(e); if (my === session) fail(t("netFail")); });
+  }
+
+  function becomeHost() {
+    clearTimeout(connectTimer);
+    R.hostId = R.selfId;
+    R.players = [{ id: R.selfId, name: R.name, avatar: R.avatar, color: R.color }];
+    R.status = "lobby";
+    emit("status", "lobby"); emit("join", playerOf(R.selfId)); emit("players", snapshot().players);
+    ui.render();
+  }
+
+  function restoreSession() {
+    const saved = keep.get();
+    if (!saved || R) return;
+    const u = urlRoom();
+    if (u && u !== saved.code) { keep.clear(); return; }   // an invite link for another room wins
+    resume(saved);
+  }
+
+  // ---- profile: name and avatar, kept for the next room and shared with the room at once ----
+  function updateProfile({ name, avatar, color } = {}) {
+    if (name != null) store.set(cfg.nameKey, cleanName(name));
+    if (avatar != null) store.set(AVATAR_KEY, cleanAvatar(avatar));
+    if (color != null) store.set(COLOR_KEY, cleanColor(color));
+    if (!R) return ui.render();
+    if (name != null) R.name = cleanName(name);
+    if (avatar != null) R.avatar = cleanAvatar(avatar);
+    if (color != null) R.color = cleanColor(color);
+    const me = R.players.find((p) => p.id === R.selfId);
+    if (me) { me.name = R.name; me.avatar = R.avatar; me.color = R.color; }
+    if (net && R.status !== "connecting") net.send({ t: "profile", name: R.name, avatar: R.avatar, color: R.color });
+    if (R.hostId === R.selfId) broadcastLobby();
+    emit("players", snapshot().players);
+    ui.render();
   }
 
   // ---- invitation link + QR code ----
@@ -375,15 +535,17 @@
     hide() { this.open = false; this.linkJoin = false; if (this.el) this.el.classList.remove("show"); this.renderQR(); },
 
     render(prefill) {
-      if (R) this.linkJoin = false;
+      if (R) { this.linkJoin = false; keep.set({ code: R.code, name: R.name, token: R.token, at: Date.now() }); }
       dock.render();
-      for (const b of this.buttons) b.classList.toggle("mp-live", !!R && R.status !== "connecting");
+      for (const b of this.buttons) { b.classList.toggle("mp-live", !!R && R.status !== "connecting"); b.textContent = R ? t("lobbyBtn") : t("button"); }   // in a room the button says Lobby
       if (!this.el || !this.open) return;
       const box = this.el.querySelector(".mp-box");
       const keepCode = prefill || (this.el.querySelector("#mp-code") || {}).value || (lastError ? this.lastCode : "") || "";
       const keepName = (this.el.querySelector("#mp-name") || {}).value;
       const S = R && snapshot();
       const initial = (n) => esc([...String(n).trim()][0] || "?").toUpperCase();
+      const colRow = (cur) => `<div class="mp-lbl">${t("color")}</div><div class="mp-avs">${COLORS.map((c) => `<button type="button" class="mp-col-pick${c === cur ? " on" : ""}" data-act="color" data-v="${c}" aria-label="${c}" style="background:${c}"></button>`).join("")}</div>`;
+      const avRow = (cur) => `<div class="mp-lbl">${t("avatar")}</div><div class="mp-avs">${AVATARS.map((a) => `<button type="button" class="mp-av-pick${a === cur ? " on" : ""}" data-act="avatar" data-v="${a}" aria-label="${a}">${a}</button>`).join("")}</div>`;
       const head = `<button class="mp-x" data-act="close" aria-label="${t("close")}">✕</button><div class="mp-head"><h3>${t("title")}</h3>`;
       const codeBlock = (c) => `<div class="mp-lbl">${t("roomCode")}</div><div class="mp-code">${esc(c)}</div>`;
       const leaveBtn = `<button class="mp-sec" data-act="leave">${t("leave")}</button>`;
@@ -395,6 +557,7 @@
       if (!R) {
         h = `${head}<p class="mp-sub">${t("sub", { max: cfg.max })}</p></div>
           <div class="mp-field"><label for="mp-name">${t("yourName")}</label><input id="mp-name" maxlength="12" autocomplete="off" spellcheck="false" value="${esc(keepName ?? store.get(cfg.nameKey))}" placeholder="${esc(t("player"))}"></div>
+          <div class="mp-section">${avRow(store.get(AVATAR_KEY))}${colRow(store.get(COLOR_KEY))}</div>
           ${this.linkJoin && !lastError ? "" : `<div class="mp-section"><b>${t("hostT")}</b><small>${t("hostS")}</small><button class="mp-primary mp-wide" data-act="host">${t("create")}</button></div>
           <div class="mp-or"><span>${t("or")}</span></div>`}
           <div class="mp-section"><b>${t("joinT")}</b><div class="mp-row"><input id="mp-code" maxlength="${CODE_LEN}" autocomplete="off" spellcheck="false" placeholder="ABCDE" aria-label="${t("roomCode")}" value="${esc(keepCode)}"><button class="mp-primary" data-act="join">${t("join")}</button></div></div>
@@ -403,7 +566,8 @@
         h = `${head}</div>${codeBlock(R.code)}<p class="mp-sub">${t("connecting")}</p><div class="mp-act">${leaveBtn}</div>`;
       } else {
         const isHost = S.isHost, playing = R.status === "playing", enough = canStart(), tooMany = cfg.gameMax != null && R.players.length > cfg.gameMax;
-        const list = S.players.map((p) => `<li class="${p.you ? "me" : ""}"><i class="mp-av">${initial(p.name)}</i><span class="mp-nm">${esc(p.name)}${p.you ? `<em>${t("you")}</em>` : ""}${p.host ? `<em>${t("host")}</em>` : ""}</span></li>`).join("");
+        const keepPname = (this.el.querySelector("#mp-pname") || {}).value;
+        const list = S.players.map((p) => `<li class="${p.you ? "me" : ""}"><i class="mp-av" style="${p.color ? "background:" + p.color : ""}">${p.avatar ? esc(p.avatar) : initial(p.name)}</i><span class="mp-nm">${esc(p.name)}${p.you ? `<em>${t("you")}</em>` : ""}${p.host ? `<em>${t("host")}</em>` : ""}</span></li>`).join("");
         let act;
         if (playing) act = `<p class="mp-hint">${t("inGame")}</p>${isHost ? `<button class="mp-primary mp-wide" data-act="end">${t("back")}</button>` : ""}`;
         else if (isHost && !cfg.lobbyStart) act = `<button class="mp-primary mp-wide" data-act="pick">${t("pick")}</button>`;
@@ -412,6 +576,7 @@
         h = `${head}</div><div class="mp-coderow">${codeBlock(R.code)}<button class="mp-qr-toggle" data-act="qr" aria-label="${t("qrShow")}" title="${t("qrShow")}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v0M17 17v4h4"/></svg></button></div>${linkBtn}
           ${R.game ? `<div class="mp-game"><span>${t("game")}</span><b>${esc(gameTitle(R.game))}</b></div>` : ""}
           <div class="mp-plh"><span>${t("players")}</span><b>${S.players.length}/${R.max}</b></div><ul class="mp-pl">${list}</ul>
+          <div class="mp-section mp-profile"><b>${t("profileT")}</b><div class="mp-row"><input id="mp-pname" maxlength="12" autocomplete="off" spellcheck="false" value="${esc(keepPname ?? R.name)}"><button class="mp-sec" data-act="profile">${t("saveProfile")}</button></div>${avRow(R.avatar)}${colRow(R.color)}</div>
           <div class="mp-act">${act}${leaveBtn}</div>`;
       }
       box.innerHTML = h;
@@ -448,6 +613,9 @@
         case "end": endGame(); break;
         case "pick": this.hide(); emit("pick", {}); break;       // host wants to choose the game: back to the page that shows the picker
         case "leave": leave(); break;
+        case "avatar": updateProfile({ avatar: b.dataset.v, name: val("#mp-pname") ?? val("#mp-name") }); break;
+        case "profile": updateProfile({ name: val("#mp-pname") }); break;
+        case "color": updateProfile({ color: b.dataset.v, name: val("#mp-pname") ?? val("#mp-name") }); break;
         case "share":
           navigator.share({ title: t("title"), text: t("shareText", { code: R.code }), url: roomUrl() }).catch(() => {});   // user cancelling the sheet rejects: ignore
           break;
@@ -484,7 +652,7 @@
     render() {
       if (!this.el) return;
       const S = R && R.status !== "connecting" ? snapshot() : null;
-      this.list.innerHTML = S ? S.players.map((p) => `<li class="${p.you ? "me" : ""}${p.host ? " host" : ""}"><span class="mp-dock-av" style="--h:${hue(p.id)}">${esc([...String(p.name).trim()][0] || "?").toUpperCase()}${p.host ? CROWN : ""}</span><span class="mp-dock-nm">${esc(p.name)}${p.you ? `<em>${t("you")}</em>` : ""}</span></li>`).join("") : "";
+      this.list.innerHTML = S ? S.players.map((p) => `<li class="${p.you ? "me" : ""}${p.host ? " host" : ""}"><span class="mp-dock-av" style="--h:${hue(p.id)}${p.color ? ";background:" + p.color : ""}">${p.avatar ? esc(p.avatar) : esc([...String(p.name).trim()][0] || "?").toUpperCase()}${p.host ? CROWN : ""}</span><span class="mp-dock-nm">${esc(p.name)}${p.you ? `<em>${t("you")}</em>` : ""}</span></li>`).join("") : "";
     },
   };
 
@@ -519,7 +687,7 @@
 
   window.Multiplayer = {
     mountDock: () => dock.mount(),
-    configure, host, join, leave, send, on, setGame, start, endGame, roomUrl, mountButton, openFromUrl,
+    configure, host, join, leave, send, deliver, on, setGame, start, endGame, roomUrl, mountButton, openFromUrl,
     onMessage: (type, fn) => on("message:" + type, fn),
     openUI: (prefill) => ui.show(prefill),
     closeUI: () => ui.hide(),
@@ -530,4 +698,8 @@
     get connected() { return !!R && R.status !== "connecting"; },
     get error() { return lastError; },
   };
+
+  // a reload in the same tab: pick the room up again (after the scripts of the page have run)
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(restoreSession, 0));
+  else setTimeout(restoreSession, 0);
 })();

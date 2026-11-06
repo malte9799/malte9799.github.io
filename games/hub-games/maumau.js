@@ -23,6 +23,7 @@
 // the next one. Leaving players drop out; their cards slide back under the
 // draw pile.
 
+import { shell } from "../hub-kit.js";
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 // ---- the deck: 108 cards, card = colour * 15 + value ----
@@ -271,6 +272,7 @@ export default {
   min: 2, max: 6,
 
   mount(ctx) {
+    const kit = shell(ctx, { title: "Mau-Mau" }), root = kit.body;
     const names = Object.fromEntries(ctx.players.map((p) => [p.id, p.name]));
     const ids = new Set(Object.keys(names));
     const order = ctx.players.map((p) => p.id);
@@ -322,7 +324,7 @@ export default {
     const styleEl = document.createElement("style");
     styleEl.textContent = CSS;
     document.head.appendChild(styleEl);
-    ctx.root.innerHTML = `<div class="mm" tabindex="-1">
+    root.innerHTML = `<div class="mm" tabindex="-1">
       <div class="mm-head">
         <span class="mm-mechip"></span>
         <span class="mm-meta"></span>
@@ -345,7 +347,7 @@ export default {
       <div class="mm-hand"></div>
       <div class="mm-strip"></div>
     </div>`;
-    const rootEl = ctx.root.firstElementChild;
+    const rootEl = root.firstElementChild;
     const $ = (s) => rootEl.querySelector(s);
     const headEl = $(".mm-head"), metaEl = $(".mm-meta"), oppoEl = $(".mm-oppo"),
       deckEl = $(".mm-deck"), deckNEl = $(".mm-deckn"), dirEl = $(".mm-dir"),

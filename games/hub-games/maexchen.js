@@ -19,6 +19,7 @@
 // (a round lost by a host change is voided without penalty, since the new
 // host cannot reconstruct the hidden rolls).
 
+import { shell } from "../hub-kit.js";
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 // ---- the value ladder, ascending strength ----
@@ -231,6 +232,7 @@ export default {
   min: 2, max: 6,
 
   mount(ctx) {
+    const kit = shell(ctx, { title: "Mäxchen" }), root = kit.body;
     const names = Object.fromEntries(ctx.players.map((p) => [p.id, p.name]));
     const ids = new Set(Object.keys(names));
     const order = ctx.players.map((p) => p.id);
@@ -296,14 +298,14 @@ export default {
     }
 
     // ---- DOM ----
-    ctx.root.innerHTML = `<div class="mx" tabindex="-1">
+    root.innerHTML = `<div class="mx" tabindex="-1">
       <div class="mx-head"><div class="mx-seats"></div><span class="mx-meta"></span></div>
       <div class="mx-board"></div>
       <div class="mx-status" aria-live="polite"></div>
       <div class="mx-act"></div>
       <div class="mx-table"></div>
     </div>`;
-    const rootEl = ctx.root.firstElementChild;
+    const rootEl = root.firstElementChild;
     const $ = (s) => rootEl.querySelector(s);
     const seatsEl = $(".mx-seats"), metaEl = $(".mx-meta"), boardEl = $(".mx-board"),
       statusEl = $(".mx-status"), actEl = $(".mx-act"), tableEl = $(".mx-table");

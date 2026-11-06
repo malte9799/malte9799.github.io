@@ -120,3 +120,13 @@ button.mp-launch.mp-live::after { content: ""; width: 7px; height: 7px; margin-l
 #mp-dock .mp-dock-nm em { margin-left: 6px; font-size: 11px; color: var(--muted); }
 
 #mp-ui button.mp-copy + button.mp-copy { margin-top: 8px; }
+
+/* profile: name + avatar examples (lobby window, also on the pre-room form) */
+.mp-avs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.mp-av-pick { width: 38px; height: 38px; padding: 0; border-radius: 50%; font-size: 20px; line-height: 1; display: grid; place-items: center; border: 2px solid var(--hairline); background: var(--chip-bg); }
+.mp-av-pick.on { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+.mp-profile .mp-row input { flex: 1; min-width: 0; }
+
+/* the avatar icon itself is a bit bigger (emoji or initial) */
+#mp-ui .mp-av { font-size: 19px; }
+#mp-dock .mp-dock-av { font-size: 19px; }
