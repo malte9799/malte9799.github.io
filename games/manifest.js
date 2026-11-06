@@ -20,6 +20,7 @@ const GAMES = [
   { id: "netwalk",     title: "Netwalk",       desc: "rotate pipes · power the grid", preview: drawNetwalk },
   { id: "blackjack",   title: "Blackjack",     desc: "hit · stand · beat the dealer", preview: drawBlackjack },
   { id: "kniffel",     title: "Kniffel · Yahtzee", desc: "roll · hold · write it down", preview: drawKniffel },
+  { id: "kritzel",     title: "Kritzel-Revier",    desc: "kritzle das größte Revier",   preview: drawKritzel },
 ];
 
 // ---- preview renderers ----
@@ -704,6 +705,88 @@ function drawMaexchen(p, w, h) {
   for (let k = 0; k < 2; k++) { p.fill(...CLR.red, 220); p.circle(w / 2 + 130 + k * 16, 58, 12); }
   p.fill(...PAL.sky, 220); p.circle(w / 2 + 130, 318, 12);
 }
+
+// Kritzel-Revier: crayons scribbling territory on a sheet of drawing paper
+function drawKritzel(p, w, h) {
+  const PAPER = [246, 235, 210], PAPER_HI = [252, 245, 228], INK = [62, 47, 32], LINE = [214, 197, 160];
+  const RED = [226, 84, 62], RED_D = [150, 42, 30], TEAL = [32, 156, 142], TEAL_D = [16, 100, 92];
+  const STAR = [243, 192, 44], STAR_D = [166, 116, 18];
+  const rnd = (n) => { const x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); };
+
+  p.background(...PAPER);
+  p.noStroke();
+  for (let k = 0; k < 130; k++) { p.fill(120, 96, 60, 14); p.circle(rnd(k + 1) * w, rnd(k + 51) * h, 1.6 + rnd(k + 101) * 2); }
+  // the sheet
+  p.fill(60, 42, 20, 35); p.rect(56, 62, w - 112, h - 122, 14);
+  p.fill(...PAPER_HI, 170); p.stroke(...INK, 220); p.strokeWeight(3); p.rect(50, 56, w - 112, h - 122, 14);
+  p.noStroke();
+  // faint grid
+  p.stroke(...LINE, 160); p.strokeWeight(1);
+  const cs = 30, gx = 60, gy = 66, GC = 16, GR = 7;
+  for (let i = 1; i < GC; i++) p.line(gx + i * cs, gy, gx + i * cs, gy + GR * cs);
+  for (let j = 1; j < GR; j++) p.line(gx, gy + j * cs, gx + GC * cs, gy + j * cs);
+  p.noStroke();
+  // scribbled territory (red bottom-left, teal top-right)
+  const scribble = (c, r, col, dark) => {
+    const x = gx + c * cs, y = gy + r * cs, j = (c * 7 + r * 13) % 9 - 4;
+    p.push(); p.translate(x + cs / 2 + j * 0.5, y + cs / 2 + ((c * 3 + r * 11) % 5 - 2) * 0.5);
+    p.rotate((((c * 5 + r * 7) % 9) - 4) * 0.014);
+    p.fill(...col, 225); p.rect(-cs / 2 - 2, -cs / 2 - 2, cs + 4, cs + 4, 4);
+    p.stroke(...dark, 90); p.strokeWeight(2); p.strokeCap(p.ROUND);
+    p.line(-cs * 0.3, -cs * 0.25, cs * 0.28, cs * 0.05);
+    p.line(-cs * 0.2, cs * 0.22, cs * 0.32, -cs * 0.3);
+    p.noStroke(); p.pop();
+  };
+  [[0, 4], [1, 4], [2, 4], [1, 5], [2, 5], [3, 5], [2, 6], [3, 6], [4, 6], [1, 3], [0, 5], [2, 3]].forEach(([c, r]) => scribble(c, r, RED, RED_D));
+  [[11, 0], [12, 0], [13, 0], [12, 1], [13, 1], [14, 1], [13, 2], [14, 0], [10, 1], [14, 2]].forEach(([c, r]) => scribble(c, r, TEAL, TEAL_D));
+  // coffee stain
+  p.push(); p.translate(gx + 8.5 * cs, gy + 4.4 * cs);
+  p.fill(150, 104, 58, 46); p.ellipse(0, 0, 52, 46);
+  p.noFill(); p.stroke(122, 80, 42, 130); p.strokeWeight(3); p.ellipse(0, 0, 56, 50);
+  p.noStroke(); p.fill(140, 96, 54, 90); p.circle(34, 16, 7); p.pop();
+  // glitter star
+  p.push(); p.translate(gx + 7.5 * cs, gy + 2.5 * cs); p.rotate(-0.1);
+  p.fill(...STAR, 70); p.beginShape();
+  for (let k = 0; k < 10; k++) { const a = -p.PI / 2 + k * p.PI / 5, rr = k % 2 ? 11 : 24; p.vertex(p.cos(a) * rr, p.sin(a) * rr); }
+  p.endShape(p.CLOSE);
+  p.fill(...STAR); p.stroke(...STAR_D); p.strokeWeight(2); p.beginShape();
+  for (let k = 0; k < 10; k++) { const a = -p.PI / 2 + k * p.PI / 5, rr = k % 2 ? 5.5 : 13; p.vertex(p.cos(a) * rr, p.sin(a) * rr); }
+  p.endShape(p.CLOSE); p.noStroke(); p.pop();
+  // crayons with faces + name tags
+  const crayon = (x, y, col, dark, tilt) => {
+    p.push(); p.translate(x, y); p.rotate(tilt);
+    p.noStroke(); p.fill(60, 42, 20, 40); p.ellipse(0, 17, 24, 8);
+    p.stroke(...dark); p.strokeWeight(2); p.fill(...col); p.rect(-8, -21, 16, 34, 5, 5, 2, 2);
+    p.noStroke(); p.fill(...col); p.triangle(-8, 13, 8, 13, 0, 24);
+    p.fill(240, 226, 196); p.rect(-8, 9, 16, 5);
+    p.fill(...col.map((v) => Math.min(255, v + 40))); p.rect(-8, -7, 16, 9, 2);
+    p.fill(255, 252, 246); p.circle(-3.2, -15, 5.4); p.circle(3.2, -15, 5.4);
+    p.fill(48, 34, 22); p.circle(-2.6, -15, 2.6); p.circle(3.8, -15, 2.6);
+    p.pop();
+  };
+  const tag = (x, y, txt) => {
+    p.textFont("Comic Sans MS"); p.textStyle(p.BOLD); p.textSize(11);
+    const tw = p.textWidth(txt) + 14;
+    p.noStroke(); p.fill(252, 246, 232, 230); p.stroke(...INK, 90); p.strokeWeight(1.2);
+    p.rect(x - tw / 2, y - 9, tw, 17, 8);
+    p.noStroke(); p.fill(...INK); p.textAlign(p.CENTER, p.CENTER); p.text(txt, x, y + 0.5);
+  };
+  crayon(gx + 5.5 * cs, gy + 4.6 * cs, RED, RED_D, -0.18); tag(gx + 5.5 * cs, gy + 4.6 * cs - 37, "Du");
+  crayon(gx + 10.5 * cs, gy + 5.5 * cs, TEAL, TEAL_D, 0.22); tag(gx + 10.5 * cs, gy + 5.5 * cs - 37, "Mia");
+  // clock + score chips
+  p.textFont("Comic Sans MS"); p.textStyle(p.BOLD); p.textAlign(p.CENTER, p.CENTER);
+  p.fill(...INK); p.textSize(24); p.text("0:21", gx + GC * cs / 2, gy - 22);
+  p.fill(...LINE, 220); p.rect(gx + GC * cs / 2 - 70, gy - 10, 140, 5, 2.5);
+  p.fill(...RED); p.rect(gx + GC * cs / 2 - 70, gy - 10, 140 * 0.3, 5, 2.5);
+  p.textSize(15);
+  p.textAlign(p.RIGHT, p.CENTER);
+  p.fill(...RED); p.circle(gx + GC * cs - 66, gy + GR * cs + 22, 14);
+  p.fill(...INK); p.text("38", gx + GC * cs - 22, gy + GR * cs + 22);
+  p.textAlign(p.LEFT, p.CENTER);
+  p.fill(...TEAL); p.circle(gx + 66, gy + GR * cs + 22, 14);
+  p.fill(...INK); p.text("31", gx + 78, gy + GR * cs + 22);
+}
+
 // Mau-Mau (hub only): the wooden parlour table — striped card backs fanned
 // along the edges, a slumping discard pile, sticker-style hand cards
 function drawMaumau(p, w, h) {

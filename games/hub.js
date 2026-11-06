@@ -19,6 +19,7 @@ const MP_GAMES = [
   { id: "maexchen", title: "Mäxchen", desc: "Lügenwürfel: höher ankündigen oder bezweifeln? Bluff-Duell am Filztisch", min: 2, max: 6, preview: (p, w, h) => drawMaexchen(p, w, h), load: () => import("./hub-games/maexchen.js") },
   { id: "maumau", title: "Mau-Mau", desc: "UNO-Regeln: Farbe bekennen, +2, Aussetzen – und rechtzeitig UNO! rufen", min: 2, max: 6, preview: (p, w, h) => drawMaumau(p, w, h), load: () => import("./hub-games/maumau.js") },
   { id: "clickrace", title: "Klick-Rennen", desc: "15 Sekunden, wer klickt mehr?", min: 2, max: 6, preview: (p, w, h) => drawClickRace(p, w, h), load: () => import("./hub-games/clickrace.js") },
+  { id: "kritzel", title: "Kritzel-Revier", desc: "Echtzeit: kritzle das größte Revier – Flecken blockieren, Sterne geben Turbo", min: 2, max: 4, preview: (p, w, h) => drawKritzel(p, w, h), load: () => import("./hub-games/kritzel.js") },
 ];
 window.MP_GAMES = MP_GAMES;                        // multiplayer.js reads the game titles from here
 
@@ -144,6 +145,15 @@ function renderTools() {
     b.onclick = () => MP.endGame();
     $("hub-tools").prepend(b);
   } else if (!need && b) b.remove();
+
+  // a game is running but its window was closed: offer to bring it back
+  let show = $("hub-show");
+  const hidden = !!run && !run.open;
+  if (hidden && !show) {
+    show = document.createElement("button"); show.id = "hub-show"; show.className = "primary"; show.textContent = "Spiel anzeigen";
+    show.onclick = () => showStage(true);
+    $("hub-tools").prepend(show);
+  } else if (!hidden && show) show.remove();
 }
 
 // ---- "Wie funktioniert’s?" modal ----
@@ -225,6 +235,7 @@ async function startGame({ game, options, players }) {
   run = rt;
   root.hidden = false; root.className = "hub-stage hub-" + g.id;
   root.innerHTML = `<p class="hub-loading">Lade ${esc(g.title)} …</p>`;
+  showStage(true);
   renderLobby(); renderTools();
 
   const key = (t) => id + "/" + t;
@@ -264,7 +275,18 @@ function stopGame() {
   try { rt.inst && rt.inst.destroy && rt.inst.destroy(); } catch (e) { console.error(e); }
   if (rt.ctx) rt.ctx._cleanup();
   rt.root.innerHTML = ""; rt.root.hidden = true; rt.root.className = "";
+  showStage(false);
 }
+
+// the game window: open/closed. Closing only hides it; the game keeps running until the host ends it.
+function showStage(open) {
+  $("hub-overlay").hidden = !open;
+  document.body.classList.toggle("hub-game-open", open);
+  if (run) run.open = open;
+  renderTools();
+}
+$("hub-overlay-x").onclick = () => { if (MP.isHost && run) MP.endGame(); else showStage(false); };
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && run && run.open) showStage(false); });
 
 MP.on("start", startGame);
 MP.on("pick", () => { const el = $("hub-grid"); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); });
