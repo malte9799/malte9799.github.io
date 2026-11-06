@@ -20,6 +20,7 @@ const GAMES = [
   { id: "netwalk",     title: "Netwalk",       desc: "rotate pipes · power the grid", preview: drawNetwalk },
   { id: "blackjack",   title: "Blackjack",     desc: "hit · stand · beat the dealer", preview: drawBlackjack },
   { id: "kniffel",     title: "Kniffel · Yahtzee", desc: "roll · hold · write it down", preview: drawKniffel },
+  { id: "leftleftleft", title: "Left! Left! Left!", desc: "Fahrer fährt, Beifahrer navigiert", preview: drawLeftLeftLeft },
 ];
 
 // ---- preview renderers ----
@@ -639,4 +640,25 @@ function drawKniffel(p, w, h) {
   [["2", 0], ["8", 1], ["6", 2], ["8", 3], ["20", 4], ["12", 5]].forEach(([n, r]) => write(n, 1, r, ink));
   write("25", 0, 10, ink); write("30", 0, 11, ink); write("24", 0, 12, ink); write("0", 1, 9, ink);
   p.pop();
+}
+
+function drawLeftLeftLeft(p, w, h) {
+  // Static preview: low-poly car interior with route map in passenger footwell
+  p.background(135, 206, 235); // sky
+  p.fill(30, 120, 40); p.rect(0, h * 0.6, w, h * 0.4, 8); // grass/road area
+  p.fill(240, 240, 240); p.rect(0, h * 0.6, w, h * 0.4, 8); // road stripe placeholder
+  // car interior (red)
+  p.fill(163, 58, 58); p.rect(0, 0, w, h * 0.55, 8);
+  // dashboard
+  p.fill(136, 136, 136); p.rect(0, h * 0.35, w, h * 0.25, 8);
+  // steering wheel
+  p.fill(17, 17, 17); p.circle(w * 0.42, h * 0.5, w * 0.06); p.circle(w * 0.42, h * 0.5, w * 0.03);
+  // route map UI (bottom)
+  p.fill(216, 195, 165); p.rect(w * 0.35, h * 0.55, w * 0.3, h * 0.32, 8);
+  p.fill(83, 64, 74); p.textAlign(p.LEFT, p.CENTER); p.textSize(13);
+  p.text("Routenkarte", w * 0.38, h * 0.62);
+  p.textAlign(p.CENTER, p.CENTER); p.textSize(40);
+  p.fill(163, 58, 58); p.text("↑", w * 0.5, h * 0.75);
+  p.fill(83, 64, 74); p.textSize(12); p.textAlign(p.CENTER, p.CENTER);
+  p.text("Geradeaus", w * 0.5, h * 0.86);
 }
