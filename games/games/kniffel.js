@@ -2312,7 +2312,7 @@ function infoAnim(p, w, h, f) {
   if (T > 62 && T < 80) { p.noFill(); p.stroke(255, 220, 120, 200 - (T - 62) * 10); p.strokeWeight(2); p.circle(gx(0) + 6, 94, 48 + (T - 62) * 1.5); p.circle(gx(1) + 6, 94, 48 + (T - 62) * 1.5); }
 }
 
-// test hook: index.html?game=kniffel&debug exposes the internals as window.__kn
+// test hook: /games/kniffel/?debug exposes the internals as window.__kn
 if (/[?&]debug\b/.test(location.search)) {
   window.__kn = {
     get G() { return G; }, get camera() { return camera; }, get scene() { return scene; }, get renderer() { return renderer; },

@@ -42,7 +42,7 @@ function buildHome(grid) {
       const a = document.createElement("a");
       a.className = "card" + (revealer && !revealed.has(game.id) ? " reveal" : "");
       a.style.setProperty("--i", idx % 3);
-      a.href = "index.html?game=" + game.id;
+      a.href = game.id + "/";
       a.dataset.id = game.id;
       a.innerHTML = `
         <div class="preview"></div>

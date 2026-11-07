@@ -76,8 +76,11 @@
 <div id="app" style="display:none"></div>
 
 <script>
-// Router: no param → the hub (multiplayer + single-player card grids, see hub.js);
-// ?game=<id> loads that single-player game into the shared shell (game.js builds the UI into #app).
+// Router: /games/ → the hub (multiplayer + single-player card grids, see hub.js);
+// /games/<id>/ loads that single-player game into the shared shell (game.js builds the UI into #app).
+// Every game has its own generated page games/<id>/index.html (vite.config.js) — same shell, with a <base>
+// pointing back at /games/, so the relative paths below work from there too. Old ?game=<id> links are
+// moved to /games/<id>/ (the rest of the query, e.g. ?room=, is kept).
 //
 // Game ideas that would fit this collection (grid/puzzle games, p5 canvas,
 // same "Midnight" theme (PAL in game.js) — add via games/<id>.js + a manifest.js entry):
@@ -94,7 +97,17 @@
 //   - Breakout/Pong  — arcade sibling for Snake in fullscreen mode
 //   - Wordle-like    — daily word guess with keyboard heatmap
 
-const _gameName = new URLSearchParams(location.search).get("game");
+const _params = new URLSearchParams(location.search);
+const _legacy = _params.get("game");
+const _moving = !!_legacy && /^[a-z0-9-]+$/i.test(_legacy);
+if (_moving) {
+  _params.delete("game");
+  const q = _params.toString();
+  location.replace(location.pathname.replace(/index\.html$/, "") + _legacy + "/" + (q ? "?" + q : "") + location.hash);
+}
+// the game id is the last path segment: /games/kniffel/ → "kniffel"; /games/ and /games/index.html → hub
+const _seg = decodeURIComponent(location.pathname).replace(/\/+$/, "").split("/").pop();
+const _gameName = !_moving && _seg !== "games" && /^[a-z0-9-]+$/i.test(_seg) ? _seg : null;
 window._pageKind = _gameName ? "game" : "home";
 
 function loadScript(src, onload, onerror) {
@@ -105,21 +118,21 @@ function loadScript(src, onload, onerror) {
   document.body.appendChild(s);
 }
 
-if (_gameName) {
+if (_moving) {
+  // redirecting to /games/<id>/ (see above)
+} else if (_gameName) {
   // Game view: hide the hub, let game.js build the shell into #app,
   // then dynamically load the selected game's script.
   document.title = _gameName.charAt(0).toUpperCase() + _gameName.slice(1);
   document.getElementById("hub").style.display = "none";
   document.getElementById("app").style.display = "";
-  // only plain ids, so ?game= can't point the loader at another path
-  const ok = /^[a-z0-9-]+$/i.test(_gameName);
   const notFound = () => {
     document.getElementById("app").innerHTML =
       `<a class="back-link" href="index.html">← Games</a><header><h1>Not found</h1></header>` +
       `<p class="tag" style="text-align:left">There's no game called “${_gameName.replace(/[<>&"]/g, "")}”.</p>`;
   };
-  if (ok) loadScript("games/" + _gameName + ".js", null, notFound);
-  else notFound();
+  // relative to the page's <base> (games/<id>/ → /games/), so this loads games/games/<id>.js
+  loadScript("games/" + _gameName + ".js", null, notFound);
 } else {
   // Hub view: manifest.js (previews) and home.js (single-player card grid) are only loaded here so
   // their globals never collide with a running game; hub.js (ES module) drives the page.

@@ -5,12 +5,12 @@ Two files to touch, nothing else:
 1. **`games/<id>.js`** — the game itself (see the template below)
 2. **`manifest.js`** — one registry entry + a preview function
 
-The `<id>` is what appears in the URL: `index.html?game=<id>`.
+The `<id>` is what appears in the URL: `/games/<id>/` (generated page per game, see vite.config.js).
 
 ## How it fits together
 
 ```
-index.html      the start page and router: ?game=<id> loads games/<id>.js into the shell,
+index.html      the start page and router: /games/<id>/ loads games/<id>.js into the shell,
                 no param shows the hub (hub.js): "Mehrspieler" / "Einzelspieler" switch,
                 multiplayer cards + the single-player card grid (manifest.js + home.js)
 themes.js       designs: canvas palettes (PAL), fonts, render effects, picker
@@ -311,7 +311,7 @@ token, not the WebRTC peer id, so it is stable across reloads.
 | `endGame()` | host: game over, everybody is back in the lobby, the room stays open |
 | `configure({ game, min, max, lang, startOptions })` | defaults; `startOptions()` supplies `options` when the lobby's own "Spiel starten" button is used |
 | `openUI(prefill?)` / `closeUI()` / `mountButton(el, { label })` / `openFromUrl()` | the shared lobby window with QR board |
-| `roomUrl()` | invite link `…?game=<id>&room=<CODE>` |
+| `roomUrl()` | invite link `…/games/<id>/?room=<CODE>` |
 
 Read-only: `state` (`{ code, selfId, hostId, isHost, status, game, options, min, max, players }` or
 `null`), `players`, `me`, `isHost`, `connected`, `error`. A player is `{ id, name, host, you }`; `id` is
