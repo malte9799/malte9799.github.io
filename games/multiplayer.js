@@ -484,10 +484,9 @@
 
   // ---- invitation link + QR code ----
   const roomUrl = (code) => {
+    // the game is part of the path (/games/<id>/), so only the room goes into the query
     const u = new URL(location.href);
     u.hash = ""; u.search = "";
-    const game = (R && R.game) || cfg.game || new URLSearchParams(location.search).get("game");
-    if (game && cfg.gameParam) u.searchParams.set("game", game);
     u.searchParams.set("room", code || (R && R.code) || "");
     return u.toString();
   };
