@@ -16,7 +16,7 @@ npm run build     # static site in dist/
   English pages send German-language browsers to `/de/` unless the visitor picked a
   language with the EN/DE switch.
 - `src/components/reactbits/` — text and card effects adapted from [React Bits](https://reactbits.dev)
-- `games/`, `old/` — hand-written static pages, copied into `dist/` unchanged
+- `old/` — hand-written static pages, copied into `dist/` unchanged. The games are their own repo: [malte9799/games](https://github.com/malte9799/games), served at `/games/` (and games.maltee.dev).
 
 Pushing to `main` builds and deploys via `.github/workflows/deploy.yml`
 (Settings → Pages → Source must be set to **GitHub Actions**).
