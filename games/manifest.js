@@ -379,33 +379,44 @@ function drawClickRace(p, w, h) {
   });
 }
 
-// Shell Shock (hub only): hills, two tanks, one shell in flight
+// Shell Shock (hub only): side view — solid hills from a heightmap, two tanks, one arc in flight
 function drawShellShock(p, w, h) {
   previewBg(p, w, h);
-  // hills: a height field, filled down to the bottom
-  const nx = 24, ny = 12;
-  const rows = [];
-  for (let j = 0; j <= ny; j++) { const y = (j / ny) * h; const row = []; for (let i = 0; i <= nx; i++) { const x = (i / nx) * w; row.push([x, y]); } rows.push(row); }
+  // terrain: a heightmap surface, filled down to the bottom like the real game
+  const surf = (x) => h * 0.74 - h * 0.1 * Math.sin(x * 0.012 + 1.2)
+    - h * 0.3 * Math.exp(-Math.pow((x - w * 0.4) / (w * 0.13), 2))
+    - h * 0.26 * Math.exp(-Math.pow((x - w * 0.76) / (w * 0.1), 2));
   p.noStroke();
-  p.fill(PAL.mint[0], PAL.mint[1], PAL.mint[2], 120);
-  p.beginShape(p.POLYGON);
-  p.vertex(0, h);
-  for (const row of rows) for (const pt of row) p.vertex(pt[0], pt[1]);
-  p.vertex(w, h);
-  p.endShape(p.POLYGON);
-  // tanks: "me" mint bottom-left, enemy sky top-right, one shell in flight
-  const tank = (x, y, a, col) => {
-    const dx = Math.cos(a), dy = Math.sin(a);
-    p.stroke(...PAL.ink, 120); p.strokeWeight(3);
-    p.line(x + dx * 6, y + dy * 6, x + dx * 11, y + dy * 11);
-    p.push(); p.translate(x, y); p.rotate(a);
-    p.noStroke(); p.fill(...col); p.ellipse(0, 0, 28, 20, 5);
-    p.noStroke(); p.fill(255, 255, 255, 40); p.ellipse(12, 0, 9, 11, 4);
-    p.pop();
+  p.fill(...PAL.sky, 200);
+  p.beginShape();
+  p.vertex(0, h + 2);
+  for (let x = 0; x <= w; x += 6) p.vertex(x, surf(x));
+  p.vertex(w + 2, h + 2);
+  p.endShape(p.CLOSE);
+  p.noFill();
+  p.stroke(...PAL.skyHi, 220);
+  p.strokeWeight(2.5);
+  p.beginShape();
+  for (let x = 0; x <= w; x += 6) p.vertex(x, surf(x));
+  p.endShape();
+  // tanks on the surface: "me" mint on the left, enemy rose on the right
+  const tank = (x, a, col) => {
+    const y = surf(x) - 9;
+    p.stroke(...PAL.ink, 200); p.strokeWeight(3.5); p.strokeCap(p.ROUND);
+    p.line(x, y - 4, x + Math.cos(a) * 16, y - 4 + Math.sin(a) * 16);
+    p.noStroke(); p.fill(...PAL.ink, 190); p.ellipse(x, y + 1, 26, 12, 5);
+    p.fill(...col); p.ellipse(x, y - 1, 21, 12, 5);
+    p.fill(...PAL.ink, 60); p.rect(x - 16, y - 26, 32, 4, 2);
+    p.fill(...col, 235); p.rect(x - 16, y - 26, 32, 4, 2);
   };
-  tank(w * 0.28, h * 0.5, -0.6, PAL.mint);
-  tank(w * 0.72, h * 0.52, 2.2, PAL.sky);
-  p.noStroke(); p.fill(...PAL.sky, 220); p.circle(w * 0.6, h * 0.36, 6);
+  tank(w * 0.2, -0.9, PAL.mint);
+  tank(w * 0.79, -Math.PI + 0.8, PAL.rose);
+  // one shell in a high arc with a fading trail
+  p.noStroke();
+  for (let i = 0; i < 9; i++) {
+    p.fill(...PAL.sun, 40 + i * 24);
+    p.circle(w * (0.38 + i * 0.034), h * (0.14 + Math.pow(i - 5, 2) * 0.016), 7 - i * 0.3);
+  }
 }
 
 
