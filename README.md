@@ -22,7 +22,7 @@ Pushing to `main` builds and deploys via `.github/workflows/deploy.yml`
 (Settings → Pages → Source must be set to **GitHub Actions**).
 
 **maltee.dev.** The same `main` build is also served at https://maltee.dev/ by a Cloudflare
-assets-only Worker (`maltee-site`, `wrangler.jsonc`, route `maltee.dev/*`), deployed by the
+assets-only Worker (`maltee-site`, `wrangler.jsonc`, custom domain `maltee.dev`), deployed by the
 "Cloudflare (maltee.dev)" step of the workflow (main only; `previews/` is left out). Orbis keeps its own
 more specific route `maltee.dev/orbis*`, so `/orbis/` is unaffected. GitHub Pages stays live in parallel.
 One-time setup: repo secrets `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit + Zone → Workers Routes: Edit for

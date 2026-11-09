@@ -14,7 +14,10 @@
     // unknown paths are real 404s (the React pages are separate HTML entries, no SPA fallback)
     "not_found_handling": "none"
   },
-  "routes": [{ "pattern": "maltee.dev/*", "zone_name": "maltee.dev" }],
+  // Custom domain instead of a `maltee.dev/*` route: a route only receives traffic when the
+  // hostname has a proxied DNS record, and the apex has none (only the Cloudflare SOA/NS and an
+  // SPF TXT exist). A custom domain makes wrangler create that record itself.
+  "routes": [{ "pattern": "maltee.dev", "custom_domain": true }],
   "workers_dev": true,
   "preview_urls": false
 }
